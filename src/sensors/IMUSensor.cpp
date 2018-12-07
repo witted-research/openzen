@@ -505,7 +505,7 @@ namespace zen
                 else if (property == ZenImuProperty_MagRange)
                     uiValue = imu::v0::mapMagRange(value);
                 else
-                    uiValue = static_cast<int32_t>(value);
+                    uiValue = static_cast<uint32_t>(value);
 
                 return sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<unsigned char*>(&uiValue), sizeof(uiValue));
             }

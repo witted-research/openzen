@@ -1,6 +1,7 @@
 #include "IZenSensor.h"
 #include "IZenSensorManager.h"
 
+#include <array>
 #include <atomic>
 #include <iostream>
 #include <string>
@@ -89,6 +90,19 @@ int main(int argc, char *argv[])
         pollingThread.join();
         return error;
     }
+
+    // Get an array property
+    std::array<int32_t, 3> version;
+    size_t length = version.size();
+    if (auto error = sensor->getArrayDeviceProperty(ZenSensorProperty_FirmwareVersion, ZenPropertyType_Int32, version.data(), &length))
+    {
+        g_terminate = true;
+        ZenShutdown();
+        pollingThread.join();
+        return error;
+    }
+
+    std::cout << "Firmware version: " << version.at(0) << "." << version.at(1) << "." << version.at(2) << std::endl;
 
     // Do something based on the sensor property
     if (time)

@@ -1,5 +1,6 @@
 #include "sensors/BaseSensor.h"
 
+#include <algorithm>
 #include <cstring>
 #include <string>
 
@@ -203,6 +204,11 @@ namespace zen
                 int32_t* iBuffer = reinterpret_cast<int32_t*>(buffer);
                 for (size_t idx = 0; idx < *bufferSize; ++idx)
                     iBuffer[idx] = static_cast<int32_t>(uiBuffer[idx]);
+
+                // Some properties need to be reversed
+                const bool reverse = property == ZenSensorProperty_FirmwareVersion;
+                if (reverse)
+                    std::reverse(iBuffer, iBuffer + *bufferSize);
 
                 return ZenError_None;
             }
