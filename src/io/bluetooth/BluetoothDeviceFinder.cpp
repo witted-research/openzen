@@ -10,13 +10,12 @@ namespace zen
     {
         start();
 
+        // There is no way of detecting whether Bluetooth is turned on, so need to manually timeout
         if (!m_fence.waitFor(std::chrono::seconds(5)))
         {
             quit();
             wait();
 
-            // [XXX] There is no way of detecting whether Bluetooth is turned on
-            //return ZenError_Io_Timeout;
             return ZenError_None;
         }
 
@@ -34,6 +33,7 @@ namespace zen
                 ZenSensorDesc desc;
                 std::memcpy(desc.name, name.c_str(), size);
                 desc.name[size] = '\0';
+                desc.serialNumber[0] = '\0';
                 desc.handle64 = device.address().toUInt64();
                 std::memcpy(desc.ioType, BluetoothSystem::KEY, sizeof(BluetoothSystem::KEY));
 
