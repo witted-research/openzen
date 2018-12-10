@@ -634,9 +634,13 @@ namespace zen
         imuData.timestamp = *reinterpret_cast<const uint32_t*>(data) / static_cast<float>(m_samplingRate.load());
         data += sizeof(float);
 
-        const bool lowPrec = getConfigDataFlag(22);
+        bool enabled;
+        if (auto error = getExtensionBoolDeviceProperty(ZenImuProperty_OutputLowPrecision, enabled))
+            return error;
 
-        if (getConfigDataFlag(12))
+        const bool lowPrec = enabled;
+
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputRawGyr, enabled) == ZenError_None && enabled)
         {
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.gRaw[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
@@ -651,7 +655,7 @@ namespace zen
             convertLpVector3fToArray(&g, imuData.g);
         }
 
-        if (getConfigDataFlag(11))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputRawAcc, enabled) == ZenError_None && enabled)
         {
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.aRaw[idx] = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
@@ -666,7 +670,7 @@ namespace zen
             convertLpVector3fToArray(&a, imuData.a);
         }
 
-        if (getConfigDataFlag(10))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputRawMag, enabled) == ZenError_None && enabled)
         {
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.bRaw[idx] = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
@@ -681,11 +685,11 @@ namespace zen
             convertLpVector3fToArray(&b, imuData.b);
         }
 
-        if (getConfigDataFlag(16))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputAngularVel, enabled) == ZenError_None && enabled)
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.w[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
 
-        if (getConfigDataFlag(18))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputQuat, enabled) == ZenError_None && enabled)
         {
             for (unsigned idx = 0; idx < 4; ++idx)
                 imuData.q[idx] = lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
@@ -697,27 +701,25 @@ namespace zen
             convertLpMatrixToArray(&m, imuData.rotationM);
         }
 
-        if (getConfigDataFlag(17))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputEuler, enabled) == ZenError_None && enabled)
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.r[idx] = (180.f / float(M_PI)) * lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
 
-        if (getConfigDataFlag(21))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputLinearAcc, enabled) == ZenError_None && enabled)
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.linAcc[idx] = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
 
-        if (getConfigDataFlag(9))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputPressure, enabled) == ZenError_None && enabled)
             imuData.pressure = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
 
-        if (getConfigDataFlag(19))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputAltitude, enabled) == ZenError_None && enabled)
             imuData.altitude = lowPrec ? parseFloat16(data, 10.f) : parseFloat32(data);
 
-        if (getConfigDataFlag(13))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputTemperature, enabled) == ZenError_None && enabled)
             imuData.temperature = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
 
-        if (getConfigDataFlag(26))
+        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputHeaveMotion, enabled) == ZenError_None && enabled)
             imuData.hm.yHeave = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
-
-        // [XXX] Do we use gait tracking?
 
         SensorManager::get().notifyEvent(std::move(event));
         return ZenError_None;
