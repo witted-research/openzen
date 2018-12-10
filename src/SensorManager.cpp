@@ -192,6 +192,7 @@ namespace zen
                 }
 
                 *outLength = m_devices.size();
+                m_devices.clear();
 
                 const auto error = m_listingError ? ZenAsync_Failed : ZenAsync_Finished;
                 m_listing = false;
