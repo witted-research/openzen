@@ -1,6 +1,6 @@
 #include "io/systems/BleSystem.h"
 
-#include "io/BleDeviceFinder.h"
+#include "io/ble/BleDeviceFinder.h"
 #include "io/interfaces/BleInterface.h"
 
 namespace zen

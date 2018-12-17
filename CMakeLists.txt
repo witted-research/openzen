@@ -32,16 +32,19 @@ set(zen_sources
 )
 
 set(io_sources
-    src/io/BleDeviceFinder.cpp
-    src/io/BleDeviceFinder.h
-    src/io/BleDeviceHandler.cpp
-    src/io/BleDeviceHandler.h
     src/io/IIoInterface.h
     src/io/IIoSystem.h
     src/io/IoManager.cpp
     src/io/IoManager.h
     src/io/Modbus.cpp
     src/io/Modbus.h
+)
+
+set(io_ble_sources
+    src/io/ble/BleDeviceFinder.cpp
+    src/io/ble/BleDeviceFinder.h
+    src/io/ble/BleDeviceHandler.cpp
+    src/io/ble/BleDeviceHandler.h
 )
 
 set(io_bluetooth_sources
@@ -141,6 +144,7 @@ if(ZEN_USE_STATIC_LIBS)
         ${zen_includes}
         ${zen_sources}
         ${io_sources}
+        ${io_ble_sources}
         ${io_bluetooth_sources}
         ${io_can_sources}
         ${io_interfaces_sources}
@@ -154,6 +158,7 @@ else()
         ${zen_includes}
         ${zen_sources}
         ${io_sources}
+        ${io_ble_sources}
         ${io_bluetooth_sources}
         ${io_can_sources}
         ${io_interfaces_sources}

@@ -1,5 +1,5 @@
-#ifndef ZEN_IO_BLEDEVICEHANDLER_H_
-#define ZEN_IO_BLEDEVICEHANDLER_H_
+#ifndef ZEN_IO_BLE_BLEDEVICEHANDLER_H_
+#define ZEN_IO_BLE_BLEDEVICEHANDLER_H_
 
 #include <atomic>
 #include <optional>

@@ -5,7 +5,7 @@
 #include <string_view>
 
 #include "BaseIoInterface.h"
-#include "io/BleDeviceHandler.h"
+#include "io/ble/BleDeviceHandler.h"
 
 namespace zen
 {
