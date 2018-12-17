@@ -81,7 +81,7 @@ namespace zen
         return ZenError_None;
     }
 
-    std::optional<modbus::Frame> BleDeviceHandler::tryToGetFrame()
+    std::optional<std::vector<unsigned char>> BleDeviceHandler::tryToGetReceivedData()
     {
         return m_queue.tryToPop();
     }
@@ -138,22 +138,8 @@ namespace zen
         if (info.uuid() != QUuid(reinterpret_cast<const char*>(ZEN_IMUDATA_UUID)))
             return;
 
-        size_t length = value.size();
-        while (length > 0)
-        {
-            const size_t nParsedBytes = value.size() - length;
-            if (auto error = m_parser.parse(reinterpret_cast<const unsigned char*>(value.data() + nParsedBytes), length))
-            {
-                m_error = ZenError_Io_MsgCorrupt;
-                return;
-            }
-
-            if (m_parser.finished())
-            {
-                m_queue.emplace(m_parser.frame());
-                m_parser.reset();
-            }
-        }
+        std::vector<unsigned char> buffer(value.begin(), value.end());
+        m_queue.emplace(std::move(buffer));
     }
 
     void BleDeviceHandler::descriptorWritten(const QLowEnergyDescriptor& info, const QByteArray& value)

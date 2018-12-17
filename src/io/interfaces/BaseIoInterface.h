@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "io/IIoInterface.h"
+#include "io/Modbus.h"
 
 namespace zen
 {
@@ -16,14 +17,15 @@ namespace zen
 
         ZenError send(uint8_t address, uint8_t function, const unsigned char* data, size_t length) final override;
 
-        ZenError process(uint8_t address, uint8_t function, const unsigned char* data, size_t length);
-
     protected:
+        ZenError processReceivedData(const unsigned char* data, size_t length);
+
         virtual ZenError send(std::vector<unsigned char> frame) = 0;
 
     private:
         void setSubscriber(IIoDataSubscriber& subscriber) { m_subscriber = &subscriber; }
 
+        modbus::LpFrameParser m_parser;
         IIoDataSubscriber* m_subscriber;
     };
 

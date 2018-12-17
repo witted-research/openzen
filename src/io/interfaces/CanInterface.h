@@ -30,6 +30,12 @@ namespace zen
         /** Returns whether the IO interface equals the sensor description */
         bool equals(const ZenSensorDesc& desc) const override;
 
+        /** Process received data */
+        ZenError processReceivedData(const unsigned char* data, size_t length);
+
+        /** Returns the CAN ID */
+        uint32_t id() const { return m_id; }
+
     private:
         ZenError send(std::vector<unsigned char> frame) override;
 

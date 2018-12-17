@@ -7,7 +7,6 @@
 
 #include "SiUSBXp.h"
 
-#include "io/Modbus.h"
 #include "io/interfaces/BaseIoInterface.h"
 
 namespace zen
@@ -38,10 +37,8 @@ namespace zen
 
     private:
         ZenError receiveInBuffer(bool& received);
-        ZenError parseBuffer();
 
         std::vector<unsigned char> m_buffer;
-        modbus::LpFrameParser m_parser;
 
         HANDLE m_handle;
 

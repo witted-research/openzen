@@ -64,7 +64,7 @@ namespace zen
         return ZenError_None;
     }
 
-    std::optional<modbus::Frame> BluetoothDeviceHandler::tryToGetFrame()
+    std::optional<std::vector<unsigned char>> BluetoothDeviceHandler::tryToGetReceivedData()
     {
         return m_queue.tryToPop();
     }
@@ -102,23 +102,8 @@ namespace zen
     void BluetoothDeviceHandler::receiveData()
     {
         QByteArray data = m_socket->readAll();
-        size_t length = data.size();
-        while (length > 0)
-        {
-            const size_t nParsedBytes = data.size() - length;
-            if (auto error = m_parser.parse(reinterpret_cast<const unsigned char*>(data.data() + nParsedBytes), length))
-            {
-                m_error = ZenError_Io_MsgCorrupt;
-                m_parser.reset();
-                return;
-            }
-
-            if (m_parser.finished())
-            {
-                m_queue.push(m_parser.frame());
-                m_parser.reset();
-            }
-        }
+        std::vector<unsigned char> buffer(data.begin(), data.end());
+        m_queue.emplace(std::move(buffer));
     }
 
     void BluetoothDeviceHandler::reset()

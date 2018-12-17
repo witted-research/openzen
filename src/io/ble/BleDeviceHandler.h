@@ -8,7 +8,6 @@
 #include <QLowEnergyController>
 
 #include "ZenTypes.h"
-#include "io/Modbus.h"
 #include "utility/LockingQueue.h"
 #include "utility/ThreadFence.h"
 
@@ -28,7 +27,7 @@ namespace zen
         ZenError initialize();
 
         ZenError send(const std::vector<unsigned char>& data);
-        std::optional<modbus::Frame> tryToGetFrame();
+        std::optional<std::vector<unsigned char>> tryToGetReceivedData();
 
         bool equals(uint64_t handle) const;
 
@@ -42,8 +41,7 @@ namespace zen
     private:
         void reset();
 
-        modbus::RTUFrameParser m_parser;
-        LockingQueue<modbus::Frame> m_queue;
+        LockingQueue<std::vector<unsigned char>> m_queue;
 
         QLowEnergyController m_controller;
         QLowEnergyCharacteristic m_characteristic;

@@ -9,7 +9,6 @@
 #include <Windows.h>
 #undef NOMINMAX
 
-#include "io/Modbus.h"
 #include "io/interfaces/BaseIoInterface.h"
 
 namespace zen
@@ -43,7 +42,6 @@ namespace zen
         ZenError parseBuffer();
 
         std::array<unsigned char, 1024> m_buffer;
-        modbus::ASCIIFrameParser m_parser;
         size_t m_usedBufferSize;
 
         std::string m_deviceId;

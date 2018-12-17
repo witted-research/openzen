@@ -20,7 +20,7 @@ namespace zen
         bool shouldParse = true;
         while (shouldParse)
         {
-            if (auto error = parseBuffer())
+            if (auto error = processReceivedData(m_buffer.data(), m_buffer.size()))
                 return error;
 
             if (auto error = receiveInBuffer(shouldParse))
@@ -94,39 +94,6 @@ namespace zen
         {
             m_buffer.clear();
             return ZenError_Io_ReadFailed;
-        }
-
-        return ZenError_None;
-    }
-
-    ZenError SiUsbInterface::parseBuffer()
-    {
-        const size_t bufferSize = m_buffer.size();
-        size_t length = bufferSize;
-        while (length > 0)
-        {
-            const size_t nParsedBytes = bufferSize - length;
-            if (auto error = m_parser.parse(m_buffer.data() + nParsedBytes, length))
-                return ZenError_Io_MsgCorrupt;
-
-            if (m_parser.finished())
-            {
-                auto guard = finally([this]() {
-                    m_parser.reset();
-                });
-
-                const auto& frame = m_parser.frame();
-                if (auto error = process(frame.address, frame.function, frame.data.data(), frame.data.size()))
-                {
-                    // Remove used data from buffer
-                    if (length == 0)
-                        m_buffer.clear();
-                    else
-                        m_buffer.erase(m_buffer.begin(), m_buffer.end() - length);
-
-                    return error;
-                }
-            }
         }
 
         return ZenError_None;

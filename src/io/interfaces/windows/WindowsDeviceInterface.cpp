@@ -53,7 +53,7 @@ namespace zen
         bool shouldParse = true;
         while (shouldParse)
         {
-            if (auto error = parseBuffer())
+            if (auto error = processReceivedData(m_buffer.data(), m_usedBufferSize))
                 return error;
 
             if (auto error = receiveInBuffer(shouldParse))
@@ -130,38 +130,6 @@ namespace zen
 
         m_usedBufferSize = nReceivedBytes;
         received = nReceivedBytes > 0;
-        return ZenError_None;
-    }
-
-    ZenError WindowsDeviceInterface::parseBuffer()
-    {
-        size_t length = m_usedBufferSize;
-        while (length > 0)
-        {
-            const size_t nParsedBytes = m_usedBufferSize - length;
-            if (auto error = m_parser.parse(m_buffer.data() + nParsedBytes, length))
-                return ZenError_Io_MsgCorrupt;
-
-            if (m_parser.finished())
-            {
-                auto guard = finally([this]() {
-                    m_parser.reset();
-                });
-
-                const auto& frame = m_parser.frame();
-                if (auto error = process(frame.address, frame.function, frame.data.data(), frame.data.size()))
-                {
-
-                    // Remove used data from buffer
-                    if (length > 0)
-                        std::copy(m_buffer.cbegin() + m_usedBufferSize - length, m_buffer.cbegin() + m_usedBufferSize, m_buffer.begin());
-
-                    m_usedBufferSize = length;
-                    return error;
-                }
-            }
-        }
-
         return ZenError_None;
     }
 }

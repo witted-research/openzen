@@ -13,15 +13,6 @@ namespace zen
 {
     namespace
     {
-        std::optional<uint8_t> getAvailableId(const std::unordered_map<uint8_t, CanInterface*>& map)
-        {
-            for (unsigned int id = 0; id <= std::numeric_limits<uint8_t>::max(); ++id)
-                if (map.find(id) == map.end())
-                    return id;
-
-            return {};
-        }
-
         TPCANMsg makeMsg(uint32_t id, unsigned char type, const unsigned char* data, uint8_t length)
         {
             TPCANMsg m;
@@ -88,19 +79,22 @@ namespace zen
 
     ZenError PcanBasicChannel::subscribe(CanInterface& i)
     {
-        auto it = m_subscribers2.find(&i);
-        if (it != m_subscribers2.cend())
-            return ZenError_None;
-
-        if (auto id = getAvailableId(m_subscribers))
         {
-            // [XXX] How do we notify the opposite side of our canId?
-            m_subscribers.emplace(*id, &i);
-            m_subscribers2.emplace(&i, *id);
-            return ZenError_None;
+            // Did someone already subscribe to this ID?
+            auto it = m_subscribers.find(i.id());
+            if (it != m_subscribers.cend())
+                return ZenError_Io_AlreadyInitialized;
+        }
+        {
+            // Are we already subscribed to another ID?
+            auto it = m_subscribers2.find(&i);
+            if (it != m_subscribers2.cend())
+                return ZenError_Io_AlreadyInitialized;
         }
 
-        return ZenError_Can_AddressOutOfRange;
+        m_subscribers.emplace(i.id(), &i);
+        m_subscribers2.emplace(&i, i.id());
+        return ZenError_None;
     }
 
     void PcanBasicChannel::unsubscribe(CanInterface& i)
@@ -135,32 +129,21 @@ namespace zen
         TPCANMsg m;
         TPCANTimestamp t;
 
-        while (!m_parser.finished())
+        for (;;)
         {
             if (auto error = PcanBasicSystem::fnTable.read(m_channel, &m, &t))
-                return error == PCAN_ERROR_QRCVEMPTY ? ZenError_None : ZenError_Io_ReadFailed; // Is there data in the receive queue?
-
-            if (m.ID != CanManager::get().id())
+                return error == PCAN_ERROR_QRCVEMPTY ? ZenError_None : ZenError_Io_ReadFailed;
+             
+            auto it = m_subscribers.find(static_cast<uint32_t>(m.ID));
+            if (it == m_subscribers.cend())
             {
                 m_deviceIds.emplace(m.ID);
                 continue;
             }
 
-            size_t length = m.LEN;
-            if (auto error = m_parser.parse(m.DATA, length))
-                return ZenError_Io_MsgCorrupt;
+            if (auto error = it->second->processReceivedData(m.DATA, static_cast<size_t>(m.LEN)))
+                return error;
         }
-
-        auto guard = finally([this]() {
-            m_parser.reset();
-        });
-
-        const auto& frame = m_parser.frame();
-        auto it = m_subscribers.find(frame.address);
-        if (it == m_subscribers.end())
-            return ZenError_None; // [XXX] Should we return an error?
-
-        return it->second->process(frame.address, frame.function, frame.data.data(), frame.data.size());
     }
 
     bool PcanBasicChannel::equals(std::string_view ioType) const

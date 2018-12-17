@@ -21,11 +21,6 @@ ZenError CanInterface::poll()
     return ZenError_None;
 }
 
-ZenError CanInterface::send(std::vector<unsigned char> frame)
-{
-    return m_channel.send(m_id, std::move(frame));
-}
-
 ZenError CanInterface::baudrate(int32_t& rate) const
 {
     rate = m_channel.baudrate();
@@ -48,4 +43,14 @@ bool CanInterface::equals(const ZenSensorDesc& desc) const
         return false;
 
     return m_id == desc.handle32;
+}
+
+ZenError CanInterface::send(std::vector<unsigned char> frame)
+{
+    return m_channel.send(m_id, std::move(frame));
+}
+
+ZenError CanInterface::processReceivedData(const unsigned char* data, size_t length)
+{
+    return BaseIoInterface::processReceivedData(data, length);
 }

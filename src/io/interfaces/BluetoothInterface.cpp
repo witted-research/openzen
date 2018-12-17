@@ -10,8 +10,8 @@ namespace zen
 
     ZenError BluetoothInterface::poll()
     {
-        while (auto frame = m_handler->tryToGetFrame())
-            if (auto error = process(frame->address, frame->function, frame->data.data(), frame->data.size()))
+        while (auto data = m_handler->tryToGetReceivedData())
+            if (auto error = processReceivedData(data->data(), data->size()))
                 return error;
 
         return ZenError_None;

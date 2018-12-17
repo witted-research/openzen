@@ -10,7 +10,6 @@
 
 #include <PCANBasic.h>
 
-#include "io/Modbus.h"
 #include "io/can/ICanChannel.h"
 
 namespace zen
@@ -57,10 +56,8 @@ namespace zen
         std::set<uint32_t> m_deviceIds;
 
         // Simple bi-directional map of pointers
-        std::unordered_map<uint8_t, CanInterface*> m_subscribers;
-        std::unordered_map<CanInterface*, uint8_t> m_subscribers2;
-
-        modbus::ASCIIFrameParser m_parser;
+        std::unordered_map<uint32_t, CanInterface*> m_subscribers;
+        std::unordered_map<CanInterface*, uint32_t> m_subscribers2;
 
         TPCANHandle m_channel;
         unsigned int m_baudrate;

@@ -8,7 +8,6 @@
 #include "ftd2xx.h"
 #undef NOMINMAX
 
-#include "io/Modbus.h"
 #include "io/interfaces/BaseIoInterface.h"
 
 namespace zen
@@ -38,10 +37,8 @@ namespace zen
         ZenError send(std::vector<unsigned char> frame) override;
 
         ZenError receiveInBuffer(bool& received);
-        ZenError parseBuffer();
 
         std::vector<unsigned char> m_buffer;
-        modbus::LpFrameParser m_parser;
 
         FT_HANDLE m_handle;
 
