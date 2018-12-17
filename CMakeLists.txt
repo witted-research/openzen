@@ -139,34 +139,24 @@ else()
     message(FATAL_ERROR "OS not supported.")
 endif()
 
+set(all_sources
+    ${zen_includes}
+    ${zen_sources}
+    ${io_sources}
+    ${io_ble_sources}
+    ${io_bluetooth_sources}
+    ${io_can_sources}
+    ${io_interfaces_sources}
+    ${io_systems_sources}
+    ${properties_sources}
+    ${sensors_sources}
+    ${utility_sources}
+)
+
 if(ZEN_USE_STATIC_LIBS)
-    add_library(OpenZen STATIC
-        ${zen_includes}
-        ${zen_sources}
-        ${io_sources}
-        ${io_ble_sources}
-        ${io_bluetooth_sources}
-        ${io_can_sources}
-        ${io_interfaces_sources}
-        ${io_systems_sources}
-        ${properties_sources}
-        ${sensors_sources}
-        ${utility_sources}
-    )
+    add_library(OpenZen STATIC ${all_sources})
 else()
-    add_library(OpenZen SHARED
-        ${zen_includes}
-        ${zen_sources}
-        ${io_sources}
-        ${io_ble_sources}
-        ${io_bluetooth_sources}
-        ${io_can_sources}
-        ${io_interfaces_sources}
-        ${io_systems_sources}
-        ${properties_sources}
-        ${sensors_sources}
-        ${utility_sources}
-    )
+    add_library(OpenZen SHARED ${all_sources})
 endif()
 
 target_compile_definitions(OpenZen
