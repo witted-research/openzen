@@ -1,7 +1,7 @@
 #include "io/interfaces/BaseIoInterface.h"
 
+#include "Sensor.h"
 #include "io/Modbus.h"
-#include "sensors/BaseSensor.h"
 #include "utility/Finally.h"
 
 namespace zen

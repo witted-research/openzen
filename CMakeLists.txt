@@ -24,6 +24,9 @@ set(zen_includes
 set(zen_sources
     src/ImuHelpers.h
     src/InternalTypes.h
+    src/ISensorComponent.h
+    src/Sensor.cpp
+    src/Sensor.h
     src/SensorManager.cpp
     src/SensorManager.h
     
@@ -61,6 +64,8 @@ set(io_can_sources
 )
 
 set(io_interfaces_sources
+    src/io/interfaces/AsyncIoInterface.cpp
+    src/io/interfaces/AsyncIoInterface.h
     src/io/interfaces/BaseIoInterface.cpp
     src/io/interfaces/BaseIoInterface.h
     src/io/interfaces/BleInterface.cpp
@@ -87,11 +92,9 @@ set(properties_sources
     src/properties/ImuSensorPropertiesV0.h
 )
 
-set(sensors_sources
-    src/sensors/BaseSensor.cpp
-    src/sensors/BaseSensor.h
-    src/sensors/IMUSensor.cpp
-    src/sensors/IMUSensor.h
+set(components_sources
+    src/components/ImuComponent.cpp
+    src/components/ImuComponent.h
 )
 
 set(utility_sources
@@ -142,6 +145,7 @@ endif()
 set(all_sources
     ${zen_includes}
     ${zen_sources}
+    ${components_sources}
     ${io_sources}
     ${io_ble_sources}
     ${io_bluetooth_sources}
@@ -149,7 +153,6 @@ set(all_sources
     ${io_interfaces_sources}
     ${io_systems_sources}
     ${properties_sources}
-    ${sensors_sources}
     ${utility_sources}
 )
 

@@ -1,4 +1,4 @@
-#include "sensors/IMUSensor.h"
+#include "components/IMUComponent.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -45,33 +45,34 @@ namespace zen
         }
     }
 
-    ImuSensor::ImuSensor(std::unique_ptr<BaseIoInterface> ioInterface)
-        : BaseSensor(std::move(ioInterface))
+    ImuComponent::ImuComponent(Sensor& base, AsyncIoInterface& ioInterface)
+        : m_cache{}
+        , m_base(base)
+        , m_ioInterface(ioInterface)
         , m_version(0)
-        , m_cache{}
         , m_gyrUseThreshold(false)
         , m_gyrAutoCalibration(false)
     {}
 
-    ZenError ImuSensor::initExtension()
+    ZenError ImuComponent::init()
     {
-        if (auto error = setBoolDeviceProperty(ZenImuProperty_StreamData, false))
+        if (auto error = *setBoolDeviceProperty(ZenImuProperty_StreamData, false))
             return error;
 
         {
             ZenMatrix3x3f matrix;
-            if (auto error = getMatrix33DeviceProperty(ZenImuProperty_AccAlignment, &matrix))
+            if (auto error = *getMatrix33DeviceProperty(ZenImuProperty_AccAlignment, matrix))
                 return error;
 
             LpMatrix3x3f temp;
             convertArrayToLpMatrix(matrix.data, &temp);
             m_cache.accAlignMatrix = temp;
-            if (auto error = getMatrix33DeviceProperty(ZenImuProperty_GyrAlignment, &matrix))
+            if (auto error = *getMatrix33DeviceProperty(ZenImuProperty_GyrAlignment, matrix))
                 return error;
 
             convertArrayToLpMatrix(matrix.data, &temp);
             m_cache.gyrAlignMatrix = temp;
-            if (auto error = getMatrix33DeviceProperty(ZenImuProperty_MagSoftIronMatrix, &matrix))
+            if (auto error = *getMatrix33DeviceProperty(ZenImuProperty_MagSoftIronMatrix, matrix))
                 return error;
 
             convertArrayToLpMatrix(matrix.data, &temp);
@@ -80,32 +81,32 @@ namespace zen
         {
             LpVector3f vector;
             size_t size = 3 * sizeof(float);
-            if (auto error = getArrayDeviceProperty(ZenImuProperty_AccBias, ZenPropertyType_Float, vector.data, &size))
+            if (auto error = *getArrayDeviceProperty(ZenImuProperty_AccBias, ZenPropertyType_Float, vector.data, size))
                 return error;
 
             m_cache.accBias = vector;
             size = 3 * sizeof(float);
-            if (auto error = getArrayDeviceProperty(ZenImuProperty_GyrBias, ZenPropertyType_Float, vector.data, &size))
+            if (auto error = *getArrayDeviceProperty(ZenImuProperty_GyrBias, ZenPropertyType_Float, vector.data, size))
                 return error;
 
             m_cache.gyrBias = vector;
             size = 3 * sizeof(float);
-            if (auto error = getArrayDeviceProperty(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, vector.data, &size))
+            if (auto error = *getArrayDeviceProperty(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, vector.data, size))
                 return error;
 
             m_cache.hardIronOffset = vector;
         }
 
         uint32_t newBitset;
-        if (auto error = requestAndWaitForResult<uint32_t>(static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config), newBitset))
+        if (auto error = m_ioInterface.requestAndWaitForResult<uint32_t>(static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config), 0, newBitset))
             return error;
 
         m_cache.outputDataBitset = newBitset;
 
-        return setBoolDeviceProperty(ZenImuProperty_StreamData, true);
+        return *setBoolDeviceProperty(ZenImuProperty_StreamData, true);
     }
 
-    ZenError ImuSensor::executeExtensionDeviceCommand(ZenCommand_t command)
+    std::optional<ZenError> ImuComponent::executeDeviceCommand(ZenCommand_t command)
     {
         switch (m_version)
         {
@@ -113,17 +114,17 @@ namespace zen
         {
             const auto commandV0 = imu::v0::mapCommand(command);
             if (imu::v0::supportsExecutingDeviceCommand(commandV0))
-                return sendAndWaitForAck(static_cast<DeviceProperty_t>(commandV0), nullptr, 0);
+                return m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(commandV0), 0, nullptr, 0);
         }
 
         default:
             ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::getExtensionArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t& bufferSize)
+    std::optional<ZenError> ImuComponent::getArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t& bufferSize)
     {
         ZenPropertyType expectedType;
         DeviceProperty_t deviceProperty;
@@ -147,36 +148,39 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        if (!expectedType)
-            return ZenError_UnknownProperty;
-
-        if (type != expectedType)
-            return ZenError_WrongDataType;
-
-        switch (type)
+        if (expectedType)
         {
-        case ZenPropertyType_Byte:
-            return requestAndWaitForArray<unsigned char>(deviceProperty, reinterpret_cast<unsigned char*>(buffer), bufferSize);
 
-        case ZenPropertyType_Float:
-            return requestAndWaitForArray<float>(deviceProperty, reinterpret_cast<float*>(buffer), bufferSize);
+            if (type != expectedType)
+                return ZenError_WrongDataType;
 
-        case ZenPropertyType_Int32:
-            if (property == ZenImuProperty_AccSupportedRanges)
-                return imu::v0::supportedAccRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
-            else if (property == ZenImuProperty_GyrSupportedRanges)
-                return imu::v0::supportedGyrRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
-            else if (property == ZenImuProperty_MagSupportedRanges)
-                return imu::v0::supportedMagRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
-            else
-                return requestAndWaitForArray<int32_t>(deviceProperty, reinterpret_cast<int32_t*>(buffer), bufferSize);
+            switch (type)
+            {
+            case ZenPropertyType_Byte:
+                return m_ioInterface.requestAndWaitForArray<unsigned char>(deviceProperty, 0, reinterpret_cast<unsigned char*>(buffer), bufferSize);
 
-        default:
-            return ZenError_WrongDataType;
+            case ZenPropertyType_Float:
+                return m_ioInterface.requestAndWaitForArray<float>(deviceProperty, 0, reinterpret_cast<float*>(buffer), bufferSize);
+
+            case ZenPropertyType_Int32:
+                if (property == ZenImuProperty_AccSupportedRanges)
+                    return imu::v0::supportedAccRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
+                else if (property == ZenImuProperty_GyrSupportedRanges)
+                    return imu::v0::supportedGyrRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
+                else if (property == ZenImuProperty_MagSupportedRanges)
+                    return imu::v0::supportedMagRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
+                else
+                    return m_ioInterface.requestAndWaitForArray<int32_t>(deviceProperty, 0, reinterpret_cast<int32_t*>(buffer), bufferSize);
+
+            default:
+                return ZenError_WrongDataType;
+            }
         }
+
+        return {};
     }
 
-    ZenError ImuSensor::getExtensionBoolDeviceProperty(ZenProperty_t property, bool& outValue)
+    std::optional<ZenError> ImuComponent::getBoolDeviceProperty(ZenProperty_t property, bool& outValue)
     {
         switch (m_version)
         {
@@ -250,7 +254,7 @@ namespace zen
             {
                 const auto propertyV0 = imu::v0::map(property, true);
                 if (imu::v0::supportsGettingBoolDeviceProperty(propertyV0))
-                    return requestAndWaitForResult<bool>(static_cast<DeviceProperty_t>(propertyV0), outValue);
+                    return m_ioInterface.requestAndWaitForResult<bool>(static_cast<DeviceProperty_t>(propertyV0), 0, outValue);
                 else
                     break;
             }
@@ -259,10 +263,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::getExtensionFloatDeviceProperty(ZenProperty_t property, float& outValue)
+    std::optional<ZenError> ImuComponent::getFloatDeviceProperty(ZenProperty_t property, float& outValue)
     {
         switch (m_version)
         {
@@ -272,14 +276,14 @@ namespace zen
             if (propertyV0 == EDevicePropertyV0::GetCentricCompensationRate)
             {
                 uint32_t value;
-                if (auto error = requestAndWaitForResult<uint32_t>(static_cast<DeviceProperty_t>(propertyV0), value))
+                if (auto error = m_ioInterface.requestAndWaitForResult<uint32_t>(static_cast<DeviceProperty_t>(propertyV0), 0, value))
                     return error;
 
                 outValue = value > 0 ? 1.f : 0.f;
                 return ZenError_None;
             }
             else if (imu::v0::supportsGettingFloatDeviceProperty(propertyV0))
-                return requestAndWaitForResult<float>(static_cast<DeviceProperty_t>(propertyV0), outValue);
+                return m_ioInterface.requestAndWaitForResult<float>(static_cast<DeviceProperty_t>(propertyV0), 0, outValue);
             else
                 break;
         }
@@ -288,10 +292,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::getExtensionInt32DeviceProperty(ZenProperty_t property, int32_t& outValue)
+    std::optional<ZenError> ImuComponent::getInt32DeviceProperty(ZenProperty_t property, int32_t& outValue)
     {
         switch (m_version)
         {
@@ -302,7 +306,7 @@ namespace zen
             {
                 // Communication protocol only supports uint32_t
                 uint32_t uiValue;
-                if (auto error = requestAndWaitForResult<uint32_t>(static_cast<DeviceProperty_t>(propertyV0), uiValue))
+                if (auto error = m_ioInterface.requestAndWaitForResult<uint32_t>(static_cast<DeviceProperty_t>(propertyV0), 0, uiValue))
                     return error;
 
                 outValue = static_cast<int32_t>(uiValue);
@@ -316,10 +320,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::getExtensionMatrix33DeviceProperty(ZenProperty_t property, ZenMatrix3x3f& outValue)
+    std::optional<ZenError> ImuComponent::getMatrix33DeviceProperty(ZenProperty_t property, ZenMatrix3x3f& outValue)
     {
         size_t length = 9;
         switch (m_version)
@@ -328,7 +332,7 @@ namespace zen
         {
             const auto propertyV0 = imu::v0::map(property, true);
             if (imu::v0::supportsGettingMatrix33DeviceProperty(propertyV0))
-                return requestAndWaitForArray<float>(static_cast<DeviceProperty_t>(propertyV0), outValue.data, length);
+                return m_ioInterface.requestAndWaitForArray<float>(static_cast<DeviceProperty_t>(propertyV0), 0, outValue.data, length);
             else
                 break;
         }
@@ -337,10 +341,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::getExtensionStringDeviceProperty(ZenProperty_t property, char* const buffer, size_t& bufferSize)
+    std::optional<ZenError> ImuComponent::getStringDeviceProperty(ZenProperty_t property, char* const buffer, size_t& bufferSize)
     {
         switch (m_version)
         {
@@ -351,7 +355,7 @@ namespace zen
             {
                 const auto propertyV0 = imu::v0::map(property, true);
                 if (imu::v0::supportsGettingStringDeviceProperty(propertyV0))
-                    return requestAndWaitForArray<char>(static_cast<DeviceProperty_t>(propertyV0), buffer, bufferSize);
+                    return m_ioInterface.requestAndWaitForArray<char>(static_cast<DeviceProperty_t>(propertyV0), 0, buffer, bufferSize);
                 else
                     break;
             }
@@ -360,10 +364,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::setExtensionArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, const void* buffer, size_t bufferSize)
+    std::optional<ZenError> ImuComponent::setArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, const void* buffer, size_t bufferSize)
     {
         ZenPropertyType expectedType;
         DeviceProperty_t deviceProperty;
@@ -382,17 +386,19 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        if (!expectedType)
-            return ZenError_UnknownProperty;
+        if (expectedType)
+        {
+            if (type != expectedType)
+                return ZenError_WrongDataType;
 
-        if (type != expectedType)
-            return ZenError_WrongDataType;
+            const size_t typeSize = sizeOfPropertyType(type);
+            return m_ioInterface.sendAndWaitForAck(property, 0, reinterpret_cast<const unsigned char*>(buffer), typeSize * bufferSize);
+        }
 
-        const size_t typeSize = sizeOfPropertyType(type);
-        return sendAndWaitForAck(property, reinterpret_cast<const unsigned char*>(buffer), typeSize * bufferSize);
+        return {};
     }
 
-    ZenError ImuSensor::setExtensionBoolDeviceProperty(ZenProperty_t property, bool value)
+    std::optional<ZenError> ImuComponent::setBoolDeviceProperty(ZenProperty_t property, bool value)
     {
         switch (m_version)
         {
@@ -401,7 +407,7 @@ namespace zen
             {
                 uint32_t temp;
                 const auto propertyV0 = value ? EDevicePropertyV0::SetStreamMode : EDevicePropertyV0::SetCommandMode;
-                return sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<unsigned char*>(&temp), sizeof(temp));
+                return m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<unsigned char*>(&temp), sizeof(temp));
             }
             else if (property == ZenImuProperty_OutputLowPrecision)
                 return setPrecisionDataFlag(value);
@@ -433,7 +439,7 @@ namespace zen
                 if (propertyV0 == EDevicePropertyV0::SetGyrUseAutoCalibration)
                 {
                     uint32_t iValue = value ? 1 : 0;
-                    if (auto error = sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue)))
+                    if (auto error = m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue)))
                         return error;
 
                     m_gyrAutoCalibration = value;
@@ -442,14 +448,14 @@ namespace zen
                 else if (propertyV0 == EDevicePropertyV0::SetGyrUseThreshold)
                 {
                     uint32_t iValue = value ? 1 : 0;
-                    if (auto error = sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue)))
+                    if (auto error = m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue)))
                         return error;
 
                     m_gyrUseThreshold = value;
                     return ZenError_None;
                 }
                 else if (imu::v0::supportsSettingBoolDeviceProperty(propertyV0))
-                    return sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<unsigned char*>(&value), sizeof(value));
+                    return m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<unsigned char*>(&value), sizeof(value));
                 else
                     break;
             }
@@ -458,10 +464,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::setExtensionFloatDeviceProperty(ZenProperty_t property, float value)
+    std::optional<ZenError> ImuComponent::setFloatDeviceProperty(ZenProperty_t property, float value)
     {
         switch (m_version)
         {
@@ -472,10 +478,10 @@ namespace zen
             {
                 constexpr float eps = std::numeric_limits<float>::epsilon();
                 uint32_t iValue = (-eps <= value && value <= eps) ? 0 : 1; // Account for imprecision of float
-                return sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue));
+                return m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue));
             }
             else if (imu::v0::supportsSettingFloatDeviceProperty(propertyV0))
-                return sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<unsigned char*>(&value), sizeof(value));
+                return m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<unsigned char*>(&value), sizeof(value));
             else
                 break;
         }
@@ -484,10 +490,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::setExtensionInt32DeviceProperty(ZenProperty_t property, int32_t value)
+    std::optional<ZenError> ImuComponent::setInt32DeviceProperty(ZenProperty_t property, int32_t value)
     {
         switch (m_version)
         {
@@ -507,7 +513,7 @@ namespace zen
                 else
                     uiValue = static_cast<uint32_t>(value);
 
-                return sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<unsigned char*>(&uiValue), sizeof(uiValue));
+                return m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<unsigned char*>(&uiValue), sizeof(uiValue));
             }
             else
                 break;
@@ -517,10 +523,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::setExtensionMatrix33DeviceProperty(ZenProperty_t property, const ZenMatrix3x3f& m)
+    std::optional<ZenError> ImuComponent::setMatrix33DeviceProperty(ZenProperty_t property, const ZenMatrix3x3f& m)
     {
         switch (m_version)
         {
@@ -528,7 +534,7 @@ namespace zen
         {
             const auto propertyV0 = imu::v0::map(property, false);
             if (imu::v0::supportsSettingMatrix33DeviceProperty(propertyV0))
-                return sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<const unsigned char*>(m.data), 9 * sizeof(float));
+                return m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<const unsigned char*>(m.data), 9 * sizeof(float));
             else
                 break;
         }
@@ -537,10 +543,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::setExtensionStringDeviceProperty(ZenProperty_t property, const char* buffer, size_t bufferSize)
+    std::optional<ZenError> ImuComponent::setStringDeviceProperty(ZenProperty_t property, const char* buffer, size_t bufferSize)
     {
         switch (m_version)
         {
@@ -548,7 +554,7 @@ namespace zen
         {
             const auto propertyV0 = imu::v0::map(property, false);
             if (imu::v0::supportsSettingStringDeviceProperty(propertyV0))
-                return sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), reinterpret_cast<const unsigned char*>(buffer), bufferSize);
+                return m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(propertyV0), 0, reinterpret_cast<const unsigned char*>(buffer), bufferSize);
             else
                 break;
         }
@@ -557,10 +563,10 @@ namespace zen
             return ZenError_Unknown;
         }
 
-        return ZenError_UnknownProperty;
+        return {};
     }
 
-    ZenError ImuSensor::extensionProcessData(uint8_t function, const unsigned char* data, size_t length)
+    std::optional<ZenError> ImuComponent::processData(uint8_t function, const unsigned char* data, size_t length)
     {
         if (auto optInternal = imu::v0::internal::map(function))
         {
@@ -569,7 +575,7 @@ namespace zen
             case EDevicePropertyInternal::Config:
                 if (length != sizeof(uint32_t))
                     return ZenError_Io_MsgCorrupt;
-                return publishResult<uint32_t>(function, *reinterpret_cast<const uint32_t*>(data));
+                return m_ioInterface.publishResult<uint32_t>(function, 0, *reinterpret_cast<const uint32_t*>(data));
 
             default:
                 throw std::invalid_argument(std::to_string(static_cast<DeviceProperty_t>(*optInternal)));
@@ -588,13 +594,13 @@ namespace zen
             case EDevicePropertyV0::GetMagRange:
                 if (length != sizeof(uint32_t))
                     return ZenError_Io_MsgCorrupt;
-                return publishResult<uint32_t>(function, *reinterpret_cast<const uint32_t*>(data));
+                return m_ioInterface.publishResult<uint32_t>(function, 0, *reinterpret_cast<const uint32_t*>(data));
 
             case EDevicePropertyV0::GetCentricCompensationRate:
             case EDevicePropertyV0::GetFieldRadius:
                 if (length != sizeof(float))
                     return ZenError_Io_MsgCorrupt;
-                return publishResult<float>(function, *reinterpret_cast<const float*>(data));
+                return m_ioInterface.publishResult<float>(function, 0, *reinterpret_cast<const float*>(data));
 
             case EDevicePropertyV0::GetRawSensorData: // [XXX] Streaming or on request? Split or remove on request!
                 return processSensorData(data, length);
@@ -606,7 +612,7 @@ namespace zen
             case EDevicePropertyV0::GetMagHardIronOffset:
                 if (length != sizeof(float) * 3)
                     return ZenError_Io_MsgCorrupt;
-                return publishArray<float>(function, reinterpret_cast<const float*>(data), 3);
+                return m_ioInterface.publishArray<float>(function, 0, reinterpret_cast<const float*>(data), 3);
 
             case EDevicePropertyV0::GetAccAlignment:
             case EDevicePropertyV0::GetGyrAlignment:
@@ -615,7 +621,7 @@ namespace zen
                 // Is this valid? Row-major? Column-major transmission?
                 if (length != sizeof(float) * 9)
                     return ZenError_Io_MsgCorrupt;
-                return publishArray<float>(function, reinterpret_cast<const float*>(data), 9);
+                return m_ioInterface.publishArray<float>(function, 0, reinterpret_cast<const float*>(data), 9);
 
             default:
                 return ZenError_Io_UnsupportedFunction;
@@ -623,7 +629,7 @@ namespace zen
         }
     }
 
-    ZenError ImuSensor::processSensorData(const unsigned char* data, size_t length)
+    ZenError ImuComponent::processSensorData(const unsigned char* data, size_t length)
     {
         ZenEvent event{0};
         event.eventType = ZenEvent_Imu;
@@ -631,16 +637,16 @@ namespace zen
 
         auto& imuData = event.data.imuData;
         imuDataReset(imuData);
-        imuData.timestamp = *reinterpret_cast<const uint32_t*>(data) / static_cast<float>(m_samplingRate.load());
+        imuData.timestamp = *reinterpret_cast<const uint32_t*>(data) / static_cast<float>(m_base.samplingRate());
         data += sizeof(float);
 
         bool enabled;
-        if (auto error = getExtensionBoolDeviceProperty(ZenImuProperty_OutputLowPrecision, enabled))
+        if (auto error = *getBoolDeviceProperty(ZenImuProperty_OutputLowPrecision, enabled))
             return error;
 
         const bool lowPrec = enabled;
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputRawGyr, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputRawGyr, enabled) == ZenError_None && enabled)
         {
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.gRaw[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
@@ -655,7 +661,7 @@ namespace zen
             convertLpVector3fToArray(&g, imuData.g);
         }
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputRawAcc, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputRawAcc, enabled) == ZenError_None && enabled)
         {
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.aRaw[idx] = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
@@ -670,7 +676,7 @@ namespace zen
             convertLpVector3fToArray(&a, imuData.a);
         }
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputRawMag, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputRawMag, enabled) == ZenError_None && enabled)
         {
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.bRaw[idx] = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
@@ -685,11 +691,11 @@ namespace zen
             convertLpVector3fToArray(&b, imuData.b);
         }
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputAngularVel, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputAngularVel, enabled) == ZenError_None && enabled)
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.w[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputQuat, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputQuat, enabled) == ZenError_None && enabled)
         {
             for (unsigned idx = 0; idx < 4; ++idx)
                 imuData.q[idx] = lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
@@ -701,36 +707,36 @@ namespace zen
             convertLpMatrixToArray(&m, imuData.rotationM);
         }
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputEuler, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputEuler, enabled) == ZenError_None && enabled)
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.r[idx] = (180.f / float(M_PI)) * lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputLinearAcc, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputLinearAcc, enabled) == ZenError_None && enabled)
             for (unsigned idx = 0; idx < 3; ++idx)
                 imuData.linAcc[idx] = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputPressure, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputPressure, enabled) == ZenError_None && enabled)
             imuData.pressure = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputAltitude, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputAltitude, enabled) == ZenError_None && enabled)
             imuData.altitude = lowPrec ? parseFloat16(data, 10.f) : parseFloat32(data);
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputTemperature, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputTemperature, enabled) == ZenError_None && enabled)
             imuData.temperature = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
 
-        if (getExtensionBoolDeviceProperty(ZenImuProperty_OutputHeaveMotion, enabled) == ZenError_None && enabled)
+        if (getBoolDeviceProperty(ZenImuProperty_OutputHeaveMotion, enabled) == ZenError_None && enabled)
             imuData.hm.yHeave = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
 
         SensorManager::get().notifyEvent(std::move(event));
         return ZenError_None;
     }
 
-    bool ImuSensor::getConfigDataFlag(unsigned int index)
+    bool ImuComponent::getConfigDataFlag(unsigned int index)
     {
         return (m_cache.outputDataBitset & (1 << index)) != 0;
     }
 
-    ZenError ImuSensor::setOutputDataFlag(unsigned int index, bool value)
+    ZenError ImuComponent::setOutputDataFlag(unsigned int index, bool value)
     {
         uint32_t newBitset;
         if (value)
@@ -738,14 +744,14 @@ namespace zen
         else
             newBitset = m_cache.outputDataBitset & ~(1 << index);
 
-        if (auto error = sendAndWaitForAck(static_cast<DeviceProperty_t>(EDevicePropertyV0::SetTransmitData), reinterpret_cast<unsigned char*>(&newBitset), sizeof(newBitset)))
+        if (auto error = m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(EDevicePropertyV0::SetTransmitData), 0, reinterpret_cast<unsigned char*>(&newBitset), sizeof(newBitset)))
             return error;
 
         m_cache.outputDataBitset = newBitset;
         return ZenError_None;
     }
 
-    ZenError ImuSensor::setPrecisionDataFlag(bool value)
+    ZenError ImuComponent::setPrecisionDataFlag(bool value)
     {
         uint32_t newBitset;
         if (value)
@@ -754,7 +760,7 @@ namespace zen
             newBitset = m_cache.outputDataBitset & ~(1 << 22);
 
         uint32_t iValue = value ? 1 : 0;
-        if (auto error = sendAndWaitForAck(static_cast<DeviceProperty_t>(EDevicePropertyV0::SetDataMode, false), reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue)))
+        if (auto error = m_ioInterface.sendAndWaitForAck(static_cast<DeviceProperty_t>(EDevicePropertyV0::SetDataMode, false), 0, reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue)))
             return error;
 
         m_cache.outputDataBitset = newBitset;

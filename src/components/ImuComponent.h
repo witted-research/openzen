@@ -1,64 +1,66 @@
-#ifndef ZEN_SENSORS_IMUSENSOR_H_
-#define ZEN_SENSORS_IMUSENSOR_H_
+#ifndef ZEN_COMPONENTS_IMUCOMPONENT_H_
+#define ZEN_COMPONENTS_IMUCOMPONENT_H_
 
-#include "sensors/BaseSensor.h"
+#include <atomic>
+
+#include "ISensorComponent.h"
+#include "io/interfaces/AsyncIoInterface.h"
 
 #include "LpMatrix.h"
 
 namespace zen
 {
-    class ImuSensor : public BaseSensor
+    class ImuComponent : public ISensorComponent
     {
     public:
-        ImuSensor() = delete;
-        ImuSensor(std::unique_ptr<BaseIoInterface> ioInterface);
+        ImuComponent(class Sensor& base, AsyncIoInterface& ioInterface);
 
-        ZenError initExtension() override;;
+        ZenError init() override;
 
         /** If successful executes the command, otherwise returns an error. */
-        ZenError executeExtensionDeviceCommand(ZenCommand_t command) override;
+        std::optional<ZenError> executeDeviceCommand(ZenCommand_t command) override;
 
         /** If successful fills the buffer with the array of properties and sets the buffer's size.
          * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
          */
-        ZenError getExtensionArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t& bufferSize) override;
+        std::optional<ZenError> getArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t& bufferSize) override;
 
         /** If successful fills the value with the property's boolean value, otherwise returns an error. */
-        ZenError getExtensionBoolDeviceProperty(ZenProperty_t property, bool& outValue) override;
+        std::optional<ZenError> getBoolDeviceProperty(ZenProperty_t property, bool& outValue) override;
 
         /** If successful fills the value with the property's floating-point value, otherwise returns an error. */
-        ZenError getExtensionFloatDeviceProperty(ZenProperty_t property, float& outValue) override;
+        std::optional<ZenError> getFloatDeviceProperty(ZenProperty_t property, float& outValue) override;
 
         /** If successful fills the value with the property's integer value, otherwise returns an error. */
-        ZenError getExtensionInt32DeviceProperty(ZenProperty_t property, int32_t& outValue) override;
+        std::optional<ZenError> getInt32DeviceProperty(ZenProperty_t property, int32_t& outValue) override;
 
         /** If successful fills the value with the property's matrix value, otherwise returns an error. */
-        ZenError getExtensionMatrix33DeviceProperty(ZenProperty_t property, ZenMatrix3x3f& outValue) override;
+        std::optional<ZenError> getMatrix33DeviceProperty(ZenProperty_t property, ZenMatrix3x3f& outValue) override;
 
         /** If successful fills the buffer with the property's string value and sets the buffer's string size.
          * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
          */
-        ZenError getExtensionStringDeviceProperty(ZenProperty_t property, char* const buffer, size_t& bufferSize) override;
+        std::optional<ZenError> getStringDeviceProperty(ZenProperty_t property, char* const buffer, size_t& bufferSize) override;
 
         /** If successful sets the array properties, otherwise returns an error. */
-        ZenError setExtensionArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, const void* buffer, size_t bufferSize) override;
+        std::optional<ZenError> setArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, const void* buffer, size_t bufferSize) override;
 
         /** If successful sets the boolean property, otherwise returns an error. */
-        ZenError setExtensionBoolDeviceProperty(ZenProperty_t property, bool value) override;
+        std::optional<ZenError> setBoolDeviceProperty(ZenProperty_t property, bool value) override;
 
         /** If successful sets the floating-point property, otherwise returns an error. */
-        ZenError setExtensionFloatDeviceProperty(ZenProperty_t property, float value) override;
+        std::optional<ZenError> setFloatDeviceProperty(ZenProperty_t property, float value) override;
 
         /** If successful sets the integer property, otherwise returns an error. */
-        ZenError setExtensionInt32DeviceProperty(ZenProperty_t property, int32_t value) override;
+        std::optional<ZenError> setInt32DeviceProperty(ZenProperty_t property, int32_t value) override;
 
         /** If successful sets the matrix property, otherwise returns an error. */
-        ZenError setExtensionMatrix33DeviceProperty(ZenProperty_t property, const ZenMatrix3x3f& m) override;
+        std::optional<ZenError> setMatrix33DeviceProperty(ZenProperty_t property, const ZenMatrix3x3f& m) override;
 
         /** If successful sets the string property, otherwise returns an error. */
-        ZenError setExtensionStringDeviceProperty(ZenProperty_t property, const char* buffer, size_t bufferSize) override;
+        std::optional<ZenError> setStringDeviceProperty(ZenProperty_t property, const char* buffer, size_t bufferSize) override;
 
-        ZenError extensionProcessData(uint8_t function, const unsigned char* data, size_t length) override;
+        std::optional<ZenError> processData(uint8_t function, const unsigned char* data, size_t length) override;
 
         ZenSensorType type() const override { return ZenSensor_Imu; }
 
@@ -80,6 +82,9 @@ namespace zen
             std::atomic<LpVector3f> hardIronOffset;
             std::atomic_uint32_t outputDataBitset;
         } m_cache;
+
+        class Sensor& m_base;
+        AsyncIoInterface& m_ioInterface;
 
         unsigned int m_version;
         std::atomic_bool m_gyrUseThreshold;

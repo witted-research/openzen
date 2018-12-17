@@ -72,8 +72,10 @@ public:
     /** If successful sets the string property, otherwise returns an error. */
     virtual ZenError setStringDeviceProperty(ZenProperty_t property, const char* const buffer, size_t bufferSize) = 0;
         
-    /** Returns the type of the sensor */
-    virtual ZenSensorType type() const = 0;
+    /** If successful, directs the outTypes pointer to a list of sensor components and sets its length.
+     * Otherwise, returns an error.
+     */
+    virtual ZenError componentTypes(ZenSensorType** outTypes, size_t* outLength) const = 0;
 
     /** Returns whether the sensor is equal to the sensor description */
     virtual bool equals(const ZenSensorDesc* desc) const = 0;

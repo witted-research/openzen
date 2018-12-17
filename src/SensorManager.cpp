@@ -2,12 +2,9 @@
 
 #include <QCoreApplication>
 
-#include "sensors/BaseSensor.h"
-
+#include "Sensor.h"
 #include "io/IoManager.h"
 #include "io/can/CanManager.h"
-
-#include "sensors/IMUSensor.h"
 
 ZEN_API IZenSensorManager* ZenInit(ZenError* outError)
 {
@@ -32,21 +29,6 @@ ZEN_API ZenError ZenShutdown()
 
 namespace zen
 {
-    namespace
-    {
-        std::unique_ptr<BaseSensor> makeSensor(ZenSensorType sensorType, std::unique_ptr<BaseIoInterface> ioInterface)
-        {
-            switch (sensorType)
-            {
-            case ZenSensor_Imu:
-                return std::make_unique<ImuSensor>(std::move(ioInterface));
-
-            default:
-                return nullptr;
-            }
-        }
-    }
-
     SensorManager& SensorManager::get()
     {
         static SensorManager singleton;
@@ -120,8 +102,8 @@ namespace zen
         if (!ioInterface)
             return error;
 
-        auto sensor = makeSensor(ZenSensor_Imu, std::move(ioInterface));
-        BaseSensor* sensorPtr = sensor.get();
+        auto sensor = std::make_unique<Sensor>(std::move(ioInterface));
+        Sensor* sensorPtr = sensor.get();
         // Add sensor, to ensure it is being polled
         {
             std::lock_guard<std::mutex> lock(m_mutex);

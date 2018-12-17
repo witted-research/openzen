@@ -8,7 +8,7 @@
 #include <set>
 
 #include "IZenSensorManager.h"
-#include "sensors/BaseSensor.h"
+#include "Sensor.h"
 #include "utility/LockingQueue.h"
 
 namespace zen
@@ -76,7 +76,7 @@ namespace zen
         void sensorLoop();
 
         LockingQueue<ZenEvent> m_eventQueue;
-        std::set<std::unique_ptr<BaseSensor>, PointerCmp<IZenSensor>> m_sensors;
+        std::set<std::unique_ptr<Sensor>, PointerCmp<IZenSensor>> m_sensors;
 
         std::vector<ZenSensorDesc> m_devices;
 
