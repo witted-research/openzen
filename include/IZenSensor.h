@@ -2,6 +2,7 @@
 #define ZEN_API_IZENSENSOR_H_
 
 #include <cstdint>
+#include <cstddef>
 
 #include "ZenTypes.h"
 

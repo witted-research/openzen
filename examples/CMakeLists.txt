@@ -6,9 +6,12 @@ add_executable(OpenZenExample
     ${example_sources}
 )
 
+include(FindThreads)
+
 target_link_libraries(OpenZenExample
     PRIVATE
         OpenZen
+        Threads::Threads
 )
 
 if(ZEN_USE_STATIC_LIBS)
