@@ -6,8 +6,9 @@
 
 namespace zen
 {
-    FtdiUsbInterface::FtdiUsbInterface(FT_HANDLE handle)
-        : m_handle(handle)
+    FtdiUsbInterface::FtdiUsbInterface(FT_HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
+        : BaseIoInterface(std::move(factory), std::move(parser))
+        , m_handle(handle)
         , m_baudrate()
     {}
 

@@ -15,7 +15,7 @@ namespace zen
     class FtdiUsbInterface : public BaseIoInterface
     {
     public:
-        FtdiUsbInterface(FT_HANDLE handle);
+        FtdiUsbInterface(FT_HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~FtdiUsbInterface();
 
         /** Poll data from IO interface */

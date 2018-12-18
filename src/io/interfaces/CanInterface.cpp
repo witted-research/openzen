@@ -4,9 +4,9 @@
 
 using namespace zen;
 
-// [XXX] Set the id for CAN devices
-CanInterface::CanInterface(uint32_t id, ICanChannel& channel)
-    : m_channel(channel)
+CanInterface::CanInterface(uint32_t id, ICanChannel& channel, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
+    : BaseIoInterface(std::move(factory), std::move(parser))
+    , m_channel(channel)
     , m_id(id)
 {}
 

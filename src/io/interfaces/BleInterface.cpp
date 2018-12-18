@@ -4,8 +4,9 @@
 
 namespace zen
 {
-    BleInterface::BleInterface(std::unique_ptr<BleDeviceHandler> handler)
-        : m_handler(std::move(handler))
+    BleInterface::BleInterface(std::unique_ptr<BleDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
+        : BaseIoInterface(std::move(factory), std::move(parser))
+        , m_handler(std::move(handler))
     {}
 
     ZenError BleInterface::poll()

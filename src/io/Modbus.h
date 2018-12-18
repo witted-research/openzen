@@ -2,6 +2,7 @@
 #define ZEN_IO_MODBUS_H_
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace zen::modbus
@@ -26,10 +27,18 @@ namespace zen::modbus
         FrameParseError_Max
     } FrameParseError;
 
+    class IFrameFactory
+    {
+    public:
+        virtual ~IFrameFactory() = default;
+
+        virtual std::vector<unsigned char> makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length) = 0;
+    };
+
     class IFrameParser
     {
-    protected:
-        ~IFrameParser() = default; // Prevent usage of base class
+    public:
+        virtual ~IFrameParser() = default;
 
     public:
         virtual FrameParseError parse(const unsigned char* data, size_t& length) = 0;
@@ -43,6 +52,16 @@ namespace zen::modbus
     protected:
         Frame m_frame;
     };
+
+    enum class ModbusFormat
+    {
+        ASCII,
+        LP,
+        RTU
+    };
+
+    std::unique_ptr<IFrameFactory> make_factory(ModbusFormat format) noexcept;
+    std::unique_ptr<IFrameParser> make_parser(ModbusFormat format) noexcept;
 
     enum class ASCIIFrameParseState
     {
@@ -80,6 +99,11 @@ namespace zen::modbus
         unsigned char m_buffer;
     };
 
+    class ASCIIFrameFactory : public IFrameFactory
+    {
+        std::vector<unsigned char> makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length) override;
+    };
+
     enum class RTUFrameParseState
     {
         Address,
@@ -91,6 +115,11 @@ namespace zen::modbus
         Finished,
 
         Max
+    };
+
+    class RTUFrameFactory : public IFrameFactory
+    {
+        std::vector<unsigned char> makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length) override;
     };
 
     class RTUFrameParser : public IFrameParser
@@ -128,6 +157,11 @@ namespace zen::modbus
         Max
     };
 
+    class LpFrameFactory : public IFrameFactory
+    {
+        std::vector<unsigned char> makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length) override;
+    };
+
     class LpFrameParser : public IFrameParser
     {
     public:
@@ -143,10 +177,6 @@ namespace zen::modbus
         uint8_t m_length;
         unsigned char m_buffer;
     };
-
-    std::vector<unsigned char> makeASCIIFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length);
-    std::vector<unsigned char> makeLpFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length);
-    std::vector<unsigned char> makeRTUFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length);
 }
 
 #endif

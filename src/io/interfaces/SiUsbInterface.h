@@ -14,7 +14,7 @@ namespace zen
     class SiUsbInterface : public BaseIoInterface
     {
     public:
-        SiUsbInterface(HANDLE handle);
+        SiUsbInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~SiUsbInterface();
 
         /** Poll data from IO interface */

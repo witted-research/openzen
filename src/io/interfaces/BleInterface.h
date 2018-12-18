@@ -12,7 +12,7 @@ namespace zen
     class BleInterface : public BaseIoInterface
     {
     public:
-        BleInterface(std::unique_ptr<BleDeviceHandler> handler);
+        BleInterface(std::unique_ptr<BleDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~BleInterface() = default;
 
         /** Poll data from IO interface */

@@ -13,7 +13,7 @@ namespace zen
     class CanInterface : public BaseIoInterface
     {
     public:
-        CanInterface(uint32_t id, ICanChannel& channel);
+        CanInterface(uint32_t id, ICanChannel& channel, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~CanInterface();
 
         ZenError poll() override;

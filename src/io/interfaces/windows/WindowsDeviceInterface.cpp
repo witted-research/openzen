@@ -39,8 +39,9 @@ namespace zen
         }
     }
 
-    WindowsDeviceInterface::WindowsDeviceInterface(HANDLE handle)
-        : m_handle(handle)
+    WindowsDeviceInterface::WindowsDeviceInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
+        : BaseIoInterface(std::move(factory), std::move(parser))
+        , m_handle(handle)
     {}
 
     WindowsDeviceInterface::~WindowsDeviceInterface()

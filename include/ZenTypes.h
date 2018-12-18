@@ -44,6 +44,7 @@ typedef enum ZenError
     ZenError_NotNull = 11,                   // Expected a null pointer
     ZenError_WrongDataType = 12,             // Wrong data type
     ZenError_BufferTooSmall = 13,            // Provided buffer is too small for the return data
+    ZenError_InvalidArgument = 14,           // An invalid argument was provided
 
     ZenError_AlreadyInitialized = 20,        // Already initialized
     ZenError_NotInitialized = 21,            // Not initialized

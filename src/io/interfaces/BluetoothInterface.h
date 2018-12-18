@@ -12,7 +12,7 @@ namespace zen
     class BluetoothInterface : public BaseIoInterface
     {
     public:
-        BluetoothInterface(std::unique_ptr<BluetoothDeviceHandler> handler);
+        BluetoothInterface(std::unique_ptr<BluetoothDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~BluetoothInterface() = default;
 
         /** Poll data from IO interface */

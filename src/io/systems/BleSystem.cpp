@@ -22,6 +22,15 @@ namespace zen
         if (outError = handle->initialize())
             return nullptr;
 
-        return std::make_unique<BleInterface>(std::move(handle));
+        auto format = modbus::ModbusFormat::LP;
+        auto factory = modbus::make_factory(format);
+        auto parser = modbus::make_parser(format);
+        if (!factory || !parser)
+        {
+            outError = ZenError_InvalidArgument;
+            return nullptr;
+        }
+
+        return std::make_unique<BleInterface>(std::move(handle), std::move(factory), std::move(parser));
     }
 }

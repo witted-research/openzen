@@ -1,5 +1,7 @@
 #include "io/Modbus.h"
 
+#include <stdexcept>
+
 namespace
 {
     constexpr const uint16_t crc16IbmLut[256] = {
@@ -126,6 +128,70 @@ namespace zen::modbus
         m_frame.data.clear();
     }
 
+    std::unique_ptr<IFrameFactory> make_factory(ModbusFormat format) noexcept
+    {
+        switch (format)
+        {
+        case ModbusFormat::ASCII:
+            return std::make_unique<ASCIIFrameFactory>();
+
+        case ModbusFormat::LP:
+            return std::make_unique<LpFrameFactory>();
+
+        case ModbusFormat::RTU:
+            return std::make_unique<RTUFrameFactory>();
+
+        default:
+            return {};
+        }
+    }
+
+    std::unique_ptr<IFrameParser> make_parser(ModbusFormat format) noexcept
+    {
+        switch (format)
+        {
+        case ModbusFormat::ASCII:
+            return std::make_unique<ASCIIFrameParser>();
+
+        case ModbusFormat::LP:
+            return std::make_unique<LpFrameParser>();
+
+        case ModbusFormat::RTU:
+            return std::make_unique<RTUFrameParser>();
+
+        default:
+            return {};
+        }
+    }
+
+    std::vector<unsigned char> ASCIIFrameFactory::makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length)
+    {
+        constexpr uint8_t WRAPPER_SIZE = 9; // 1 (start) + 2 (address) + 2 (function) + 2 (LRC) + 2 (end)
+        std::vector<unsigned char> frame(WRAPPER_SIZE + 2 + 2 * length);
+
+        frame[0] = 0x3a; // Start with colon :
+        frame[1] = toASCII(leastSigHex(address));
+        frame[2] = toASCII(mostSigHex(address));
+        frame[3] = toASCII(leastSigHex(function));
+        frame[4] = toASCII(mostSigHex(function));
+        frame[5] = toASCII(leastSigHex(length));
+        frame[6] = toASCII(mostSigHex(length));
+
+        for (auto i = 0; i < length; ++i)
+        {
+            frame[7 + 2 * i] = toASCII(leastSigHex(data[i]));
+            frame[7 + 2 * i + 1] = toASCII(mostSigHex(data[i]));
+        }
+
+        const uint8_t checksum = lrc(address, function, data, length);
+        frame[7 + 2 * length] = toASCII(leastSigHex(checksum));
+        frame[8 + 2 * length] = toASCII(mostSigHex(checksum));
+        frame[9 + 2 * length] = 0x0d; // Carriage Return
+        frame[10 + 2 * length] = 0x0a; // Line Feed
+
+        return frame;
+    }
+
     ASCIIFrameParser::ASCIIFrameParser()
         : m_state(ASCIIFrameParseState::Start)
     {}
@@ -235,6 +301,29 @@ namespace zen::modbus
         return FrameParseError_None;
     }
 
+    std::vector<unsigned char> LpFrameFactory::makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length)
+    {
+        constexpr uint8_t WRAPPER_SIZE = 9; // 1 (start) + 2 (address) + 2 (function) + 2 (LRC) + 2 (end)
+        std::vector<unsigned char> frame(WRAPPER_SIZE + 2 + length);
+
+        frame[0] = 0x3a;
+        frame[1] = address;
+        frame[2] = 0;
+        frame[3] = function;
+        frame[4] = 0;
+        frame[5] = length;
+        frame[6] = 0;
+        std::copy(data, data + length, &frame[7]);
+
+        const uint16_t checksum = lrcLp(address, function, data, length);
+        frame[7 + length] = checksum & 0xff;
+        frame[8 + length] = (checksum >> 8) & 0xff;
+        frame[9 + length] = 0x0d;
+        frame[10 + length] = 0x0a;
+
+        return frame;
+    }
+
     LpFrameParser::LpFrameParser()
         : m_state(LpFrameParseState::Start)
     {}
@@ -334,6 +423,24 @@ namespace zen::modbus
         return FrameParseError_None;
     }
 
+    // Requires a wait of 3.5 character times
+    std::vector<unsigned char> RTUFrameFactory::makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length)
+    {
+        constexpr size_t WRAPPER_SIZE = 4; // 1 (address) + 1 (function) + 2 (CRC)
+        std::vector<unsigned char> frame(WRAPPER_SIZE + 1 + length);
+
+        frame[0] = address;
+        frame[1] = function;
+        frame[2] = length;
+        std::copy(data, data + length, &frame[3]);
+
+        const uint16_t checksum = crc16(0xffff, address, function, data, length);
+        frame[3 + length] = checksum & 0xff;
+        frame[4 + length] = (checksum >> 8) & 0xff;
+
+        return frame;
+    }
+
     RTUFrameParser::RTUFrameParser()
         : m_state(RTUFrameParseState::Address)
     {}
@@ -396,74 +503,5 @@ namespace zen::modbus
 
         length = 0;
         return FrameParseError_None;
-    }
-
-    std::vector<unsigned char> makeASCIIFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length)
-    {
-        constexpr uint8_t WRAPPER_SIZE = 9; // 1 (start) + 2 (address) + 2 (function) + 2 (LRC) + 2 (end)
-        std::vector<unsigned char> frame(WRAPPER_SIZE + 2 + 2 * length);
-
-        frame[0] = 0x3a; // Start with colon :
-        frame[1] = toASCII(leastSigHex(address));
-        frame[2] = toASCII(mostSigHex(address));
-        frame[3] = toASCII(leastSigHex(function));
-        frame[4] = toASCII(mostSigHex(function));
-        frame[5] = toASCII(leastSigHex(length));
-        frame[6] = toASCII(mostSigHex(length));
-
-        for (auto i = 0; i < length; ++i)
-        {
-            frame[7 + 2 * i] = toASCII(leastSigHex(data[i]));
-            frame[7 + 2 * i + 1] = toASCII(mostSigHex(data[i]));
-        }
-
-        const uint8_t checksum = lrc(address, function, data, length);
-        frame[7 + 2 * length] = toASCII(leastSigHex(checksum));
-        frame[8 + 2 * length] = toASCII(mostSigHex(checksum));
-        frame[9 + 2 * length] = 0x0d; // Carriage Return
-        frame[10 + 2 * length] = 0x0a; // Line Feed
-
-        return frame;
-    }
-
-    std::vector<unsigned char> makeLpFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length)
-    {
-        constexpr uint8_t WRAPPER_SIZE = 9; // 1 (start) + 2 (address) + 2 (function) + 2 (LRC) + 2 (end)
-        std::vector<unsigned char> frame(WRAPPER_SIZE + 2 + length);
-
-        frame[0] = 0x3a;
-        frame[1] = address;
-        frame[2] = 0;
-        frame[3] = function;
-        frame[4] = 0;
-        frame[5] = length;
-        frame[6] = 0;
-        std::copy(data, data + length, &frame[7]);
-
-        const uint16_t checksum = lrcLp(address, function, data, length);
-        frame[7 + length] = checksum & 0xff;
-        frame[8 + length] = (checksum >> 8) & 0xff;
-        frame[9 + length] = 0x0d;
-        frame[10 + length] = 0x0a;
-
-        return frame;
-    }
-
-    // Requires a wait of 3.5 character times
-    std::vector<unsigned char> makeRTUFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length)
-    {
-        constexpr size_t WRAPPER_SIZE = 4; // 1 (address) + 1 (function) + 2 (CRC)
-        std::vector<unsigned char> frame(WRAPPER_SIZE + 1 + length);
-
-        frame[0] = address;
-        frame[1] = function;
-        frame[2] = length;
-        std::copy(data, data + length, &frame[3]);
-
-        const uint16_t checksum = crc16(0xffff, address, function, data, length);
-        frame[3 + length] = checksum & 0xff;
-        frame[4 + length] = (checksum >> 8) & 0xff;
-
-        return frame;
     }
 }

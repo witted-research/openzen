@@ -53,7 +53,16 @@ namespace zen
             return nullptr;
         }
 
-        auto ioInterface = std::make_unique<WindowsDeviceInterface>(handle);
+        auto format = modbus::ModbusFormat::LP;
+        auto factory = modbus::make_factory(format);
+        auto parser = modbus::make_parser(format);
+        if (!factory || !parser)
+        {
+            outError = ZenError_InvalidArgument;
+            return nullptr;
+        }
+
+        auto ioInterface = std::make_unique<WindowsDeviceInterface>(handle, std::move(factory), std::move(parser));
 
         DCB config;
         if (!::GetCommState(handle, &config))

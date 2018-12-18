@@ -79,7 +79,16 @@ namespace zen
             return nullptr;
         }
 
-        auto ioInterface = std::make_unique<FtdiUsbInterface>(handle);
+        auto format = modbus::ModbusFormat::LP;
+        auto factory = modbus::make_factory(format);
+        auto parser = modbus::make_parser(format);
+        if (!factory || !parser)
+        {
+            outError = ZenError_InvalidArgument;
+            return nullptr;
+        }
+
+        auto ioInterface = std::make_unique<FtdiUsbInterface>(handle, std::move(factory), std::move(parser));
         if (outError = ioInterface->setBaudrate(DEFAULT_BAUDRATE))
             return nullptr;
 

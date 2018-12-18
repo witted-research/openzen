@@ -53,7 +53,17 @@ namespace zen
     std::unique_ptr<BaseIoInterface> PcanBasicSystem::obtain(const ZenSensorDesc& desc, ZenError& outError)
     {
         ICanChannel& channel = *m_channels.begin()->get();
-        auto ioInterface = std::make_unique<CanInterface>(desc.handle32, channel);
+
+        auto format = modbus::ModbusFormat::LP;
+        auto factory = modbus::make_factory(format);
+        auto parser = modbus::make_parser(format);
+        if (!factory || !parser)
+        {
+            outError = ZenError_InvalidArgument;
+            return nullptr;
+        }
+
+        auto ioInterface = std::make_unique<CanInterface>(desc.handle32, channel, std::move(factory), std::move(parser));
         if (outError = channel.subscribe(*ioInterface.get()))
             return nullptr;
 

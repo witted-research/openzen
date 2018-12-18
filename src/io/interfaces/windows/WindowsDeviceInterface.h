@@ -16,7 +16,7 @@ namespace zen
     class WindowsDeviceInterface : public BaseIoInterface
     {
     public:
-        WindowsDeviceInterface(HANDLE handle);
+        WindowsDeviceInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~WindowsDeviceInterface();
 
         /** Poll data from IO interface */

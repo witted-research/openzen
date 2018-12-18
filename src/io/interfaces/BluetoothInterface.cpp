@@ -4,8 +4,9 @@
 
 namespace zen
 {
-    BluetoothInterface::BluetoothInterface(std::unique_ptr<BluetoothDeviceHandler> handler)
-        : m_handler(std::move(handler))
+    BluetoothInterface::BluetoothInterface(std::unique_ptr<BluetoothDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
+        : BaseIoInterface(std::move(factory), std::move(parser))
+        , m_handler(std::move(handler))
     {}
 
     ZenError BluetoothInterface::poll()
