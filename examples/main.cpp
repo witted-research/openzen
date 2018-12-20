@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     std::thread pollingThread(&pollLoop, manager);
 
     // Turn streaming off, so we can send commands
-    if (auto error = sensor->setBoolDeviceProperty(ZenImuProperty_StreamData, false))
+    if (auto error = sensor->properties()->setBool(ZenImuProperty_StreamData, false))
     {
         g_terminate = true;
         ZenShutdown();
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 
     // Get a sensor property
     int32_t time;
-    if (auto error = sensor->getInt32DeviceProperty(ZenSensorProperty_TimeOffset, &time))
+    if (auto error = sensor->properties()->getInt32(ZenSensorProperty_TimeOffset, &time))
     {
         g_terminate = true;
         ZenShutdown();
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     // Get an array property
     std::array<int32_t, 3> version;
     size_t length = version.size();
-    if (auto error = sensor->getArrayDeviceProperty(ZenSensorProperty_FirmwareVersion, ZenPropertyType_Int32, version.data(), &length))
+    if (auto error = sensor->properties()->getArray(ZenSensorProperty_FirmwareVersion, ZenPropertyType_Int32, version.data(), &length))
     {
         g_terminate = true;
         ZenShutdown();
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     // Do something based on the sensor property
     if (time)
     {
-        if (auto error = sensor->setBoolDeviceProperty(ZenImuProperty_StreamData, true))
+        if (auto error = sensor->properties()->setBool(ZenImuProperty_StreamData, true))
         {
             g_terminate = true;
             ZenShutdown();

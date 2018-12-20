@@ -27,17 +27,17 @@ namespace zen
             }
         }
 
-        constexpr EDevicePropertyV0 mapCommand(ZenCommand_t command)
+        constexpr EDevicePropertyV0 mapCommand(ZenProperty_t command)
         {
             switch (command)
             {
-            case ZenImuCommand_PollSensorData:
+            case ZenImuProperty_PollSensorData:
                 return EDevicePropertyV0::GetRawSensorData;
 
-            case ZenImuCommand_CalibrateGyro:
+            case ZenImuProperty_CalibrateGyro:
                 return EDevicePropertyV0::StartGyroCalibration;
 
-            case ZenImuCommand_ResetOrientationOffset:
+            case ZenImuProperty_ResetOrientationOffset:
                 return EDevicePropertyV0::ResetOrientationOffset;
 
             default:
@@ -273,10 +273,6 @@ namespace zen
                 return ZenPropertyType_Invalid;
             }
         }
-        constexpr bool supportsGettingBoolDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
-        }
 
         constexpr bool supportsGettingFloatDeviceProperty(EDevicePropertyV0 property)
         {
@@ -323,11 +319,6 @@ namespace zen
             }
         }
 
-        constexpr bool supportsGettingStringDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
-        }
-
 
         constexpr ZenPropertyType supportsSettingArrayDeviceProperty(EDevicePropertyV0 property)
         {
@@ -343,11 +334,6 @@ namespace zen
             default:
                 return ZenPropertyType_Invalid;
             }
-        }
-
-        constexpr bool supportsSettingBoolDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
         }
 
         constexpr bool supportsSettingFloatDeviceProperty(EDevicePropertyV0 property)
@@ -394,11 +380,6 @@ namespace zen
             default:
                 return false;
             }
-        }
-
-        constexpr bool supportsSettingStringDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
         }
     }
 }

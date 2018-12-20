@@ -26,15 +26,15 @@ namespace zen
             }
         }
 
-        constexpr EDevicePropertyV0 mapCommand(ZenCommand_t command)
+        constexpr EDevicePropertyV0 mapCommand(ZenProperty_t command)
         {
             switch (command)
             {
-            case ZenSensorCommand_StoreSettingsInFlash:
+            case ZenSensorProperty_StoreSettingsInFlash:
                 return EDevicePropertyV0::WriteRegisters;
 
-            case ZenSensorCommand_RestoreFactorySettings:
-                return EDevicePropertyV0::RestoryFactorySettings;
+            case ZenSensorProperty_RestoreFactorySettings:
+                return EDevicePropertyV0::RestoreFactorySettings;
 
             default:
                 return EDevicePropertyV0::Ack;
@@ -120,7 +120,7 @@ namespace zen
             switch (command)
             {
             case EDevicePropertyV0::WriteRegisters:
-            case EDevicePropertyV0::RestoryFactorySettings:
+            case EDevicePropertyV0::RestoreFactorySettings:
                 return true;
 
             default:
@@ -135,7 +135,7 @@ namespace zen
             case EDevicePropertyV0::GetSerialNumber:
             case EDevicePropertyV0::GetDeviceName:
             case EDevicePropertyV0::GetFirmwareInfo:
-                return ZenPropertyType_Byte;
+                return ZenPropertyType_String;
 
             case EDevicePropertyV0::GetFirmwareVersion:
                 return ZenPropertyType_Int32;
@@ -143,11 +143,6 @@ namespace zen
             default:
                 return ZenPropertyType_Invalid;
             }
-        }
-
-        constexpr bool supportsGettingBoolDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
         }
 
         constexpr bool supportsGettingFloatDeviceProperty(EDevicePropertyV0 property)
@@ -175,31 +170,6 @@ namespace zen
             }
         }
 
-        constexpr bool supportsGettingMatrix33DeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
-        }
-
-        constexpr bool supportsGettingStringDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
-        }
-
-        constexpr ZenPropertyType supportsSettingArrayDeviceProperty(EDevicePropertyV0 property)
-        {
-            return ZenPropertyType_Invalid;
-        }
-
-        constexpr bool supportsSettingBoolDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
-        }
-
-        constexpr bool supportsSettingFloatDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
-        }
-
         constexpr bool supportsSettingInt32DeviceProperty(EDevicePropertyV0 property)
         {
             switch (property)
@@ -212,16 +182,6 @@ namespace zen
             default:
                 return false;
             }
-        }
-
-        constexpr bool supportsSettingMatrix33DeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
-        }
-
-        constexpr bool supportsSettingStringDeviceProperty(EDevicePropertyV0 property)
-        {
-            return false;
         }
     }
 }

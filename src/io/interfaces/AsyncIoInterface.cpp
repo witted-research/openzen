@@ -12,38 +12,28 @@ namespace zen
         , m_publishing{ 0 }
     {}
 
-    ZenError AsyncIoInterface::sendAndWaitForAck(uint8_t function, Property_t property, const unsigned char* data, size_t length)
+    ZenError AsyncIoInterface::sendAndWaitForAck(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const unsigned char> data)
     {
-        if (auto error = tryToWait(function, property, true))
+        if (auto error = tryToWait(property, true))
             return error;
 
-        bool success;
-        m_resultPtr = &success;
-
         auto guard = finally([this]() {
-            m_resultPtr = nullptr;
             m_waiting.clear();
         });
 
-        if (auto error = m_ioInterface->send(0, function, data, length))
+        if (auto error = m_ioInterface->send(address, function, data.data(), data.size()))
             return error;
 
-        if (auto error = terminateWaitOnPublishOrTimeout())
-            return error;
-
-        if (!success)
-            return ZenError_FW_FunctionFailed;
-
-        return ZenError_None;
+        return terminateWaitOnPublishOrTimeout();
     }
 
     template <typename T>
-    ZenError AsyncIoInterface::requestAndWaitForArray(uint8_t function, Property_t property, T* outArray, size_t& outLength)
+    ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const unsigned char> data, T* outArray, size_t& outLength)
     {
         if (outArray == nullptr)
             return ZenError_IsNull;
 
-        if (auto error = tryToWait(function, property, false))
+        if (auto error = tryToWait(property, false))
             return error;
 
         const auto bufferLength = outLength;
@@ -59,7 +49,7 @@ namespace zen
                 m_waiting.clear();
             });
 
-            if (auto error = m_ioInterface->send(0, function, nullptr, 0))
+            if (auto error = m_ioInterface->send(address, function, data.data(), data.size()))
                 return error;
 
             if (auto error = terminateWaitOnPublishOrTimeout())
@@ -73,9 +63,9 @@ namespace zen
     }
 
     template <typename T>
-    ZenError AsyncIoInterface::requestAndWaitForResult(uint8_t function, Property_t property, T& outValue)
+    ZenError AsyncIoInterface::sendAndWaitForResult(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const unsigned char> data, T& outValue)
     {
-        if (auto error = tryToWait(function, property, false))
+        if (auto error = tryToWait(property, false))
             return error;
 
         m_resultPtr = &outValue;
@@ -85,13 +75,13 @@ namespace zen
             m_waiting.clear();
         });
 
-        if (auto error = m_ioInterface->send(0, function, nullptr, 0))
+        if (auto error = m_ioInterface->send(address, function, data.data(), data.size()))
             return error;
 
         return terminateWaitOnPublishOrTimeout();
     }
 
-    ZenError AsyncIoInterface::publishAck(uint8_t function, Property_t property, bool b)
+    ZenError AsyncIoInterface::publishAck(ZenProperty_t property, ZenError error)
     {
         if (!prepareForPublishing())
             return ZenError_None;
@@ -100,19 +90,16 @@ namespace zen
             m_publishing.clear();
         });
 
-        if (corruptMessage(function, property, true))
-        {
-            m_resultError = ZenError_Io_UnexpectedFunction;
-            return ZenError_Io_UnexpectedFunction;
-        }
+        if (corruptMessage(property, true))
+            return m_resultError = ZenError_Io_UnexpectedFunction;
 
-        *reinterpret_cast<bool*>(m_resultPtr) = b;
+        m_resultError = error;
         m_fence.terminate();
         return ZenError_None;
     }
 
     template <typename T>
-    ZenError AsyncIoInterface::publishArray(uint8_t function, Property_t property, const T* array, size_t length)
+    ZenError AsyncIoInterface::publishArray(ZenProperty_t property, ZenError error, const T* array, size_t length)
     {
         if (!prepareForPublishing())
             return ZenError_None;
@@ -121,11 +108,8 @@ namespace zen
             m_publishing.clear();
         });
 
-        if (corruptMessage(function, property, false))
-        {
-            m_resultError = ZenError_Io_UnexpectedFunction;
-            return ZenError_Io_UnexpectedFunction;
-        }
+        if (corruptMessage(property, false))
+            return m_resultError = error;
 
         if (*m_resultSizePtr >= length)
             std::memcpy(m_resultPtr, array, sizeof(T) * length);
@@ -136,7 +120,7 @@ namespace zen
     }
 
     template <typename T>
-    ZenError AsyncIoInterface::publishResult(uint8_t function, Property_t property, const T& result)
+    ZenError AsyncIoInterface::publishResult(ZenProperty_t property, ZenError error, const T& result)
     {
         if (!prepareForPublishing())
             return ZenError_None;
@@ -145,24 +129,20 @@ namespace zen
             m_publishing.clear();
         });
 
-        if (corruptMessage(function, property, false))
-        {
-            m_resultError = ZenError_Io_UnexpectedFunction;
-            return ZenError_Io_UnexpectedFunction;
-        }
+        if (corruptMessage(property, false))
+            return m_resultError = error;
 
         *reinterpret_cast<T*>(m_resultPtr) = result;
         m_fence.terminate();
         return ZenError_None;
     }
 
-    ZenError AsyncIoInterface::tryToWait(uint8_t function, Property_t property, bool forAck)
+    ZenError AsyncIoInterface::tryToWait(ZenProperty_t property, bool forAck)
     {
         if (m_waiting.test_and_set())
             return ZenError_Io_Busy;
 
         m_waitingForAck = forAck;
-        m_function = function,
         m_property = property;
         m_resultError = ZenError_None;
 
@@ -184,8 +164,9 @@ namespace zen
         }
 
         // If terminated, reset
+        const auto error = m_resultError;
         m_fence.reset();
-        return ZenError_None;
+        return error;
     }
 
     bool AsyncIoInterface::prepareForPublishing()
@@ -205,7 +186,7 @@ namespace zen
         return true;
     }
 
-    bool AsyncIoInterface::corruptMessage(uint8_t function, Property_t property, bool isAck)
+    bool AsyncIoInterface::corruptMessage(ZenProperty_t property, bool isAck)
     {
         // When we receive an acknowledgement, we can't match the property
         if (isAck)
@@ -214,38 +195,45 @@ namespace zen
         if (m_waitingForAck)
             return true;
 
-        // [XXX] Mapping of the function pairs should happen outside of the publish call (for backwards compatability)
-        if (m_function != function)
-            return true;
-
         if (m_property != property)
             return true;
 
         return false;
     }
 
-    template ZenError AsyncIoInterface::publishArray(uint8_t function, Property_t, const bool*, size_t);
-    template ZenError AsyncIoInterface::publishArray(uint8_t function, Property_t, const char*, size_t);
-    template ZenError AsyncIoInterface::publishArray(uint8_t function, Property_t, const unsigned char*, size_t);
-    template ZenError AsyncIoInterface::publishArray(uint8_t function, Property_t, const float*, size_t);
-    template ZenError AsyncIoInterface::publishArray(uint8_t function, Property_t, const uint32_t*, size_t);
+    template ZenError AsyncIoInterface::publishArray(ZenProperty_t, ZenError, const bool*, size_t);
+    template ZenError AsyncIoInterface::publishArray(ZenProperty_t, ZenError, const char*, size_t);
+    template ZenError AsyncIoInterface::publishArray(ZenProperty_t, ZenError, const unsigned char*, size_t);
+    template ZenError AsyncIoInterface::publishArray(ZenProperty_t, ZenError, const float*, size_t);
+    template ZenError AsyncIoInterface::publishArray(ZenProperty_t, ZenError, const int32_t*, size_t);
+    template ZenError AsyncIoInterface::publishArray(ZenProperty_t, ZenError, const uint64_t*, size_t);
+    // [TODO] Remove after we have removed backwards compatability with version 0
+    template ZenError AsyncIoInterface::publishArray(ZenProperty_t, ZenError, const uint32_t*, size_t);
 
-    template ZenError AsyncIoInterface::publishResult(uint8_t function, Property_t, const bool&);
-    template ZenError AsyncIoInterface::publishResult(uint8_t function, Property_t, const char&);
-    template ZenError AsyncIoInterface::publishResult(uint8_t function, Property_t, const unsigned char&);
-    template ZenError AsyncIoInterface::publishResult(uint8_t function, Property_t, const float&);
-    template ZenError AsyncIoInterface::publishResult(uint8_t function, Property_t, const uint32_t&);
+    template ZenError AsyncIoInterface::publishResult(ZenProperty_t, ZenError, const char&);
+    template ZenError AsyncIoInterface::publishResult(ZenProperty_t, ZenError, const unsigned char&);
+    template ZenError AsyncIoInterface::publishResult(ZenProperty_t, ZenError, const bool&);
+    template ZenError AsyncIoInterface::publishResult(ZenProperty_t, ZenError, const float&);
+    template ZenError AsyncIoInterface::publishResult(ZenProperty_t, ZenError, const int32_t&);
+    template ZenError AsyncIoInterface::publishResult(ZenProperty_t, ZenError, const uint64_t&);
+    // [TODO] Remove after we have removed backwards compatability with version 0
+    template ZenError AsyncIoInterface::publishResult(ZenProperty_t, ZenError, const uint32_t&);
 
-    template ZenError AsyncIoInterface::requestAndWaitForArray(uint8_t function, Property_t, bool*, size_t&);
-    template ZenError AsyncIoInterface::requestAndWaitForArray(uint8_t function, Property_t, char*, size_t&);
-    template ZenError AsyncIoInterface::requestAndWaitForArray(uint8_t function, Property_t, unsigned char*, size_t&);
-    template ZenError AsyncIoInterface::requestAndWaitForArray(uint8_t function, Property_t, float*, size_t&);
-    template ZenError AsyncIoInterface::requestAndWaitForArray(uint8_t function, Property_t, uint32_t*, size_t&);
-    template ZenError AsyncIoInterface::requestAndWaitForArray(uint8_t function, Property_t, int32_t*, size_t&);
+    template ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, bool*, size_t&);
+    template ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, char*, size_t&);
+    template ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, unsigned char*, size_t&);
+    template ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, float*, size_t&);
+    template ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, int32_t*, size_t&);
+    template ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, uint64_t*, size_t&);
+    // [TODO] Remove after we have removed backwards compatability with version 0
+    template ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, uint32_t*, size_t&);
 
-    template ZenError AsyncIoInterface::requestAndWaitForResult(uint8_t function, Property_t, bool&);
-    template ZenError AsyncIoInterface::requestAndWaitForResult(uint8_t function, Property_t, char&);
-    template ZenError AsyncIoInterface::requestAndWaitForResult(uint8_t function, Property_t, unsigned char&);
-    template ZenError AsyncIoInterface::requestAndWaitForResult(uint8_t function, Property_t, float&);
-    template ZenError AsyncIoInterface::requestAndWaitForResult(uint8_t function, Property_t, uint32_t&);
+    template ZenError AsyncIoInterface::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, bool&);
+    template ZenError AsyncIoInterface::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, char&);
+    template ZenError AsyncIoInterface::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, unsigned char&);
+    template ZenError AsyncIoInterface::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, float&);
+    template ZenError AsyncIoInterface::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, int32_t&);
+    template ZenError AsyncIoInterface::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, uint64_t&);
+    // [TODO] Remove after we have removed backwards compatability with version 0
+    template ZenError AsyncIoInterface::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const unsigned char>, uint32_t&);
 }

@@ -35,7 +35,9 @@
 #define ZEN_CALLTYPE
 #endif
 
-typedef enum ZenError
+typedef uint32_t ZenError_t;
+
+typedef enum ZenError : ZenError_t
 {
     ZenError_None = 0,                       // None
     ZenError_Unknown = 1,                    // Unknown
@@ -49,10 +51,10 @@ typedef enum ZenError
     ZenError_AlreadyInitialized = 20,        // Already initialized
     ZenError_NotInitialized = 21,            // Not initialized
 
-    ZenError_Device_IoTypeInvalid = 30,      // Invalid IO type
-    ZenError_Device_SensorTypeInvalid = 31,  // Invalid sensor type
-    ZenError_Device_ListingFailed = 32,      // An error occured while listing devices
-    ZenError_Device_Listing = 35,            // Busy listing devices
+    ZenError_Device_IoTypeInvalid = 30,         // Invalid IO type
+    ZenError_Sensor_VersionNotSupported = 31,   // Sensor version is not supported
+    ZenError_Device_ListingFailed = 32,         // An error occured while listing devices
+    ZenError_Device_Listing = 35,               // Busy listing devices
 
     ZenError_WrongSensorType = 40,           // Wrong sensor type
     ZenError_WrongIoType = 41,               // Wrong IO type
@@ -208,7 +210,9 @@ typedef enum EZenSensorProperty : ZenProperty_t
     ZenSensorProperty_DeviceName = 1000,         // char[16]
     ZenSensorProperty_FirmwareInfo,              // char[16]
     ZenSensorProperty_FirmwareVersion,           // int[3]
+    ZenSensorProperty_RestoreFactorySettings,    // void
     ZenSensorProperty_SerialNumber,              // char[24]
+    ZenSensorProperty_StoreSettingsInFlash,      // void
 
     ZenSensorProperty_BatteryCharging,           // bool
     ZenSensorProperty_BatteryLevel,              // float
@@ -235,14 +239,17 @@ typedef enum EZenImuProperty : ZenProperty_t
     ZenImuProperty_Invalid = 0,
 
     ZenImuProperty_StreamData = 10000,           // bool
+    ZenImuProperty_PollSensorData,               // void - Manually request sensor data (when not streaming)
+    ZenImuProperty_CalibrateGyro,                // void - Start gyro calibration
+    ZenImuProperty_ResetOrientationOffset,       // void - Resets the orientation's offset
 
     ZenImuProperty_CentricCompensationRate,      // float
-    ZenImuProperty_LinearCompensationRate,       // int (future: float)
+    ZenImuProperty_LinearCompensationRate,       // float
 
     ZenImuProperty_FieldRadius,                  // float
     ZenImuProperty_FilterMode,                   // int
     ZenImuProperty_SupportedFilterModes,         // char[]
-    ZenImuProperty_FilterPreset,                 // int (future: float)
+    ZenImuProperty_FilterPreset,                 // int (future: float acc_covar, mag_covar)
 
     ZenImuProperty_OrientationOffsetMode,        // int
 
@@ -282,33 +289,6 @@ typedef enum EZenImuProperty : ZenProperty_t
     ZenImuProperty_Max
 } EZenImuProperty;
 
-typedef uint32_t ZenCommand_t;
-
-typedef enum ZenSensorCommand : ZenCommand_t
-{
-    ZenSensorCommand_Invalid = 0,               // Invalid
-
-    ZenSensorCommand_StoreSettingsInFlash,      // Write all settings to flash
-    ZenSensorCommand_RestoreFactorySettings,    // Restore factory settings
-
-    // Sensors are free to expose private commands in this reserved region
-    ZenSensorCommand_SensorSpecific_Start = 10000,
-    ZenSensorCommand_SensorSpecific_End = 19999,
-
-    ZenSensorCommand_Max
-} ZenSensorCommand;
-
-typedef enum ZenImuCommand : ZenCommand_t
-{
-    ZenImuCommand_Invalid = 0,
-
-    ZenImuCommand_PollSensorData = 10000,   // Manually request sensor data (when not streaming)
-    ZenImuCommand_CalibrateGyro,            // Start gyro calibration
-    ZenImuCommand_ResetOrientationOffset,   // Resets the orientation's offset
-
-    ZenImuCommand_Max
-} ZenImuCommand;
-
 typedef enum ZenOrientationOffsetMode
 {
     ZenOrientationOffsetMode_Object = 0,     // Object mode
@@ -322,9 +302,16 @@ typedef enum ZenPropertyType
 {
     ZenPropertyType_Invalid = 0,
 
-    ZenPropertyType_Byte = 1,
+    ZenPropertyType_Bool = 1,
     ZenPropertyType_Float = 2,
     ZenPropertyType_Int32 = 3,
+    ZenPropertyType_UInt64 = 4,
+    ZenPropertyType_String = 5,
+
+    ZenPropertyType_Matrix = 10,
+
+    ZenPropertyType_Json = 40,
+
 
     ZenPropertyType_Max
 } ZenPropertyType;

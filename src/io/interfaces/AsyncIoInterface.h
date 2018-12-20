@@ -3,14 +3,14 @@
 
 #include <atomic>
 #include <memory>
+#include <vector>
+#include <gsl/span>
 
 #include "io/interfaces/BaseIoInterface.h"
 #include "utility/ThreadFence.h"
 
 namespace zen
 {
-    using Property_t = uint32_t;
-
     class AsyncIoInterface
     {
         constexpr static auto IO_TIMEOUT = std::chrono::milliseconds(15000);
@@ -36,30 +36,30 @@ namespace zen
         /** Returns whether the IO interface equals the sensor description */
         bool equals(const ZenSensorDesc& desc) const { return m_ioInterface->equals(desc); }
 
-        ZenError sendAndWaitForAck(uint8_t function, Property_t property, const unsigned char* data, size_t length);
+        ZenError sendAndWaitForAck(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const unsigned char> data);
 
         template <typename T>
-        ZenError requestAndWaitForArray(uint8_t function, Property_t property, T* outArray, size_t& outLength);
+        ZenError sendAndWaitForArray(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const unsigned char> data, T* outArray, size_t& outLength);
 
         template <typename T>
-        ZenError requestAndWaitForResult(uint8_t function, Property_t property, T& outValue);
+        ZenError sendAndWaitForResult(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const unsigned char> data, T& outValue);
 
-        ZenError publishAck(uint8_t function, Property_t property, bool b);
-
-        template <typename T>
-        ZenError publishArray(uint8_t function, Property_t property, const T* array, size_t length);
+        ZenError publishAck(ZenProperty_t property, ZenError error);
 
         template <typename T>
-        ZenError publishResult(uint8_t function, Property_t property, const T& result);
+        ZenError publishArray(ZenProperty_t property, ZenError error, const T* array, size_t length);
+
+        template <typename T>
+        ZenError publishResult(ZenProperty_t property, ZenError error, const T& result);
 
     private:
         ZenError terminateWaitOnPublishOrTimeout();
 
-        ZenError tryToWait(uint8_t function, Property_t property, bool forAck);
+        ZenError tryToWait(ZenProperty_t property, bool forAck);
 
         bool prepareForPublishing();
 
-        bool corruptMessage(uint8_t function, Property_t property, bool isAck);
+        bool corruptMessage(ZenProperty_t property, bool isAck);
 
         std::unique_ptr<BaseIoInterface> m_ioInterface;
 
@@ -68,9 +68,8 @@ namespace zen
         std::atomic_flag m_publishing;
 
         ZenError m_resultError;
-        Property_t m_property;
+        ZenProperty_t m_property;
         bool m_waitingForAck;  // If not, waiting for data
-        uint8_t m_function;
 
         void* m_resultPtr;
         size_t* m_resultSizePtr;

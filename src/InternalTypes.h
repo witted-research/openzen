@@ -36,7 +36,7 @@ enum class EDevicePropertyV0 : DeviceProperty_t
     SetSamplingRate = 11,               // uint32_t
 
     WriteRegisters = 15,                // void
-    RestoryFactorySettings = 16,        // void
+    RestoreFactorySettings = 16,        // void
 
     SetOrientationOffsetMode = 18,      // uint32_t
 

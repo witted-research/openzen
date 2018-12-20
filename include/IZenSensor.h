@@ -6,6 +6,86 @@
 
 #include "ZenTypes.h"
 
+class IZenSensorProperties
+{
+public:
+    virtual ~IZenSensorProperties() = default;
+
+    /** If successful executes the property, otherwise returns an error. */
+    virtual ZenError execute(ZenProperty_t property) = 0;
+
+    /** If successful fills the buffer with the array of properties and sets the buffer's size.
+     * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
+     */
+    virtual ZenError getArray(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t* bufferSize) = 0;
+
+    /** If successful fills the value with the property's boolean value, otherwise returns an error. */
+    virtual ZenError getBool(ZenProperty_t property, bool* const outValue) = 0;
+
+    /** If successful fills the value with the property's floating-point value, otherwise returns an error. */
+    virtual ZenError getFloat(ZenProperty_t property, float* const outValue) = 0;
+
+    /** If successful fills the value with the property's signed integer value, otherwise returns an error. */
+    virtual ZenError getInt32(ZenProperty_t property, int32_t* const outValue) = 0;
+
+    /** If successful fills the value with the property's matrix value, otherwise returns an error. */
+    virtual ZenError getMatrix33(ZenProperty_t property, ZenMatrix3x3f* const outValue) = 0;
+
+    /** If successful fills the buffer with the property's string value and sets the buffer's string size.
+     * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
+     */
+    virtual ZenError getString(ZenProperty_t property, char* const buffer, size_t* const bufferSize) = 0;
+
+    /** If successful fills the value with the property's unsigned integer value, otherwise returns an error. */
+    virtual ZenError getUInt64(ZenProperty_t property, uint64_t* const outValue) = 0;
+
+    /** If successful sets the array properties, otherwise returns an error. */
+    virtual ZenError setArray(ZenProperty_t property, ZenPropertyType type, const void* buffer, size_t bufferSize) = 0;
+
+    /** If successful sets the boolean property, otherwise returns an error. */
+    virtual ZenError setBool(ZenProperty_t property, bool value) = 0;
+
+    /** If successful sets the floating-point property, otherwise returns an error. */
+    virtual ZenError setFloat(ZenProperty_t property, float value) = 0;
+
+    /** If successful sets the integer property, otherwise returns an error. */
+    virtual ZenError setInt32(ZenProperty_t property, int32_t value) = 0;
+
+    /** If successful sets the matrix property, otherwise returns an error. */
+    virtual ZenError setMatrix33(ZenProperty_t property, const ZenMatrix3x3f* const value) = 0;
+
+    /** If successful sets the string property, otherwise returns an error. */
+    virtual ZenError setString(ZenProperty_t property, const char* buffer, size_t bufferSize) = 0;
+
+    /** If successful sets the unsigned integer property, otherwise returns an error. */
+    virtual ZenError setUInt64(ZenProperty_t property, uint64_t value) = 0;
+
+    /** Returns whether the property is an array type */
+    virtual bool isArray(ZenProperty_t property) const = 0;
+
+    /** Returns whether the property can be executed as a command */
+    virtual bool isCommand(ZenProperty_t property) const = 0;
+
+    /** Returns whether the property is constant. If so, the property cannot be set */
+    virtual bool isConstant(ZenProperty_t property) const = 0;
+
+    /** Returns the type of the property */
+    virtual ZenPropertyType type(ZenProperty_t property) const = 0;
+};
+
+class IZenSensorComponent
+{
+protected:
+    /** Protected destructor, to prevent usage on pointer. Instead call IZenSensorManager::release */
+    virtual ~IZenSensorComponent() = default;
+
+public:
+    virtual IZenSensorProperties* properties() = 0;
+
+    /** Returns the type of the sensor component */
+    virtual ZenSensorType type() const = 0;
+};
+
 class IZenSensor
 {
 protected:
@@ -29,53 +109,12 @@ public:
      */
     virtual ZenAsyncStatus updateIAPAsync(const char* const buffer, size_t bufferSize) = 0;
 
-    /** If successful executes the command, otherwise returns an error. */
-    virtual ZenError executeDeviceCommand(ZenCommand_t command) = 0;
+    virtual IZenSensorProperties* properties() = 0;
 
-    /** If successful fills the buffer with the array of properties and sets the buffer's size.
-      * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
-      */
-    virtual ZenError getArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t* const bufferSize) = 0;
-        
-    /** If successful fills the value with the property's boolean value, otherwise returns an error. */
-    virtual ZenError getBoolDeviceProperty(ZenProperty_t property, bool* const outValue) = 0;
-
-    /** If successful fills the value with the property's floating-point value, otherwise returns an error. */
-    virtual ZenError getFloatDeviceProperty(ZenProperty_t property, float* const outValue) = 0;
-
-    /** If successful fills the value with the property's integer value, otherwise returns an error. */
-    virtual ZenError getInt32DeviceProperty(ZenProperty_t property, int32_t* const outValue) = 0;
-
-    /** If successful fills the value with the property's matrix value, otherwise returns an error. */
-    virtual ZenError getMatrix33DeviceProperty(ZenProperty_t property, ZenMatrix3x3f* const outValue) = 0;
-
-    /** If successful fills the buffer with the property's string value and sets the buffer's string size.
-     * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
-     */
-    virtual ZenError getStringDeviceProperty(ZenProperty_t property, char* const buffer, size_t* const bufferSize) = 0;
-
-    /** If successful sets the array properties, otherwise returns an error. */
-    virtual ZenError setArrayDeviceProperty(ZenProperty_t property, ZenPropertyType type, const void* const buffer, size_t bufferSize) = 0;
-
-    /** If successful sets the boolean property, otherwise returns an error. */
-    virtual ZenError setBoolDeviceProperty(ZenProperty_t property, bool value) = 0;
-
-    /** If successful sets the floating-point property, otherwise returns an error. */
-    virtual ZenError setFloatDeviceProperty(ZenProperty_t property, float value) = 0;
-
-    /** If successful sets the integer property, otherwise returns an error. */
-    virtual ZenError setInt32DeviceProperty(ZenProperty_t property, int32_t value) = 0;
-
-    /** If successful sets the matrix property, otherwise returns an error. */
-    virtual ZenError setMatrix33DeviceProperty(ZenProperty_t property, const ZenMatrix3x3f* const m) = 0;
-
-    /** If successful sets the string property, otherwise returns an error. */
-    virtual ZenError setStringDeviceProperty(ZenProperty_t property, const char* const buffer, size_t bufferSize) = 0;
-        
-    /** If successful, directs the outTypes pointer to a list of sensor components and sets its length.
+    /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength.
      * Otherwise, returns an error.
      */
-    virtual ZenError componentTypes(ZenSensorType** outTypes, size_t* outLength) const = 0;
+    virtual ZenError components(IZenSensorComponent*** outComponents, size_t* outLength) const = 0;
 
     /** Returns whether the sensor is equal to the sensor description */
     virtual bool equals(const ZenSensorDesc* desc) const = 0;

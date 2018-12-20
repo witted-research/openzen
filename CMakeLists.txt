@@ -18,17 +18,20 @@ find_package(Qt5Bluetooth REQUIRED)
 set(zen_includes
     include/IZenSensor.h
     include/IZenSensorManager.h
+    include/ZenProtocol.h
     include/ZenTypes.h
 )
 
 set(zen_sources
     src/ImuHelpers.h
     src/InternalTypes.h
-    src/ISensorComponent.h
     src/Sensor.cpp
     src/Sensor.h
+    src/SensorComponent.h
     src/SensorManager.cpp
     src/SensorManager.h
+    src/SensorProperties.cpp
+    src/SensorProperties.h
     
     src/LpMatrix.c
     src/LpMatrix.h
@@ -89,7 +92,13 @@ set(io_systems_sources
 
 set(properties_sources
     src/properties/BaseSensorPropertiesV0.h
+    src/properties/CorePropertyRulesV1.h
+    src/properties/ImuPropertyRulesV1.h
     src/properties/ImuSensorPropertiesV0.h
+    src/properties/LegacyCoreProperties.cpp
+    src/properties/LegacyCoreProperties.h
+    src/properties/LegacyImuProperties.cpp
+    src/properties/LegacyImuProperties.h
 )
 
 set(components_sources
@@ -189,6 +198,7 @@ target_link_libraries(OpenZen
     PRIVATE
         $<$<PLATFORM_ID:Linux>:atomic>
         $<$<PLATFORM_ID:Linux>:dl>
+        GSL
         Qt5::Bluetooth
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
