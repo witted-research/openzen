@@ -1,3 +1,4 @@
 add_subdirectory(ftdi)
+add_subdirectory(gsl)
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
