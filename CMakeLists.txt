@@ -101,6 +101,7 @@ set(utility_sources
     src/utility/Finally.h
     src/utility/IPlatformDll.h
     src/utility/LockingQueue.h
+    src/utility/Ownership.h
     src/utility/ThreadFence.h
 )
 
