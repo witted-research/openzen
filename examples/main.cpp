@@ -4,10 +4,25 @@
 #include <array>
 #include <atomic>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <thread>
 
+#include <gsl/span>
+
 std::atomic_bool g_terminate(false);
+
+namespace
+{
+    std::optional<IZenSensorComponent*> getImuComponent(gsl::span<IZenSensorComponent*> components)
+    {
+        for (auto* component : components)
+            if (component->type() == ZenSensor_Imu)
+                return component;
+
+        return std::nullopt;
+    }
+}
 
 void pollLoop(IZenSensorManager* manager)
 {
@@ -70,10 +85,24 @@ int main(int argc, char *argv[])
         return error;
     }
 
+    IZenSensorComponent** components = nullptr;
+    size_t nComponents;
+    if (auto error = sensor->components(&components, &nComponents))
+        return error;
+
+    auto optImu = getImuComponent(gsl::make_span(components, nComponents));
+    if (!optImu)
+    {
+        ZenShutdown();
+        return ZenError_WrongSensorType;
+    }
+
+    auto* imu = *optImu;
+
     std::thread pollingThread(&pollLoop, manager);
 
     // Turn streaming off, so we can send commands
-    if (auto error = sensor->properties()->setBool(ZenImuProperty_StreamData, false))
+    if (auto error = imu->properties()->setBool(ZenImuProperty_StreamData, false))
     {
         g_terminate = true;
         ZenShutdown();
@@ -107,7 +136,7 @@ int main(int argc, char *argv[])
     // Do something based on the sensor property
     if (time)
     {
-        if (auto error = sensor->properties()->setBool(ZenImuProperty_StreamData, true))
+        if (auto error = imu->properties()->setBool(ZenImuProperty_StreamData, true))
         {
             g_terminate = true;
             ZenShutdown();

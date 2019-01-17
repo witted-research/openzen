@@ -8,9 +8,15 @@ add_executable(OpenZenExample
 
 include(FindThreads)
 
+target_compile_features(OpenZenExample
+    PRIVATE
+        cxx_std_17
+)
+
 target_link_libraries(OpenZenExample
     PRIVATE
         OpenZen
+        GSL
         Threads::Threads
 )
 
