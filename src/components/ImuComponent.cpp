@@ -57,7 +57,9 @@ namespace zen
         // as well a configuration bitset to determine which data to output
         if (m_version == 0)
         {
-            auto properties = std::make_unique<LegacyImuProperties>(m_ioInterface);
+            auto properties = std::make_unique<LegacyImuProperties>(m_ioInterface, *this);
+
+            // Initialize to non-streaming
             if (auto error = properties->setBool(ZenImuProperty_StreamData, false))
                 return error;
 
@@ -102,9 +104,6 @@ namespace zen
             if (auto error = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, cache->hardIronOffset.data, &size))
                 return error;
         }
-
-        if (auto error = m_properties->setBool(ZenImuProperty_StreamData, true))
-            return error;
 
         if (m_version == 0)
             m_initialized = true;

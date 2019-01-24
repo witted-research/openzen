@@ -5,13 +5,14 @@
 
 #include "IZenSensor.h"
 #include "io/interfaces/AsyncIoInterface.h"
+#include "components/ImuComponent.h"
 
 namespace zen
 {
     class LegacyCoreProperties : public IZenSensorProperties
     {
     public:
-        LegacyCoreProperties(AsyncIoInterface& ioInterface);
+        LegacyCoreProperties(AsyncIoInterface& ioInterface, ImuComponent& imu);
 
         /** If successful executes the command, therwise returns an error. */
         ZenError execute(ZenProperty_t property) override;
@@ -78,6 +79,7 @@ namespace zen
         ZenError supportedBaudRates(void* buffer, size_t& bufferSize) const;
 
         AsyncIoInterface& m_ioInterface;
+        ImuComponent& m_imu;
 
         std::atomic_int32_t m_samplingRate;
     };

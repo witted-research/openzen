@@ -55,11 +55,13 @@ namespace zen
         // [TODO] Determine version based on init
         if (m_version == 0)
         {
-            m_properties = std::make_unique<LegacyCoreProperties>(m_ioInterface);
+            // Legacy version are always Imu sensors
+            auto imu = std::make_unique<ImuComponent>(1, 0, *this, m_ioInterface);
+
+            m_properties = std::make_unique<LegacyCoreProperties>(m_ioInterface, *imu.get());
             m_samplingRate = 200;
 
-            // Legacy version are always Imu sensors
-            m_components.emplace_back(std::make_unique<ImuComponent>(1, 0, *this, m_ioInterface));
+            m_components.emplace_back(std::move(imu));
         }
         else
         {

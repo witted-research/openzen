@@ -1,11 +1,13 @@
 #include "LegacyCoreProperties.h"
 
 #include "properties/BaseSensorPropertiesV0.h"
+#include "utility/Finally.h"
 
 namespace zen
 {
-    LegacyCoreProperties::LegacyCoreProperties(AsyncIoInterface& ioInterface)
+    LegacyCoreProperties::LegacyCoreProperties(AsyncIoInterface& ioInterface, ImuComponent& imu)
         : m_ioInterface(ioInterface)
+        , m_imu(imu)
     {}
 
     ZenError LegacyCoreProperties::execute(ZenProperty_t command)
@@ -13,6 +15,16 @@ namespace zen
         const auto commandV0 = base::v0::mapCommand(command);
         if (base::v0::supportsExecutingDeviceCommand(commandV0))
         {
+            const bool streaming = m_imu.streaming();
+            if (streaming)
+                if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                    return error;
+
+            auto guard = finally([=]() {
+                if (streaming)
+                    m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+            });
+
             const auto function = static_cast<DeviceProperty_t>(commandV0);
             return m_ioInterface.sendAndWaitForAck(0, function, function, {});
         }
@@ -36,6 +48,16 @@ namespace zen
         {
             if (type != expectedType)
                 return ZenError_WrongDataType;
+
+            const bool streaming = m_imu.streaming();
+            if (streaming)
+                if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                    return error;
+
+            auto guard = finally([=]() {
+                if (streaming)
+                    m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+            });
 
             switch (type)
             {
@@ -87,6 +109,16 @@ namespace zen
         const auto propertyV0 = base::v0::map(property, true);
         if (propertyV0 == EDevicePropertyV0::GetBatteryCharging)
         {
+            const bool streaming = m_imu.streaming();
+            if (streaming)
+                if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                    return error;
+
+            auto guard = finally([=]() {
+                if (streaming)
+                    m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+            });
+
             const auto function = static_cast<DeviceProperty_t>(propertyV0);
 
             uint32_t temp;
@@ -109,6 +141,16 @@ namespace zen
         const auto propertyV0 = base::v0::map(property, true);
         if (base::v0::supportsGettingFloatDeviceProperty(propertyV0))
         {
+            const bool streaming = m_imu.streaming();
+            if (streaming)
+                if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                    return error;
+
+            auto guard = finally([=]() {
+                if (streaming)
+                    m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+            });
+
             const auto function = static_cast<DeviceProperty_t>(propertyV0);
             return m_ioInterface.sendAndWaitForResult(0, function, function, {}, *outValue);
         }
@@ -133,6 +175,16 @@ namespace zen
             const auto propertyV0 = base::v0::map(property, true);
             if (base::v0::supportsGettingInt32DeviceProperty(propertyV0))
             {
+                const bool streaming = m_imu.streaming();
+                if (streaming)
+                    if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                        return error;
+
+                auto guard = finally([=]() {
+                    if (streaming)
+                        m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+                });
+
                 const auto function = static_cast<DeviceProperty_t>(propertyV0);
 
                 // Legacy communication protocol only supports uint32_t
@@ -156,7 +208,25 @@ namespace zen
 
     ZenError LegacyCoreProperties::getString(ZenProperty_t property, char* const buffer, size_t* const bufferSize)
     {
-        // base::v0 has no string properties that can be retrieved, so no need to add backwards compatibility
+        if (bufferSize == nullptr)
+            return ZenError_IsNull;
+
+        if (isArray(property) && type(property) == ZenPropertyType_String)
+        {
+            const bool streaming = m_imu.streaming();
+            if (streaming)
+                if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                    return error;
+
+            auto guard = finally([=]() {
+                if (streaming)
+                    m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+            });
+
+            const auto propertyV0 = base::v0::map(property, true);
+            return m_ioInterface.sendAndWaitForArray(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, buffer, *bufferSize);
+        }
+        
         return ZenError_UnknownProperty;
     }
 
@@ -188,6 +258,16 @@ namespace zen
             const auto function = static_cast<DeviceProperty_t>(propertyV0);
             if (propertyV0 == EDevicePropertyV0::SetSamplingRate)
             {
+                const bool streaming = m_imu.streaming();
+                if (streaming)
+                    if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                        return error;
+
+                auto guard = finally([=]() {
+                    if (streaming)
+                        m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+                });
+
                 const uint32_t uiValue = base::v0::roundSamplingRate(value);
 
                 const auto* src = reinterpret_cast<const unsigned char*>(&uiValue);
@@ -198,6 +278,16 @@ namespace zen
             }
             else if (base::v0::supportsSettingInt32DeviceProperty(propertyV0))
             {
+                const bool streaming = m_imu.streaming();
+                if (streaming)
+                    if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                        return error;
+
+                auto guard = finally([=]() {
+                    if (streaming)
+                        m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+                });
+
                 // Legacy communication protocol only supports uint32_t
                 const uint32_t uiValue = static_cast<uint32_t>(value);
 
@@ -291,6 +381,9 @@ namespace zen
         case ZenSensorProperty_FirmwareInfo:
         case ZenSensorProperty_SerialNumber:
             return ZenPropertyType_String;
+
+        default:
+            return ZenPropertyType_Invalid;
         }
     }
 

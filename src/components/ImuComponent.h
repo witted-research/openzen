@@ -25,6 +25,10 @@ namespace zen
 
         ZenSensorType type() const override { return ZenSensor_Imu; }
 
+        bool streaming() const { return m_streaming; }
+
+        void setStreaming(bool streaming) { m_streaming = streaming; }
+
     private:
         ZenError processSensorData(const unsigned char* data, size_t length);
 
@@ -44,6 +48,7 @@ namespace zen
 
         // Legacy
         std::atomic_bool m_initialized;
+        std::atomic_bool m_streaming;
         
         const unsigned int m_version;
         const uint8_t m_id;
