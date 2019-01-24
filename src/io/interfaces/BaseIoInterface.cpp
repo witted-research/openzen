@@ -34,8 +34,12 @@ namespace zen
             const size_t nParsedBytes = bufferSize - length;
             if (auto error = m_parser->parse(data + nParsedBytes, length))
             {
-                std::cout << "Received corrupt message." << std::endl;
-                return ZenError_Io_MsgCorrupt;
+                std::cout << "Received corrupt message:" << std::endl;
+                std::cout << std::string_view(reinterpret_cast<const char*>(data), length) << std::endl;
+                length -= 1;
+                continue;
+                // [XXX] Is this a valid approach?
+                //return ZenError_Io_MsgCorrupt;
             }
 
             if (m_parser->finished())
