@@ -1,10 +1,12 @@
 #include "SensorManager.h"
 
+#include <optional>
 #include <QCoreApplication>
 
 #include "Sensor.h"
 #include "io/IoManager.h"
 #include "io/can/CanManager.h"
+#include "utility/StringView.h"
 
 ZEN_API IZenSensorManager* ZenInit(ZenError* outError)
 {
@@ -37,6 +39,7 @@ namespace zen
 
     SensorManager::SensorManager()
         : m_initialized(false) 
+        , m_startedListing(false)
         , m_listing(false)
         , m_finished(false)
         , m_terminate(false)
@@ -57,6 +60,7 @@ namespace zen
         if (m_initialized)
             return ZenError_AlreadyInitialized;
 
+        m_startedListing = false;
         m_listing = false;
         m_finished = false;
 
@@ -88,36 +92,20 @@ namespace zen
         if (outSensor == nullptr)
             return ZenError_IsNull;
 
-        if (sensorDesc->sensorType >= ZenSensor_Max)
-            return ZenError_WrongSensorType;
-
         if (auto* sensor = findSensor(sensorDesc))
         {
             *outSensor = sensor;
             return ZenError_None;
         }
 
-        ZenError error;
-        auto ioInterface = IoManager::get().obtain(*sensorDesc, error);
+        ZenError ioError;
+        auto ioInterface = IoManager::get().obtain(*sensorDesc, ioError);
         if (!ioInterface)
-            return error;
+            return ioError;
 
-        auto sensor = std::make_unique<Sensor>(std::move(ioInterface));
-        Sensor* sensorPtr = sensor.get();
-        // Add sensor, to ensure it is being polled
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_sensors.emplace(std::move(sensor));
-        }
-
-        if (auto error = sensorPtr->init())
-        {
-            release(sensorPtr);
-            return error;
-        }
-
+        auto[sensorError, sensorPtr] = makeSensor(std::move(ioInterface));
         *outSensor = sensorPtr;
-        return ZenError_None;
+        return sensorError;
     }
 
     ZenError SensorManager::release(IZenSensor* sensor)
@@ -156,12 +144,12 @@ namespace zen
         return false;
     }
 
-    ZenAsyncStatus SensorManager::listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength)
+    ZenAsyncStatus SensorManager::listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength, const char* typeFilter)
     {
         if (outLength == nullptr)
             return ZenAsync_InvalidArgument;
 
-        if (m_listing.exchange(true))
+        if (m_startedListing.exchange(true))
         {
             if (m_finished.exchange(false))
             {
@@ -178,13 +166,36 @@ namespace zen
 
                 const auto error = m_listingError ? ZenAsync_Failed : ZenAsync_Finished;
                 m_listing = false;
+                m_startedListing = false;
                 return error;
             }
 
             return ZenAsync_Updating;
         }
 
+        m_listingTypeFilter = typeFilter ? std::make_optional<std::string>(typeFilter) : std::nullopt;
+        m_listing = true;
         return ZenAsync_Updating;
+    }
+
+    std::pair<ZenError, Sensor*> SensorManager::makeSensor(std::unique_ptr<BaseIoInterface> ioInterface)
+    {
+        auto sensor = std::make_unique<Sensor>(std::move(ioInterface));
+        Sensor* sensorPtr = sensor.get();
+        // Add sensor, to ensure it is being polled
+        // [TODO] Run on separate thread
+        {
+            std::lock_guard<std::mutex> lock(m_mutex);
+            m_sensors.emplace(std::move(sensor));
+        }
+
+        if (auto error = sensorPtr->init())
+        {
+            release(sensorPtr);
+            return std::make_pair(error, nullptr);
+        }
+
+        return std::make_pair(ZenError_None, sensorPtr);
     }
 
     IZenSensor* SensorManager::findSensor(const ZenSensorDesc* sensorDesc)
@@ -202,7 +213,41 @@ namespace zen
         {
             if (m_listing && !m_finished)
             {
-                m_listingError = IoManager::get().listDevices(m_devices);
+                if (auto error = IoManager::get().listDevices(m_devices))
+                {
+                    m_listingError = error;
+                }
+                else if (m_listingTypeFilter)
+                {
+                    const auto requiredComponents = util::split(*m_listingTypeFilter, ",");
+                    for (auto it = m_devices.cbegin(); it != m_devices.cend();)
+                    {
+                        IZenSensor* sensor = nullptr;
+                        if (auto error = obtain(&*it, &sensor))
+                        {
+                            it = m_devices.erase(it);
+                            continue;
+                        }
+
+                        bool valid = true;
+                        for (const std::string_view& type : requiredComponents)
+                        {
+                            size_t nComponents;
+                            sensor->components(nullptr, &nComponents, type.data());
+                            if (nComponents == 0)
+                            {
+                                valid = false;
+                                it = m_devices.erase(it);
+                                break;
+                            }
+                        }
+
+                        release(sensor);
+                        if (valid)
+                            ++it;
+                    }
+                }
+
                 m_finished = true;
             }
 

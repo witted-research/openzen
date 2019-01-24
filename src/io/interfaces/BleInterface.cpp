@@ -44,6 +44,11 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
+    const char* BleInterface::type() const
+    {
+        return BleSystem::KEY;
+    }
+
     bool BleInterface::equals(const ZenSensorDesc& desc) const
     {
         if (std::string_view(BleSystem::KEY) != desc.ioType)

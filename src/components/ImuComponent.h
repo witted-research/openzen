@@ -23,7 +23,7 @@ namespace zen
 
         ZenError processData(uint8_t function, const unsigned char* data, size_t length) override;
 
-        ZenSensorType type() const override { return ZenSensor_Imu; }
+        const char* type() const override { return g_zenSensorType_Imu; }
 
         bool streaming() const { return m_streaming; }
 

@@ -2,11 +2,38 @@
 
 #include <iostream>
 
+#include "OpenZen.h"
+#include "SensorManager.h"
 #include "io/interfaces/SiUsbInterface.h"
 #include "utility/IPlatformDll.h"
 
 namespace zen
 {
+    namespace
+    {
+        std::pair<ZenError, std::unique_ptr<BaseIoInterface>> make_interface(DWORD deviceId)
+        {
+            HANDLE handle;
+            if (auto error = SiUsbSystem::fnTable.open(deviceId, &handle))
+                return std::make_pair(ZenError_Io_InitFailed, nullptr);
+
+            const auto format = modbus::ModbusFormat::LP;
+            auto factory = modbus::make_factory(format);
+            auto parser = modbus::make_parser(format);
+            if (!factory || !parser)
+                return std::make_pair(ZenError_InvalidArgument, nullptr);
+
+            auto ioInterface = std::make_unique<SiUsbInterface>(handle, std::move(factory), std::move(parser));
+            if (auto error = ioInterface->setBaudrate(921600))
+                return std::make_pair(error, nullptr);
+
+            if (auto error = SiUsbSystem::fnTable.setFlowControl(handle, SI_HANDSHAKE_LINE, SI_FIRMWARE_CONTROLLED, SI_HELD_INACTIVE, SI_STATUS_INPUT, SI_STATUS_INPUT, 0))
+                return std::make_pair(ZenError_Io_SetFailed, nullptr);
+
+            return std::make_pair(ZenError_None, std::move(ioInterface));
+        }
+    }
+
     SiUsbFnTable SiUsbSystem::fnTable = {};
 
     SiUsbSystem::~SiUsbSystem()
@@ -47,18 +74,17 @@ namespace zen
         if (auto error = SiUsbSystem::fnTable.getNumDevices(&nDevices))
             return ZenError_Io_GetFailed;
 
-        ZenSensorDesc desc;
-        std::memcpy(desc.ioType, SiUsbSystem::KEY, sizeof(SiUsbSystem::KEY));
-
         for (DWORD idx = 0; idx < nDevices; ++idx)
         {
+            ZenSensorDesc desc;
+            std::memcpy(desc.ioType, SiUsbSystem::KEY, sizeof(SiUsbSystem::KEY));
+
             if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, desc.serialNumber, sizeof(ZenSensorDesc::serialNumber), SI_RETURN_SERIAL_NUMBER))
                 return ZenError_Io_GetFailed;
 
-            if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, desc.name, sizeof(ZenSensorDesc::name), SI_RETURN_DESCRIPTION))
+            if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, desc.name, sizeof(ZenSensorDesc::name), SI_RETURN_SERIAL_NUMBER))
                 return ZenError_Io_GetFailed;
 
-            desc.handle32 = idx;
             outDevices.emplace_back(desc);
         }
 
@@ -67,7 +93,6 @@ namespace zen
 
     std::unique_ptr<BaseIoInterface> SiUsbSystem::obtain(const ZenSensorDesc& desc, ZenError& outError)
     {
-        // Calling SI_GetNumDevices is required before calling SI_Open
         DWORD nDevices;
         if (auto error = SiUsbSystem::fnTable.getNumDevices(&nDevices))
         {
@@ -75,38 +100,28 @@ namespace zen
             return nullptr;
         }
 
-        if (desc.handle32 >= nDevices)
+        const std::string_view target = desc.serialNumber;
+
+        bool found = false;
+        char serialNumber[sizeof(ZenSensorDesc::serialNumber)];
+        DWORD idx = 0;
+        for (; idx < nDevices; ++idx)
+        {
+            if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, serialNumber, sizeof(ZenSensorDesc::serialNumber), SI_RETURN_SERIAL_NUMBER))
+                continue;
+
+            if (found = serialNumber == target)
+                break;
+        }
+
+        if (!found)
         {
             outError = ZenError_UnknownDeviceId;
             return nullptr;
         }
 
-        HANDLE handle;
-        if (auto error = fnTable.open(static_cast<DWORD>(desc.handle32), &handle))
-        {
-            outError = ZenError_Io_InitFailed;
-            return nullptr;
-        }
-
-        auto format = modbus::ModbusFormat::LP;
-        auto factory = modbus::make_factory(format);
-        auto parser = modbus::make_parser(format);
-        if (!factory || !parser)
-        {
-            outError = ZenError_InvalidArgument;
-            return nullptr;
-        }
-
-        auto ioInterface = std::make_unique<SiUsbInterface>(handle, std::move(factory), std::move(parser));
-        if (outError = ioInterface->setBaudrate(921600))
-            return nullptr;
-
-        if (auto error = fnTable.setFlowControl(handle, SI_HANDSHAKE_LINE, SI_FIRMWARE_CONTROLLED, SI_HELD_INACTIVE, SI_STATUS_INPUT, SI_STATUS_INPUT, 0))
-        {
-            outError = ZenError_Io_SetFailed;
-            return nullptr;
-        }
-
-        return ioInterface;
+        auto[error, ioInterface] = make_interface(idx);
+        outError = error;
+        return std::move(ioInterface);
     }
 }

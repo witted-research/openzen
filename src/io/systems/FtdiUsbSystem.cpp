@@ -55,11 +55,14 @@ namespace zen
         if (auto error = fnTable.listDevices(&nDevices, nullptr, FT_LIST_NUMBER_ONLY))
             return ZenError_Unknown;
 
-        ZenSensorDesc desc;
-        std::memcpy(desc.ioType, FtdiUsbSystem::KEY, sizeof(FtdiUsbSystem::KEY));
-
         for (DWORD i = 0; i < nDevices; ++i)
         {
+            ZenSensorDesc desc;
+            std::memcpy(desc.ioType, FtdiUsbSystem::KEY, sizeof(FtdiUsbSystem::KEY));
+
+            if (auto error = fnTable.listDevices(&i, desc.name, FT_LIST_BY_INDEX | FT_OPEN_BY_DESCRIPTION))
+                return ZenError_Unknown;
+
             if (auto error = fnTable.listDevices(&i, desc.serialNumber, FT_LIST_BY_INDEX | FT_OPEN_BY_SERIAL_NUMBER))
                 return ZenError_Unknown;
 

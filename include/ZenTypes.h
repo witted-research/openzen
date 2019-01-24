@@ -194,13 +194,6 @@ typedef enum ZenEventType
     ZenEvent_Max
 } ZenEventType;
 
-typedef enum ZenSensorType
-{
-    ZenSensor_Imu = 0,
-
-    ZenSensor_Max
-} ZenSensorType;
-
 typedef uint32_t ZenProperty_t;
 
 typedef enum EZenSensorProperty : ZenProperty_t
@@ -321,7 +314,6 @@ typedef struct ZenSensorDesc
     char name[256];
     char serialNumber[64];
     char ioType[64];
-    ZenSensorType sensorType;
     union
     {
         uint32_t handle32;
@@ -333,5 +325,7 @@ typedef struct ZenMatrix3x3f
 {
     float data[9];
 } ZenMatrix3x3f;
+
+static const char* g_zenSensorType_Imu = "imu";
 
 #endif

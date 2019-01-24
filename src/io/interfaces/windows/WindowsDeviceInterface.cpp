@@ -2,6 +2,8 @@
 
 #include "utility/Finally.h"
 
+#include "io/systems/windows/WindowsDeviceSystem.h"
+
 namespace zen
 {
     namespace
@@ -115,6 +117,11 @@ namespace zen
         outBaudrates.emplace_back(CBR_128000);
         outBaudrates.emplace_back(CBR_256000);
         return ZenError_None;
+    }
+
+    const char* WindowsDeviceInterface::type() const
+    {
+        return WindowsDeviceSystem::KEY;
     }
 
     bool WindowsDeviceInterface::equals(const ZenSensorDesc& desc) const

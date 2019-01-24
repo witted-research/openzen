@@ -83,7 +83,7 @@ public:
     virtual IZenSensorProperties* properties() = 0;
 
     /** Returns the type of the sensor component */
-    virtual ZenSensorType type() const = 0;
+    virtual const char* type() const = 0;
 };
 
 class IZenSensor
@@ -111,10 +111,13 @@ public:
 
     virtual IZenSensorProperties* properties() = 0;
 
-    /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength.
-     * Otherwise, returns an error.
+    /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength, otherwise, returns an error.
+     * If the type variable points to a string, only components of that type are returned. If it is a nullptr, all components are returned, irrespective of type.
      */
-    virtual ZenError components(IZenSensorComponent*** outComponents, size_t* outLength) const = 0;
+    virtual ZenError components(IZenSensorComponent*** outComponents, size_t* outLength, const char* type) const = 0;
+
+    /** Returns the sensor's IO type */
+    virtual const char* ioType() const = 0;
 
     /** Returns whether the sensor is equal to the sensor description */
     virtual bool equals(const ZenSensorDesc* desc) const = 0;

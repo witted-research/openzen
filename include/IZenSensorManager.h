@@ -29,7 +29,7 @@ public:
      * Returns ZenAsync_Finished once available sensors have been successfully listed, otherwise will return an error.
      * Returns ZenAsync_Failed if an error occurred while listing sensors.
      */
-    virtual ZenAsyncStatus listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength) = 0;
+    virtual ZenAsyncStatus listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength, const char* typeFilter) = 0;
 };
 
 ZEN_API IZenSensorManager* ZenInit(ZenError* error);

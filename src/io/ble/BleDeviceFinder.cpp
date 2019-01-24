@@ -14,24 +14,29 @@ namespace zen
         if (m_agent->error() != QBluetoothDeviceDiscoveryAgent::NoError)
             return ZenError_Device_ListingFailed;
 
-        ZenSensorDesc desc;
-        std::memcpy(desc.ioType, BleSystem::KEY, sizeof(BleSystem::KEY));
-
         const auto devices = m_agent->discoveredDevices();
         for (const auto& device : devices)
         {
             if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
             {
-                const std::string name = device.name().toStdString();
-                const auto size = std::min(sizeof(ZenSensorDesc::name) - 1, name.size());
+                const auto name = device.name().toStdString();
+                const auto address = device.address().toString().toStdString();
 
-                std::memcpy(desc.name, name.c_str(), size);
-                desc.name[size] = '\0';
+                ZenSensorDesc desc;
+                auto length = std::min(sizeof(ZenSensorDesc::name) - 1, name.size());
+                std::memcpy(desc.name, name.c_str(), length);
+                desc.name[length] = '\0';
+
+                length = std::min(sizeof(ZenSensorDesc::serialNumber) - 1, static_cast<size_t>(address.size()));
+                std::memcpy(desc.serialNumber, address.c_str(), length);
+                desc.serialNumber[length] = '\0';
+
+                std::memcpy(desc.ioType, BleSystem::KEY, sizeof(BleSystem::KEY));
                 desc.handle64 = device.address().toUInt64();
-
                 outDevices.emplace_back(desc);
             }
         }
+
         return ZenError_None;
     }
 

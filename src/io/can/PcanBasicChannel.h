@@ -35,6 +35,9 @@ namespace zen
         /** Returns the channel Id */
         unsigned int channel() const override { return m_channel; }
 
+        /** Returns the type of IO interface */
+        const char* type() const override;
+
         /** Returns whether the CAN channel equals the IO type */
         bool equals(std::string_view ioType) const override;
 

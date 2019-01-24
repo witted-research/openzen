@@ -30,6 +30,9 @@ namespace zen
         /** Returns the supported baudrates of the IO interface (bit/s) */
         virtual ZenError supportedBaudrates(std::vector<int32_t>& outBaudrates) const = 0;
 
+        /** Returns the type of IO interface */
+        virtual const char* type() const = 0;
+
         /** Returns whether the IO interface equals the sensor description */
         virtual bool equals(const ZenSensorDesc& desc) const = 0;
     };

@@ -38,6 +38,9 @@ namespace zen
         /** Returns the channel Id */
         virtual unsigned int channel() const = 0;
 
+        /** Returns the type of IO used by the CAN channel */
+        virtual const char* type() const = 0;
+
         /** Returns whether the CAN channel equals the IO type */
         virtual bool equals(std::string_view ioType) const = 0;
 

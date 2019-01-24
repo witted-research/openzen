@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <numeric>
 #include <string>
 
 #include "ZenProtocol.h"
@@ -157,21 +158,30 @@ namespace zen
         return ZenAsync_Updating;
     }
 
-    ZenError Sensor::components(IZenSensorComponent*** outComponents, size_t* outLength) const
+    ZenError Sensor::components(IZenSensorComponent*** outComponents, size_t* outLength, const char* type) const
     {
         if (outLength == nullptr)
             return ZenError_IsNull;
 
+        const size_t length = !type ? m_components.size() : std::accumulate(m_components.cbegin(), m_components.cend(), static_cast<size_t>(0), [=](size_t count, const auto& component) {
+            return component->type() == std::string_view(type) ? count + 1 : count;
+        });
+
+        *outLength = length;
         if (!m_components.empty())
         {
-            IZenSensorComponent** components = new IZenSensorComponent*[m_components.size()];
-            for (size_t idx = 0; idx < m_components.size(); ++idx)
-                components[idx] = m_components[idx].get();
+            if (outComponents == nullptr)
+                return ZenError_None;
+
+            IZenSensorComponent** components = new IZenSensorComponent*[length];
+            size_t idx = 0;
+            for (const auto& component : m_components)
+                if (!type || component->type() == std::string_view(type))
+                    components[idx++] = component.get();
             
             *outComponents = components;
         }
 
-        *outLength = m_components.size();
         return ZenError_None;
     }
 

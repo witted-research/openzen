@@ -27,6 +27,9 @@ namespace zen
         /** Returns the supported baudrates of the CAN interface (bit/s) */
         ZenError supportedBaudrates(std::vector<int32_t>& outBaudrates) const override;
 
+        /** Returns the type of IO interface */
+        const char* type() const override { return m_channel.type(); }
+
         /** Returns whether the IO interface equals the sensor description */
         bool equals(const ZenSensorDesc& desc) const override;
 

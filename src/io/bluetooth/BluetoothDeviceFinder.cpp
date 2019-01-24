@@ -27,16 +27,20 @@ namespace zen
         {
             if (device.coreConfigurations() & QBluetoothDeviceInfo::BaseRateCoreConfiguration)
             {
-                const std::string name = device.name().toStdString();
-                const auto size = std::min(sizeof(ZenSensorDesc::name) - 1, name.size());
+                const auto name = device.name().toStdString();
+                const auto address = device.address().toString().toStdString();
 
                 ZenSensorDesc desc;
-                std::memcpy(desc.name, name.c_str(), size);
-                desc.name[size] = '\0';
-                desc.serialNumber[0] = '\0';
-                desc.handle64 = device.address().toUInt64();
-                std::memcpy(desc.ioType, BluetoothSystem::KEY, sizeof(BluetoothSystem::KEY));
+                auto length = std::min(sizeof(ZenSensorDesc::name) - 1, name.size());
+                std::memcpy(desc.name, name.c_str(), length);
+                desc.name[length] = '\0';
 
+                length = std::min(sizeof(ZenSensorDesc::serialNumber) - 1, static_cast<size_t>(address.size()));
+                std::memcpy(desc.serialNumber, address.c_str(), length);
+                desc.serialNumber[length] = '\0';
+
+                std::memcpy(desc.ioType, BluetoothSystem::KEY, sizeof(BluetoothSystem::KEY));
+                desc.handle64 = device.address().toUInt64();
                 outDevices.emplace_back(desc);
             }
         }

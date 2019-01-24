@@ -17,7 +17,7 @@ namespace
     std::optional<IZenSensorComponent*> getImuComponent(gsl::span<IZenSensorComponent*> components)
     {
         for (auto* component : components)
-            if (component->type() == ZenSensor_Imu)
+            if (component->type() == std::string_view(g_zenSensorType_Imu))
                 return component;
 
         return std::nullopt;
@@ -47,11 +47,11 @@ int main(int argc, char *argv[])
     if (error)
         return error;
 
-    std::cout << "Listing devices:" << std::endl;
+    std::cout << "Listing IMU devices:" << std::endl;
 
     ZenSensorDesc* list = nullptr;
     size_t nSensors;
-    while (auto status = manager->listSensorsAsync(&list, &nSensors))
+    while (auto status = manager->listSensorsAsync(&list, &nSensors, g_zenSensorType_Imu))
     {
         if (status != ZenAsync_Updating)
         {
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     }
 
     for (int i = 0; i < nSensors; ++i)
-        std::cout << i << ": " << list[i].name << " (" << list[i].sensorType << "/" << list[i].ioType << ")" << std::endl;
+        std::cout << i << ": " << list[i].name << " ("  << list[i].ioType << ")" << std::endl;
 
     if (nSensors == 0)
     {
@@ -84,31 +84,21 @@ int main(int argc, char *argv[])
         ZenShutdown();
         return error;
     }
-
+    
     IZenSensorComponent** components = nullptr;
     size_t nComponents;
-    if (auto error = sensor->components(&components, &nComponents))
+    if (auto error = sensor->components(&components, &nComponents, g_zenSensorType_Imu))
         return error;
 
-    auto optImu = getImuComponent(gsl::make_span(components, nComponents));
-    if (!optImu)
+    if (nComponents == 0)
     {
         ZenShutdown();
         return ZenError_WrongSensorType;
     }
 
-    auto* imu = *optImu;
+    auto* imu = components[0];
 
     std::thread pollingThread(&pollLoop, manager);
-
-    // Turn streaming off, so we can send commands
-    if (auto error = imu->properties()->setBool(ZenImuProperty_StreamData, false))
-    {
-        g_terminate = true;
-        ZenShutdown();
-        pollingThread.join();
-        return error;
-    }
 
     // Get a sensor property
     int32_t time;

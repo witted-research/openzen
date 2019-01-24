@@ -44,6 +44,11 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
+    const char* BluetoothInterface::type() const
+    {
+        return BluetoothSystem::KEY;
+    }
+
     bool BluetoothInterface::equals(const ZenSensorDesc& desc) const
     {
         if (std::string_view(BluetoothSystem::KEY) != desc.ioType)

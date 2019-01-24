@@ -113,7 +113,6 @@ namespace zen
         {
             ZenSensorDesc desc;
             desc.handle32 = deviceId;
-            desc.sensorType = ZenSensor_Imu;
             std::memcpy(desc.ioType, PcanBasicSystem::KEY, sizeof(PcanBasicSystem::KEY));
             outDevices.emplace_back(desc);
         }
@@ -211,6 +210,11 @@ namespace zen
         outBaudrates.emplace_back(800000);
         outBaudrates.emplace_back(1000000);
         return ZenError_None;
+    }
+
+    const char* PcanBasicChannel::type() const
+    {
+        return PcanBasicSystem::KEY;
     }
 
     bool PcanBasicChannel::hasBusError()

@@ -64,7 +64,9 @@ namespace zen
         /** Returns true and fills the next event on the queue when there is a new one, otherwise returns false upon a call to ZenShutdown() */
         bool waitForNextEvent(ZenEvent* outEvent) override;
 
-        ZenAsyncStatus listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength) override;
+        ZenAsyncStatus listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength, const char* typeFilter) override;
+
+        std::pair<ZenError, Sensor*> makeSensor(std::unique_ptr<BaseIoInterface> ioInterface);
 
         /** Pushes an event to the event queue */
         void notifyEvent(ZenEvent&& event) { m_eventQueue.push(std::move(event)); }
@@ -86,9 +88,11 @@ namespace zen
         std::mutex m_mutex;
         std::atomic_bool m_initialized;
 
+        std::atomic_bool m_startedListing;
         std::atomic_bool m_listing;
         std::atomic_bool m_finished;
         std::atomic_bool m_terminate;
+        std::optional<std::string> m_listingTypeFilter;
         ZenError m_listingError;
 
         bool m_destructing;

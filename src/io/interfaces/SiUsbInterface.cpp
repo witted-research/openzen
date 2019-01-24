@@ -69,6 +69,11 @@ namespace zen
         return ZenError_Io_BaudratesUnknown;
     }
 
+    const char* SiUsbInterface::type() const
+    {
+        return SiUsbSystem::KEY;
+    }
+
     bool SiUsbInterface::equals(const ZenSensorDesc& desc) const
     {
         if (std::string_view(SiUsbSystem::KEY) != desc.ioType)

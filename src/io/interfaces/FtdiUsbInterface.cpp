@@ -83,6 +83,11 @@ namespace zen
         return ZenError_None;
     }
 
+    const char* FtdiUsbInterface::type() const
+    {
+        return FtdiUsbSystem::KEY;
+    }
+
     bool FtdiUsbInterface::equals(const ZenSensorDesc& desc) const
     {
         if (std::string_view(FtdiUsbSystem::KEY) != desc.ioType)
