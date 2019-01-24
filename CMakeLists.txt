@@ -18,6 +18,7 @@ find_package(Qt5Bluetooth REQUIRED)
 set(zen_includes
     include/IZenSensor.h
     include/IZenSensorManager.h
+    include/OpenZen.h
     include/ZenProtocol.h
     include/ZenTypes.h
 )
