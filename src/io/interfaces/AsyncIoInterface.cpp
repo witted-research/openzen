@@ -30,36 +30,22 @@ namespace zen
     template <typename T>
     ZenError AsyncIoInterface::sendAndWaitForArray(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const unsigned char> data, T* outArray, size_t& outLength)
     {
-        if (outArray == nullptr)
-            return ZenError_IsNull;
-
         if (auto error = tryToWait(property, false))
             return error;
-
-        const auto bufferLength = outLength;
 
         m_resultPtr = outArray;
         m_resultSizePtr = &outLength;
 
-        // No need to be waiting while validating the result
-        {
-            auto guard = finally([this]() {
-                m_resultPtr = nullptr;
-                m_resultSizePtr = nullptr;
-                m_waiting.clear();
-            });
+        auto guard = finally([this]() {
+            m_resultPtr = nullptr;
+            m_resultSizePtr = nullptr;
+            m_waiting.clear();
+        });
 
-            if (auto error = m_ioInterface->send(address, function, data.data(), data.size()))
-                return error;
+        if (auto error = m_ioInterface->send(address, function, data.data(), data.size()))
+            return error;
 
-            if (auto error = terminateWaitOnPublishOrTimeout())
-                return error;
-        }
-
-        if (bufferLength < outLength)
-            return ZenError_BufferTooSmall;
-
-        return ZenError_None;
+        return terminateWaitOnPublishOrTimeout();
     }
 
     template <typename T>
@@ -111,12 +97,21 @@ namespace zen
         if (corruptMessage(property, false))
             return m_resultError = error;
 
-        if (*m_resultSizePtr >= length)
-            std::memcpy(m_resultPtr, array, sizeof(T) * length);
-
+        const auto bufferLength = *m_resultSizePtr;
         *m_resultSizePtr = length;
-        m_fence.terminate();
-        return ZenError_None;
+
+        auto guard2 = finally([this]() {
+            m_fence.terminate();
+        });
+
+        if (m_resultPtr == nullptr)
+            return m_resultError = ZenError_IsNull;
+
+        if (length > bufferLength)
+            return m_resultError = ZenError_BufferTooSmall;
+
+        std::memcpy(m_resultPtr, array, sizeof(T) * length);
+        return m_resultError = ZenError_None;
     }
 
     template <typename T>
