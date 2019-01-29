@@ -333,12 +333,15 @@ namespace zen
     {
         if (property == ZenImuProperty_StreamData)
         {
-            uint32_t temp;
-            const auto propertyV0 = value ? EDevicePropertyV0::SetStreamMode : EDevicePropertyV0::SetCommandMode;
-            if (auto error = m_ioInterface.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<unsigned char*>(&temp), sizeof(temp))))
-                return error;
+            if (m_imu.streaming() != value)
+            {
+                uint32_t temp;
+                const auto propertyV0 = value ? EDevicePropertyV0::SetStreamMode : EDevicePropertyV0::SetCommandMode;
+                if (auto error = m_ioInterface.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<unsigned char*>(&temp), sizeof(temp))))
+                    return error;
 
-            m_imu.setStreaming(value);
+                m_imu.setStreaming(value);
+            }
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputLowPrecision)
@@ -634,6 +637,16 @@ namespace zen
 
     ZenError LegacyImuProperties::setOutputDataFlag(unsigned int index, bool value)
     {
+        const bool streaming = m_imu.streaming();
+        if (streaming)
+            if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                return error;
+
+        auto guard = finally([=]() {
+            if (streaming)
+                m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+        });
+
         uint32_t newBitset;
         if (value)
             newBitset = m_cache.outputDataBitset | (1 << index);
@@ -649,14 +662,24 @@ namespace zen
 
     ZenError LegacyImuProperties::setPrecisionDataFlag(bool value)
     {
+        const bool streaming = m_imu.streaming();
+        if (streaming)
+            if (auto error = m_imu.properties()->setBool(ZenImuProperty_StreamData, false))
+                return error;
+
+        auto guard = finally([=]() {
+            if (streaming)
+                m_imu.properties()->setBool(ZenImuProperty_StreamData, true);
+        });
+
         uint32_t newBitset;
         if (value)
             newBitset = m_cache.outputDataBitset | (1 << 22);
         else
             newBitset = m_cache.outputDataBitset & ~(1 << 22);
 
-        uint32_t iValue = value ? 1 : 0;
-        if (auto error = m_ioInterface.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(EDevicePropertyV0::SetDataMode), static_cast<ZenProperty_t>(EDevicePropertyV0::SetDataMode), gsl::make_span(reinterpret_cast<unsigned char*>(&iValue), sizeof(iValue))))
+        const uint32_t iValue = value ? 1 : 0;
+        if (auto error = m_ioInterface.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(EDevicePropertyV0::SetDataMode), static_cast<ZenProperty_t>(EDevicePropertyV0::SetDataMode), gsl::make_span(reinterpret_cast<const unsigned char*>(&iValue), sizeof(iValue))))
             return error;
 
         m_cache.outputDataBitset = newBitset;
