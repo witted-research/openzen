@@ -2,8 +2,10 @@
 #define ZEN_IO_INTERFACES_WINDOWS_WINDOWSDEVICEINTERFACE_H_
 
 #include <array>
+#include <atomic>
 #include <string>
 #include <string_view>
+#include <thread>
 
 #define NOMINMAX
 #include <Windows.h>
@@ -18,9 +20,6 @@ namespace zen
     public:
         WindowsDeviceInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~WindowsDeviceInterface();
-
-        /** Poll data from IO interface */
-        ZenError poll() override;
 
         /** Returns the IO interface's baudrate (bit/s) */
         ZenError baudrate(int32_t& rate) const override;
@@ -41,11 +40,16 @@ namespace zen
         /** Send data to IO interface */
         ZenError send(std::vector<unsigned char> frame) override;
 
-        ZenError receiveInBuffer(bool& received);
         ZenError parseBuffer();
+        ZenError receiveInBuffer(bool& received);
+
+        int run();
 
         std::array<unsigned char, 1024> m_buffer;
         size_t m_usedBufferSize;
+
+        std::atomic_bool m_terminate;
+        std::thread m_pollingThread;
 
         std::string m_deviceId;
 

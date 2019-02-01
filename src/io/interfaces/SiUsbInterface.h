@@ -1,6 +1,9 @@
 #ifndef ZEN_IO_INTERFACES_SIUSBINTERFACE_H_
 #define ZEN_IO_INTERFACES_SIUSBINTERFACE_H_
 
+#include <atomic>
+#include <thread>
+
 #define NOMINMAX
 #include <Windows.h>
 #undef NOMINMAX
@@ -16,9 +19,6 @@ namespace zen
     public:
         SiUsbInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~SiUsbInterface();
-
-        /** Poll data from IO interface */
-        ZenError poll() override;
 
         /** Send data to USB interface */
         ZenError send(std::vector<unsigned char> frame) override;
@@ -40,8 +40,11 @@ namespace zen
 
     private:
         ZenError receiveInBuffer(bool& received);
+        int run();
 
         std::vector<unsigned char> m_buffer;
+        std::atomic_bool m_terminate;
+        std::thread m_pollingThread;
 
         HANDLE m_handle;
 

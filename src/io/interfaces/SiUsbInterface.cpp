@@ -7,28 +7,18 @@ namespace zen
 {
     SiUsbInterface::SiUsbInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
         : BaseIoInterface(std::move(factory), std::move(parser))
+        , m_terminate(false)
+        , m_pollingThread(&SiUsbInterface::run, this)
         , m_handle(handle)
         , m_baudrate(0)
     {}
 
     SiUsbInterface::~SiUsbInterface()
     {
+        m_terminate = true;
+        m_pollingThread.join();
+
         SiUsbSystem::fnTable.close(m_handle);
-    }
-
-    ZenError SiUsbInterface::poll()
-    {
-        bool shouldParse = true;
-        while (shouldParse)
-        {
-            if (auto error = processReceivedData(m_buffer.data(), m_buffer.size()))
-                return error;
-
-            if (auto error = receiveInBuffer(shouldParse))
-                return error;
-        }
-
-        return ZenError_None;
     }
 
     ZenError SiUsbInterface::send(std::vector<unsigned char> frame)
@@ -100,6 +90,26 @@ namespace zen
         {
             m_buffer.clear();
             return ZenError_Io_ReadFailed;
+        }
+
+        return ZenError_None;
+    }
+
+    int SiUsbInterface::run()
+    {
+        while (!m_terminate)
+        {
+            bool shouldParse = true;
+            while (shouldParse)
+            {
+                if (auto error = processReceivedData(m_buffer.data(), m_buffer.size()))
+                    return error;
+
+                if (auto error = receiveInBuffer(shouldParse))
+                    return error;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
         return ZenError_None;

@@ -15,12 +15,6 @@ CanInterface::~CanInterface()
     m_channel.unsubscribe(*this);
 }
 
-ZenError CanInterface::poll()
-{
-    // No logic, as it is handled by the IPlatformCanEngine
-    return ZenError_None;
-}
-
 ZenError CanInterface::baudrate(int32_t& rate) const
 {
     rate = m_channel.baudrate();

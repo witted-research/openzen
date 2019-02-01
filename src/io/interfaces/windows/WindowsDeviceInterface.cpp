@@ -43,27 +43,16 @@ namespace zen
 
     WindowsDeviceInterface::WindowsDeviceInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
         : BaseIoInterface(std::move(factory), std::move(parser))
+        , m_terminate(false)
+        , m_pollingThread(&WindowsDeviceInterface::run, this)
         , m_handle(handle)
     {}
 
     WindowsDeviceInterface::~WindowsDeviceInterface()
     {
+        m_terminate = true;
+        m_pollingThread.join();
         ::CloseHandle(m_handle);
-    }
-
-    ZenError WindowsDeviceInterface::poll()
-    {
-        bool shouldParse = true;
-        while (shouldParse)
-        {
-            if (auto error = processReceivedData(m_buffer.data(), m_usedBufferSize))
-                return error;
-
-            if (auto error = receiveInBuffer(shouldParse))
-                return error;
-        }
-        
-        return ZenError_None;
     }
 
     ZenError WindowsDeviceInterface::send(std::vector<unsigned char> frame)
@@ -138,6 +127,26 @@ namespace zen
 
         m_usedBufferSize = nReceivedBytes;
         received = nReceivedBytes > 0;
+        return ZenError_None;
+    }
+
+    int WindowsDeviceInterface::run()
+    {
+        while (!m_terminate)
+        {
+            bool shouldParse = true;
+            while (shouldParse)
+            {
+                if (auto error = processReceivedData(m_buffer.data(), m_usedBufferSize))
+                    return error;
+
+                if (auto error = receiveInBuffer(shouldParse))
+                    return error;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
         return ZenError_None;
     }
 }

@@ -8,6 +8,8 @@ namespace zen
 {
     FtdiUsbInterface::FtdiUsbInterface(FT_HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
         : BaseIoInterface(std::move(factory), std::move(parser))
+        , m_terminate(false)
+        , m_pollingThread(&FtdiUsbInterface::run, this)
         , m_handle(handle)
         , m_baudrate()
     {}
@@ -15,21 +17,6 @@ namespace zen
     FtdiUsbInterface::~FtdiUsbInterface()
     {
         FtdiUsbSystem::fnTable.close(m_handle);
-    }
-
-    ZenError FtdiUsbInterface::poll()
-    {
-        bool shouldParse = true;
-        while (shouldParse)
-        {
-            if (auto error = processReceivedData(m_buffer.data(), m_buffer.size()))
-                return error;
-
-            if (auto error = receiveInBuffer(shouldParse))
-                return error;
-        }
-
-        return ZenError_None;
     }
 
     ZenError FtdiUsbInterface::send(std::vector<unsigned char> frame)
@@ -119,6 +106,26 @@ namespace zen
         {
             m_buffer.clear();
             return ZenError_Io_ReadFailed;
+        }
+
+        return ZenError_None;
+    }
+
+    int FtdiUsbInterface::run()
+    {
+        while (!m_terminate)
+        {
+            bool shouldParse = true;
+            while (shouldParse)
+            {
+                if (auto error = processReceivedData(m_buffer.data(), m_buffer.size()))
+                    return error;
+
+                if (auto error = receiveInBuffer(shouldParse))
+                    return error;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
         return ZenError_None;

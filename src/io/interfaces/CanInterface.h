@@ -16,8 +16,6 @@ namespace zen
         CanInterface(uint32_t id, ICanChannel& channel, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~CanInterface();
 
-        ZenError poll() override;
-
         /** Returns the CAN interface's baudrate (bit/s) */
         ZenError baudrate(int32_t& rate) const override;
 

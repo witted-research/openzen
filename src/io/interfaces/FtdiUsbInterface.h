@@ -1,8 +1,10 @@
 #ifndef ZEN_IO_INTERFACES_FTDIUSBINTERFACE_H_
 #define ZEN_IO_INTERFACES_FTDIUSBINTERFACE_H_
 
+#include <atomic>
 #include <string>
 #include <string_view>
+#include <thread>
 
 #define NOMINMAX
 #include "ftd2xx.h"
@@ -17,9 +19,6 @@ namespace zen
     public:
         FtdiUsbInterface(FT_HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~FtdiUsbInterface();
-
-        /** Poll data from IO interface */
-        ZenError poll() override;
 
         /** Returns the IO interface's baudrate (bit/s) */
         ZenError baudrate(int32_t& rate) const override;
@@ -40,7 +39,10 @@ namespace zen
         ZenError send(std::vector<unsigned char> frame) override;
 
         ZenError receiveInBuffer(bool& received);
+        int run();
 
+        std::atomic_bool m_terminate;
+        std::thread m_pollingThread;
         std::vector<unsigned char> m_buffer;
 
         FT_HANDLE m_handle;

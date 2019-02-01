@@ -7,16 +7,9 @@ namespace zen
     BleInterface::BleInterface(std::unique_ptr<BleDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
         : BaseIoInterface(std::move(factory), std::move(parser))
         , m_handler(std::move(handler))
+        , m_terminate(false)
+        , m_pollingThread(&BleInterface::run, this)
     {}
-
-    ZenError BleInterface::poll()
-    {
-        while (auto data = m_handler->tryToGetReceivedData())
-            if (auto error = processReceivedData(data->data(), data->size()))
-                return error;
-
-        return ZenError_None;
-    }
 
     ZenError BleInterface::send(std::vector<unsigned char> frame)
     {
@@ -55,5 +48,19 @@ namespace zen
             return false;
 
         return m_handler->equals(desc.handle64);
+    }
+
+    int BleInterface::run()
+    {
+        while (!m_terminate)
+        {
+            while (auto data = m_handler->tryToGetReceivedData())
+                if (auto error = processReceivedData(data->data(), data->size()))
+                    return error;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        return ZenError_None;
     }
 }

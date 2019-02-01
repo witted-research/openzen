@@ -9,15 +9,6 @@ namespace zen
         , m_handler(std::move(handler))
     {}
 
-    ZenError BluetoothInterface::poll()
-    {
-        while (auto data = m_handler->tryToGetReceivedData())
-            if (auto error = processReceivedData(data->data(), data->size()))
-                return error;
-
-        return ZenError_None;
-    }
-
     ZenError BluetoothInterface::send(std::vector<unsigned char> frame)
     {
         if (auto error = m_handler->send(frame))
@@ -55,5 +46,19 @@ namespace zen
             return false;
 
         return m_handler->equals(desc.handle64);
+    }
+
+    int BluetoothInterface::run()
+    {
+        while (!m_terminate)
+        {
+            while (auto data = m_handler->tryToGetReceivedData())
+                if (auto error = processReceivedData(data->data(), data->size()))
+                    return error;
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+
+        return ZenError_None;
     }
 }

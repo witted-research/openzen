@@ -274,15 +274,7 @@ namespace zen
 
         while (!m_terminate)
         {
-            {
-                std::lock_guard<std::mutex> lock(m_mutex);
-
-                for (const auto& sensor : m_sensors)
-                    sensor->poll();
-
-                CanManager::get().poll();
-            }
-
+            CanManager::get().poll();
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 

@@ -24,8 +24,6 @@ namespace zen
         /** Allow the sensor to initialize variables, that require an active IO interface */
         ZenError init();
 
-        ZenError poll();
-
         /** On first call, tries to initialize a firmware update, and returns an error on failure.
          * Subsequent calls do not require a valid buffer and buffer size, and only report the current status:
          * Returns ZenAsync_Updating while busy updating firmware.

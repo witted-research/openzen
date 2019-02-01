@@ -87,11 +87,6 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError Sensor::poll()
-    {
-        return m_ioInterface.poll();
-    }
-
     ZenAsyncStatus Sensor::updateFirmwareAsync(const char* const buffer, size_t bufferSize)
     {
         if (buffer == nullptr)

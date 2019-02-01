@@ -1,8 +1,10 @@
 #ifndef ZEN_IO_INTERFACES_BLUETOOTHINTERFACE_H_
 #define ZEN_IO_INTERFACES_BLUETOOTHINTERFACE_H_
 
+#include <atomic>
 #include <string>
 #include <string_view>
+#include <thread>
 
 #include "BaseIoInterface.h"
 #include "io/bluetooth/BluetoothDeviceHandler.h"
@@ -14,9 +16,6 @@ namespace zen
     public:
         BluetoothInterface(std::unique_ptr<BluetoothDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~BluetoothInterface() = default;
-
-        /** Poll data from IO interface */
-        ZenError poll() override;
 
         /** Send data to IO interface */
         ZenError send(std::vector<unsigned char> frame) override;
@@ -37,7 +36,11 @@ namespace zen
         bool equals(const ZenSensorDesc& desc) const override;
 
     private:
+        int run();
+
         std::unique_ptr<BluetoothDeviceHandler> m_handler;
+        std::atomic_bool m_terminate;
+        std::thread m_pollingThread;
     };
 }
 

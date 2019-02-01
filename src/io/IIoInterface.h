@@ -15,9 +15,6 @@ namespace zen
     public:
         virtual ~IIoInterface() = default;
 
-        /** Poll data from IO interface */
-        virtual ZenError poll() = 0;
-
         /** Send data to IO interface */
         virtual ZenError send(uint8_t address, uint8_t function, const unsigned char* data, size_t length) = 0;
 

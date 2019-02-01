@@ -18,9 +18,6 @@ namespace zen
     public:
         AsyncIoInterface(std::unique_ptr<BaseIoInterface> ioInterface);
 
-        /** Poll data from IO interface */
-        ZenError poll() { return m_ioInterface->poll(); }
-
         /** Send data to IO interface */
         ZenError send(uint8_t address, uint8_t function, const unsigned char* data, size_t length) { return m_ioInterface->send(address, function, data, length); }
 
