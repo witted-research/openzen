@@ -239,7 +239,7 @@ namespace zen
         }
         else
         {
-            if (address >= m_components.size())
+            if (address > m_components.size())
                 return ZenError_Io_MsgCorrupt;
 
             if (address > 0)
