@@ -1,12 +1,12 @@
 #include "io/interfaces/SiUsbInterface.h"
 
 #include "io/systems/SiUsbSystem.h"
-#include "utility/Finally.h"
 
 namespace zen
 {
-    SiUsbInterface::SiUsbInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
+    SiUsbInterface::SiUsbInterface(HANDLE handle, OVERLAPPED ioReader, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
         : BaseIoInterface(std::move(factory), std::move(parser))
+        , m_ioReader(ioReader)
         , m_terminate(false)
         , m_pollingThread(&SiUsbInterface::run, this)
         , m_handle(handle)
@@ -16,14 +16,20 @@ namespace zen
     SiUsbInterface::~SiUsbInterface()
     {
         m_terminate = true;
+        
+        // Terminate wait for the interrupt
+        SiUsbSystem::fnTable.cancelIo(m_handle);
+        ::PulseEvent(m_ioReader.hEvent);
+
         m_pollingThread.join();
 
         SiUsbSystem::fnTable.close(m_handle);
+        ::CloseHandle(m_ioReader.hEvent);
     }
 
     ZenError SiUsbInterface::send(std::vector<unsigned char> frame)
     {
-        DWORD nBytesWritten;
+        DWORD nBytesWritten = 0;
         if (auto error = SiUsbSystem::fnTable.write(m_handle, frame.data(), static_cast<DWORD>(frame.size()), &nBytesWritten, nullptr))
             return ZenError_Io_SendFailed;
 
@@ -77,39 +83,26 @@ namespace zen
         return std::string_view(serialNumber, length) == desc.serialNumber;
     }
 
-    ZenError SiUsbInterface::receiveInBuffer(bool& received)
-    {
-        DWORD temp, nReceivedBytes;
-        if (auto error = SiUsbSystem::fnTable.checkRxQueue(m_handle, &nReceivedBytes, &temp))
-            return ZenError_Io_GetFailed;
-
-        m_buffer.resize(nReceivedBytes);
-
-        received = nReceivedBytes > 0;
-        if (received && SiUsbSystem::fnTable.read(m_handle, m_buffer.data(), static_cast<DWORD>(m_buffer.size()), &nReceivedBytes, nullptr) != SI_SUCCESS)
-        {
-            m_buffer.clear();
-            return ZenError_Io_ReadFailed;
-        }
-
-        return ZenError_None;
-    }
-
     int SiUsbInterface::run()
     {
         while (!m_terminate)
         {
-            bool shouldParse = true;
-            while (shouldParse)
+            DWORD nReceivedBytes = 0;
+            if (auto error = SiUsbSystem::fnTable.read(m_handle, m_buffer.data(), static_cast<DWORD>(m_buffer.size()), &nReceivedBytes, &m_ioReader))
             {
-                if (auto error = processReceivedData(m_buffer.data(), m_buffer.size()))
-                    return error;
+                if (error != SI_IO_PENDING)
+                    return ZenError_Io_ReadFailed;
 
-                if (auto error = receiveInBuffer(shouldParse))
-                    return error;
+                if (::WaitForSingleObject(m_ioReader.hEvent, INFINITE) != WAIT_OBJECT_0)
+                    return ZenError_Io_ReadFailed;
+
+                if (!::GetOverlappedResult(m_handle, &m_ioReader, &nReceivedBytes, false))
+                    return ZenError_Io_ReadFailed;
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            if (nReceivedBytes > 0)
+                if (auto error = processReceivedData(m_buffer.data(), nReceivedBytes))
+                    return error;
         }
 
         return ZenError_None;

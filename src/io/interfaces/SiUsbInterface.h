@@ -1,6 +1,7 @@
 #ifndef ZEN_IO_INTERFACES_SIUSBINTERFACE_H_
 #define ZEN_IO_INTERFACES_SIUSBINTERFACE_H_
 
+#include <array>
 #include <atomic>
 #include <thread>
 
@@ -17,7 +18,7 @@ namespace zen
     class SiUsbInterface : public BaseIoInterface
     {
     public:
-        SiUsbInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
+        SiUsbInterface(HANDLE handle, OVERLAPPED ioReader, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
         ~SiUsbInterface();
 
         /** Send data to USB interface */
@@ -39,14 +40,15 @@ namespace zen
         bool equals(const ZenSensorDesc& desc) const override;
 
     private:
-        ZenError receiveInBuffer(bool& received);
         int run();
 
-        std::vector<unsigned char> m_buffer;
-        std::atomic_bool m_terminate;
-        std::thread m_pollingThread;
+        std::array<unsigned char, 256> m_buffer;
 
         HANDLE m_handle;
+        OVERLAPPED m_ioReader;
+
+        std::atomic_bool m_terminate;
+        std::thread m_pollingThread;
 
         unsigned int m_baudrate;
     };

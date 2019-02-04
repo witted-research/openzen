@@ -23,7 +23,13 @@ namespace zen
             if (!factory || !parser)
                 return std::make_pair(ZenError_InvalidArgument, nullptr);
 
-            auto ioInterface = std::make_unique<SiUsbInterface>(handle, std::move(factory), std::move(parser));
+            // Create an overlapped object for asynchronous communication
+            OVERLAPPED ioReader{0};
+            ioReader.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
+            if (!ioReader.hEvent)
+                return std::make_pair(ZenError_Io_InitFailed, nullptr);
+
+            auto ioInterface = std::make_unique<SiUsbInterface>(handle, ioReader, std::move(factory), std::move(parser));
             if (auto error = ioInterface->setBaudrate(921600))
                 return std::make_pair(error, nullptr);
 
@@ -52,6 +58,7 @@ namespace zen
             m_handle = handle;
 
             fnTable.checkRxQueue = reinterpret_cast<SiUsbFnTable::CheckRxQueueFn>(dll.procedure(m_handle, "SI_CheckRXQueue"));
+            fnTable.cancelIo = reinterpret_cast<SiUsbFnTable::CancelIoFn>(dll.procedure(m_handle, "SI_CancelIo"));
             fnTable.close = reinterpret_cast<SiUsbFnTable::CloseFn>(dll.procedure(m_handle, "SI_Close"));
             fnTable.getDeviceProductString = reinterpret_cast<SiUsbFnTable::GetDeviceProductStringFn>(dll.procedure(m_handle, "SI_GetDeviceProductString"));
             fnTable.getNumDevices = reinterpret_cast<SiUsbFnTable::GetNumDevicesFn>(dll.procedure(m_handle, "SI_GetNumDevices"));

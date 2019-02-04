@@ -13,6 +13,7 @@ namespace zen
     struct SiUsbFnTable
     {
         using CheckRxQueueFn = SI_STATUS (WINAPI *)(const HANDLE, LPDWORD, LPDWORD);
+        using CancelIoFn = SI_STATUS(WINAPI *)(const HANDLE);
         using CloseFn = SI_STATUS (WINAPI *)(const HANDLE);
         using GetDeviceProductStringFn = SI_STATUS (WINAPI *)(const HANDLE, LPVOID, LPBYTE);
         using GetNumDevicesFn = SI_STATUS (WINAPI *)(LPDWORD);
@@ -24,6 +25,7 @@ namespace zen
         using WriteFn = SI_STATUS (WINAPI *)(const HANDLE, LPVOID, const DWORD, LPDWORD, LPOVERLAPPED);
 
         CheckRxQueueFn checkRxQueue;
+        CancelIoFn cancelIo;
         CloseFn close;
         GetDeviceProductStringFn getDeviceProductString;
         GetNumDevicesFn getNumDevices;
