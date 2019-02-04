@@ -5,7 +5,6 @@
 
 #include "Sensor.h"
 #include "io/Modbus.h"
-#include "utility/Finally.h"
 
 namespace zen
 {
@@ -48,10 +47,6 @@ namespace zen
 
             if (m_parser->finished())
             {
-                auto guard = finally([this]() {
-                    m_parser->reset();
-                });
-
                 const auto& frame = m_parser->frame();
                 if (auto error = m_subscriber->processData(frame.address, frame.function, frame.data.data(), frame.data.size()))
                 {
@@ -63,6 +58,7 @@ namespace zen
                         std::cout << c << ",";
                     std::cout << "' due to error '" << error << "'." << std::endl;
                 }
+                m_parser->reset();
             }
         }
 
