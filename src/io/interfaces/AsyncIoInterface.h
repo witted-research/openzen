@@ -13,8 +13,6 @@ namespace zen
 {
     class AsyncIoInterface
     {
-        constexpr static auto IO_TIMEOUT = std::chrono::milliseconds(15000);
-
     public:
         AsyncIoInterface(std::unique_ptr<BaseIoInterface> ioInterface);
 

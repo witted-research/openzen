@@ -146,6 +146,8 @@ namespace zen
 
     ZenError AsyncIoInterface::terminateWaitOnPublishOrTimeout()
     {
+        constexpr static auto IO_TIMEOUT = std::chrono::milliseconds(2000);
+
         if (!m_fence.waitFor(IO_TIMEOUT))
         {
             // Second chance, in case we timed out right after the interface started publishing
