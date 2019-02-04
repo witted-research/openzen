@@ -39,6 +39,7 @@ namespace zen
                     std::cout << std::to_string(c) << ",";
                 std::cout << std::endl;
 
+                m_parser->reset();
                 length -= 1;
                 continue;
                 // [XXX] Is this a valid approach?
