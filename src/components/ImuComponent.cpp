@@ -47,6 +47,7 @@ namespace zen
         , m_base(base)
         , m_ioInterface(ioInterface)
         , m_initialized(false)
+        , m_streaming(true)
         , m_version(version)
         , m_id(id)
     {}
