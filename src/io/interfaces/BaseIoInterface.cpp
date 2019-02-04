@@ -34,8 +34,11 @@ namespace zen
             const size_t nParsedBytes = bufferSize - length;
             if (auto error = m_parser->parse(data + nParsedBytes, length))
             {
-                std::cout << "Received corrupt message:" << std::endl;
-                std::cout << std::string_view(reinterpret_cast<const char*>(data), length) << std::endl;
+                std::cout << "Received corrupt message: ";
+                for (auto c : gsl::make_span(data + nParsedBytes, length))
+                    std::cout << std::to_string(c) << ",";
+                std::cout << std::endl;
+
                 length -= 1;
                 continue;
                 // [XXX] Is this a valid approach?
@@ -50,7 +53,15 @@ namespace zen
 
                 const auto& frame = m_parser->frame();
                 if (auto error = m_subscriber->processData(frame.address, frame.function, frame.data.data(), frame.data.size()))
-                    std::cout << "Received unexpected message (" << std::to_string(frame.function) << ": " << frame.data.data() << ") from " << std::to_string(frame.address) << std::endl;
+                {
+                    std::cout << "Failed to process message with address '" << std::to_string(frame.address) <<
+                        "', function '" << std::to_string(frame.function) <<
+                        "', data '";
+                    
+                    for (auto c : frame.data)
+                        std::cout << c << ",";
+                    std::cout << "' due to error '" << error << "'." << std::endl;
+                }
             }
         }
 
