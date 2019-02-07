@@ -1,3 +1,4 @@
+add_subdirectory(expected-lite)
 add_subdirectory(ftdi)
 add_subdirectory(gsl)
 add_subdirectory(pcanbasic)

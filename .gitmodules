@@ -1,3 +1,6 @@
 [submodule "external/gsl"]
 	path = external/gsl
 	url = https://github.com/Microsoft/GSL.git
+[submodule "external/expected-lite"]
+	path = external/expected-lite
+	url = https://github.com/martinmoene/expected-lite.git
