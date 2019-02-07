@@ -181,21 +181,12 @@ namespace zen
     std::pair<ZenError, Sensor*> SensorManager::makeSensor(std::unique_ptr<BaseIoInterface> ioInterface)
     {
         auto sensor = std::make_unique<Sensor>(std::move(ioInterface));
-        Sensor* sensorPtr = sensor.get();
-        // Add sensor, to ensure it is being polled
-        // [TODO] Run on separate thread
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_sensors.emplace(std::move(sensor));
-        }
-
-        if (auto error = sensorPtr->init())
-        {
-            release(sensorPtr);
+        if (auto error = sensor->init())
             return std::make_pair(error, nullptr);
-        }
 
-        return std::make_pair(ZenError_None, sensorPtr);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = m_sensors.emplace(std::move(sensor));
+        return std::make_pair(ZenError_None, it.first->get());
     }
 
     IZenSensor* SensorManager::findSensor(const ZenSensorDesc* sensorDesc)
