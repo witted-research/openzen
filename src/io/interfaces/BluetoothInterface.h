@@ -15,7 +15,7 @@ namespace zen
     {
     public:
         BluetoothInterface(std::unique_ptr<BluetoothDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
-        ~BluetoothInterface() = default;
+        ~BluetoothInterface();
 
         /** Send data to IO interface */
         ZenError send(std::vector<unsigned char> frame) override;
@@ -40,7 +40,7 @@ namespace zen
 
         std::unique_ptr<BluetoothDeviceHandler> m_handler;
         std::atomic_bool m_terminate;
-        std::thread m_pollingThread;
+        std::thread m_ioReader;
     };
 }
 

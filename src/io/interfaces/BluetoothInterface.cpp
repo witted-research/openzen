@@ -7,14 +7,20 @@ namespace zen
     BluetoothInterface::BluetoothInterface(std::unique_ptr<BluetoothDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
         : BaseIoInterface(std::move(factory), std::move(parser))
         , m_handler(std::move(handler))
+        , m_terminate(false)
+        , m_ioReader(&BluetoothInterface::run, this)
     {}
+
+    BluetoothInterface::~BluetoothInterface()
+    {
+        m_terminate = true;
+        m_handler.reset();
+        m_ioReader.join();
+    }
 
     ZenError BluetoothInterface::send(std::vector<unsigned char> frame)
     {
-        if (auto error = m_handler->send(frame))
-            return error;
-
-        return ZenError_None;
+        return m_handler->send(frame);
     }
 
     ZenError BluetoothInterface::baudrate(int32_t& rate) const
@@ -52,11 +58,24 @@ namespace zen
     {
         while (!m_terminate)
         {
-            while (auto data = m_handler->tryToGetReceivedData())
-                if (auto error = processReceivedData(data->data(), data->size()))
-                    return error;
+            // This is the only place where we read asynchronously, so no need to check the expected
+            auto future = m_handler->readAsync();
+            future->wait();
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            auto buffer = future->get();
+            if (buffer.has_value())
+            {
+                if (auto error = processReceivedData(buffer->data(), buffer->size()))
+                    return error;
+            }
+            else
+            {
+                if (buffer.error() == ZenError_Io_NotInitialized)
+                {
+                    // [TODO] Try to reconnect
+                }
+                return buffer.error();
+            }
         }
 
         return ZenError_None;
