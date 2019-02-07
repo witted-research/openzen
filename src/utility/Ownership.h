@@ -27,7 +27,7 @@ namespace zen
             m_owner.release();
         }
 
-        T operator*() const noexcept { return m_ref; }
+        T& operator*() & noexcept { return m_ref; }
         T* operator->() const noexcept { return &m_ref; }
     };
 
