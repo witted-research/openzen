@@ -231,7 +231,7 @@ typedef enum EZenImuProperty : ZenProperty_t
 {
     ZenImuProperty_Invalid = 0,
 
-    ZenImuProperty_StreamData = 10000,           // bool
+    ZenImuProperty_StreamData = 1000,           // bool
     ZenImuProperty_PollSensorData,               // void - Manually request sensor data (when not streaming)
     ZenImuProperty_CalibrateGyro,                // void - Start gyro calibration
     ZenImuProperty_ResetOrientationOffset,       // void - Resets the orientation's offset
