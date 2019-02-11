@@ -48,7 +48,7 @@ namespace zen
             m_uploadThread.join();
     }
 
-    ZenError Sensor::init()
+    ZenSensorInitError Sensor::init()
     {
         // [XXX] Even before this we'd want to know the IOs baudrate, and set the IO Interface baudrate accordingly
         // [XXX] That way we can remove this from the external API
@@ -69,11 +69,11 @@ namespace zen
             if (auto properties = make_properties(0, m_version, m_ioInterface))
                 m_properties = std::move(properties);
             else
-                return ZenError_Sensor_VersionNotSupported;
+                return ZenSensorInitError_UnsupportedProtocol;
 
             int32_t samplingRate;
-            if (auto error = m_properties->getInt32(ZenSensorProperty_SamplingRate, &samplingRate))
-                return error;
+            if (m_properties->getInt32(ZenSensorProperty_SamplingRate, &samplingRate) != ZenError_None)
+                return ZenSensorInitError_InvalidConfig;
 
             m_samplingRate = samplingRate;
 
@@ -84,7 +84,7 @@ namespace zen
             if (auto error = component->init())
                 return error;
 
-        return ZenError_None;
+        return ZenSensorInitError_None;
     }
 
     ZenAsyncStatus Sensor::updateFirmwareAsync(const char* const buffer, size_t bufferSize)

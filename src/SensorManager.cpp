@@ -84,28 +84,34 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError SensorManager::obtain(const ZenSensorDesc* sensorDesc, IZenSensor** outSensor)
+    ZenSensorInitError SensorManager::obtain(const ZenSensorDesc* sensorDesc, IZenSensor** outSensor)
     {
         if (sensorDesc == nullptr)
-            return ZenError_IsNull;
+            return ZenSensorInitError_IsNull;
 
         if (outSensor == nullptr)
-            return ZenError_IsNull;
+            return ZenSensorInitError_IsNull;
 
         if (auto* sensor = findSensor(sensorDesc))
         {
             *outSensor = sensor;
-            return ZenError_None;
+            return ZenSensorInitError_None;
         }
 
-        ZenError ioError;
+        ZenSensorInitError ioError;
         auto ioInterface = IoManager::get().obtain(*sensorDesc, ioError);
         if (!ioInterface)
             return ioError;
 
-        auto[sensorError, sensorPtr] = makeSensor(std::move(ioInterface));
-        *outSensor = sensorPtr;
-        return sensorError;
+        auto sensor = make_sensor(std::move(ioInterface));
+        if (!sensor)
+            return sensor.error();
+
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = m_sensors.emplace(std::move(*sensor));
+        *outSensor = it.first->get();
+
+        return ZenSensorInitError_None;
     }
 
     ZenError SensorManager::release(IZenSensor* sensor)
@@ -178,17 +184,6 @@ namespace zen
         return ZenAsync_Updating;
     }
 
-    std::pair<ZenError, Sensor*> SensorManager::makeSensor(std::unique_ptr<BaseIoInterface> ioInterface)
-    {
-        auto sensor = std::make_unique<Sensor>(std::move(ioInterface));
-        if (auto error = sensor->init())
-            return std::make_pair(error, nullptr);
-
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = m_sensors.emplace(std::move(sensor));
-        return std::make_pair(ZenError_None, it.first->get());
-    }
-
     IZenSensor* SensorManager::findSensor(const ZenSensorDesc* sensorDesc)
     {
         for (const auto& sensor : m_sensors)
@@ -214,7 +209,7 @@ namespace zen
                     for (auto it = m_devices.cbegin(); it != m_devices.cend();)
                     {
                         IZenSensor* sensor = nullptr;
-                        if (auto error = obtain(&*it, &sensor))
+                        if (ZenSensorInitError_None != obtain(&*it, &sensor))
                         {
                             it = m_devices.erase(it);
                             continue;

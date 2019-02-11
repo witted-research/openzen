@@ -7,7 +7,7 @@ namespace zen
     BluetoothDeviceHandler::BluetoothDeviceHandler(uint64_t address)
         : m_address(address)
         , m_connected(false)
-        , m_error(ZenError_None)
+        , m_initError(ZenSensorInitError_None)
     {}
 
     BluetoothDeviceHandler::~BluetoothDeviceHandler()
@@ -20,16 +20,17 @@ namespace zen
             promise->value().set_value(nonstd::make_unexpected(ZenError_None));
     }
 
-    ZenError BluetoothDeviceHandler::initialize()
+    ZenSensorInitError BluetoothDeviceHandler::initialize()
     {
         start();
         if (m_fence.waitFor(std::chrono::milliseconds(5000)))
         {
-            ZenError result = m_error;
+            ZenSensorInitError result = m_initError;
             reset();
             return result;
         }
-        return ZenError_Io_InitFailed;
+
+        return ZenSensorInitError_ConnectFailed;
     }
 
     void BluetoothDeviceHandler::run()
@@ -39,13 +40,13 @@ namespace zen
 
         connect(&agent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered, this, &BluetoothDeviceHandler::serviceDiscovered, Qt::DirectConnection);
         connect(&agent, QOverload<QBluetoothServiceDiscoveryAgent::Error>::of(&QBluetoothServiceDiscoveryAgent::error), this, [this]() {
-            m_error = ZenError_Io_InitFailed;
+            m_initError = ZenSensorInitError_ConnectFailed;
             quit();
         }, Qt::DirectConnection);
         connect(&agent, &QBluetoothServiceDiscoveryAgent::finished, this, [this]() {
             if (!m_socket)
             {
-                m_error = ZenError_Io_InitFailed;
+                m_initError = ZenSensorInitError_ConnectFailed;
                 quit();
             }
         }, Qt::DirectConnection);
@@ -121,7 +122,7 @@ namespace zen
                 }
                 else
                 {
-                    m_error = ZenError_Io_InitFailed;
+                    m_initError = ZenSensorInitError_ConnectFailed;
                     m_fence.terminate();
                 }
             }, Qt::DirectConnection);
@@ -148,7 +149,7 @@ namespace zen
 
     void BluetoothDeviceHandler::reset()
     {
-        m_error = ZenError_None;
+        m_initError = ZenSensorInitError_None;
         m_fence.reset();
     }
 }

@@ -21,7 +21,7 @@ namespace zen
         ~PcanBasicChannel();
 
         /** Subscribe IO Interface to CAN interface  */
-        ZenError subscribe(CanInterface& i) override;
+        bool subscribe(CanInterface& i) override;
 
         /** Unsubscribe IO Interface from CAN interface */
         void unsubscribe(CanInterface& i) override;

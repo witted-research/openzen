@@ -72,13 +72,13 @@ namespace zen
         return ZenError_None;
     }
 
-    std::unique_ptr<BaseIoInterface> FtdiUsbSystem::obtain(const ZenSensorDesc& desc, ZenError& outError)
+    std::unique_ptr<BaseIoInterface> FtdiUsbSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
     {
         FT_HANDLE handle;
         // Need to cast to a non-const because the FT_OpenEx interface expects a void pointer
         if (auto error = fnTable.openEx(const_cast<char*>(desc.serialNumber), FT_OPEN_BY_SERIAL_NUMBER, &handle))
         {
-            outError = ZenError_Io_SetFailed;
+            outError = ZenSensorInitError_InvalidAddress;
             return nullptr;
         }
 
@@ -87,35 +87,35 @@ namespace zen
         auto parser = modbus::make_parser(format);
         if (!factory || !parser)
         {
-            outError = ZenError_InvalidArgument;
+            outError = ZenSensorInitError_UnsupportedDataFormat;
             return nullptr;
         }
 
         auto ioInterface = std::make_unique<FtdiUsbInterface>(handle, std::move(factory), std::move(parser));
-        if (outError = ioInterface->setBaudrate(DEFAULT_BAUDRATE))
-            return nullptr;
+        //if (outError = ioInterface->setBaudrate(DEFAULT_BAUDRATE))
+        //    return nullptr;
 
         if (auto error = fnTable.setDataCharacteristics(handle, FT_BITS_8, FT_STOP_BITS_1, FT_PARITY_NONE))
         {
-            outError = ZenError_Io_SetFailed;
+            outError = ZenSensorInitError_IoFailed;
             return nullptr;
         }
 
         if (auto error = fnTable.setFlowControl(handle, FT_FLOW_RTS_CTS, 0x11, 0x12))
         {
-            outError = ZenError_Io_SetFailed;
+            outError = ZenSensorInitError_IoFailed;
             return nullptr;
         }
 
         if (auto error = fnTable.setLatencyTimer(handle, 2))
         {
-            outError = ZenError_Io_SetFailed;
+            outError = ZenSensorInitError_IoFailed;
             return nullptr;
         }
 
         if (auto error = fnTable.setUsbParameters(handle, 64, 0))
         {
-            outError = ZenError_Io_SetFailed;
+            outError = ZenSensorInitError_IoFailed;
             return nullptr;
         }
 

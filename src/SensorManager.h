@@ -54,7 +54,7 @@ namespace zen
         ZenError init();
         ZenError deinit();
 
-        ZenError obtain(const ZenSensorDesc* sensorDesc, IZenSensor** outSensor) override;
+        ZenSensorInitError obtain(const ZenSensorDesc* sensorDesc, IZenSensor** outSensor) override;
 
         ZenError release(IZenSensor* sensor) override;
 
@@ -65,8 +65,6 @@ namespace zen
         bool waitForNextEvent(ZenEvent* outEvent) override;
 
         ZenAsyncStatus listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength, const char* typeFilter) override;
-
-        std::pair<ZenError, Sensor*> makeSensor(std::unique_ptr<BaseIoInterface> ioInterface);
 
         /** Pushes an event to the event queue */
         void notifyEvent(ZenEvent&& event) { m_eventQueue.push(std::move(event)); }

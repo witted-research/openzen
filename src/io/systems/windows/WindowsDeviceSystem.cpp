@@ -43,13 +43,12 @@ namespace zen
         return ZenError_None;
     }
 
-    std::unique_ptr<BaseIoInterface> WindowsDeviceSystem::obtain(const ZenSensorDesc& desc, ZenError& outError)
+    std::unique_ptr<BaseIoInterface> WindowsDeviceSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
     {
-        std::string deviceId;
-        HANDLE handle = ::CreateFileA(deviceId.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+        HANDLE handle = ::CreateFileA(desc.name, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
         if (handle == INVALID_HANDLE_VALUE)
         {
-            outError = ZenError_Io_InitFailed;
+            outError = ZenSensorInitError_InvalidAddress;
             return nullptr;
         }
 
@@ -58,7 +57,7 @@ namespace zen
         auto parser = modbus::make_parser(format);
         if (!factory || !parser)
         {
-            outError = ZenError_InvalidArgument;
+            outError = ZenSensorInitError_UnsupportedDataFormat;
             return nullptr;
         }
 
@@ -67,7 +66,7 @@ namespace zen
         DCB config;
         if (!::GetCommState(handle, &config))
         {
-            outError = ZenError_Io_GetFailed;
+            outError = ZenSensorInitError_IoFailed;
             return nullptr;
         }
 
@@ -83,7 +82,7 @@ namespace zen
 
         if (!::SetCommState(handle, &config))
         {
-            outError = ZenError_Io_SetFailed;
+            outError = ZenSensorInitError_IoFailed;
             return nullptr;
         }
 
@@ -96,12 +95,12 @@ namespace zen
 
         if (!::SetCommTimeouts(handle, &timeoutConfig))
         {
-            outError = ZenError_Io_SetFailed;
+            outError = ZenSensorInitError_IoFailed;
             return nullptr;
         }
 
-        if (outError = ioInterface->setBaudrate(DEFAULT_BAUDRATE))
-            return nullptr;
+        //if (outError = ioInterface->setBaudrate(DEFAULT_BAUDRATE))
+        //    return nullptr;
 
         return ioInterface;
     }

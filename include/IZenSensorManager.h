@@ -13,7 +13,7 @@ protected:
 
 public:
     /** Obtain a sensor */
-    virtual ZenError obtain(const ZenSensorDesc* sensorDesc, IZenSensor** outSensor) = 0;
+    virtual ZenSensorInitError obtain(const ZenSensorDesc* sensorDesc, IZenSensor** outSensor) = 0;
 
     /** Release a sensor */
     virtual ZenError release(IZenSensor* sensor) = 0;

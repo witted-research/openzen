@@ -50,7 +50,7 @@ namespace zen
         return ZenError_None;
     }
 
-    std::unique_ptr<BaseIoInterface> PcanBasicSystem::obtain(const ZenSensorDesc& desc, ZenError& outError)
+    std::unique_ptr<BaseIoInterface> PcanBasicSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
     {
         ICanChannel& channel = *m_channels.begin()->get();
 
@@ -59,12 +59,12 @@ namespace zen
         auto parser = modbus::make_parser(format);
         if (!factory || !parser)
         {
-            outError = ZenError_InvalidArgument;
+            outError = ZenSensorInitError_UnsupportedDataFormat;
             return nullptr;
         }
 
         auto ioInterface = std::make_unique<CanInterface>(desc.handle32, channel, std::move(factory), std::move(parser));
-        if (outError = channel.subscribe(*ioInterface.get()))
+        if (!channel.subscribe(*ioInterface.get()))
             return nullptr;
 
         return ioInterface;

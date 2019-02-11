@@ -24,7 +24,7 @@ namespace zen
         BleDeviceHandler(uint64_t address);
         ~BleDeviceHandler();
 
-        ZenError initialize();
+        ZenSensorInitError initialize();
 
         ZenError send(const std::vector<unsigned char>& data);
         std::optional<std::vector<unsigned char>> tryToGetReceivedData();
@@ -51,7 +51,7 @@ namespace zen
         ThreadFence m_fence;
 
         std::atomic_bool m_disconnected;
-        ZenError m_error;
+        ZenSensorInitError m_error;
     };
 }
 

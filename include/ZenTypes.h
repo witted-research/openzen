@@ -91,6 +91,27 @@ typedef enum ZenError : ZenError_t
     ZenError_Max
 } ZenError;
 
+typedef enum ZenSensorInitError : ZenError_t
+{
+    ZenSensorInitError_None = 0,
+
+    ZenSensorInitError_IsNull,                  // Provided pointer is null
+    ZenSensorInitError_UnsupportedDataFormat,   // Provided Modbus Format is not supported
+    ZenSensorInitError_UnsupportedIoType,       // Provided IO type is not supported
+    ZenSensorInitError_UnsupportedProtocol,     // The sensor's protocol version is not supported by the host
+
+    ZenSensorInitError_ConnectFailed,           // Failed to establish a connection with the sensor
+    ZenSensorInitError_IoFailed,                // Low-level IO API returned an error
+    ZenSensorInitError_RetrieveFailed,          // Failed to retrieve a property from the sensor
+    ZenSensorInitError_SetBaudRateFailed,       // Failed to change the BaudRate
+    ZenSensorInitError_SendFailed,              // Failed to send data
+    ZenSensorInitError_IncompatibleBaudRates,   // Unable to find a compatible BaudRate
+    ZenSensorInitError_InvalidAddress,          // Provided remote address is invalid
+    ZenSensorInitError_InvalidConfig,           // The configuration file is invalid
+
+    ZenSensorInitError_Max
+} ZenSensorInitError;
+
 typedef enum ZenAsyncStatus
 {
     ZenAsync_Finished,

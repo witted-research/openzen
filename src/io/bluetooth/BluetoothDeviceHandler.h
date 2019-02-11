@@ -32,7 +32,7 @@ namespace zen
 
         BluetoothDeviceHandler(BluetoothDeviceHandler&&) = default;
 
-        ZenError initialize();
+        ZenSensorInitError initialize();
 
         nonstd::expected<std::future<async_read_value_t>, ZenAsyncStatus> readAsync();
 
@@ -56,7 +56,7 @@ namespace zen
 
         ThreadFence m_fence;
         std::atomic_bool m_connected;
-        std::atomic<ZenError> m_error;
+        std::atomic<ZenSensorInitError> m_initError;
     };
 }
 

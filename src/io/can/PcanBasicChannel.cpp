@@ -77,24 +77,24 @@ namespace zen
         PcanBasicSystem::fnTable.uninitialize(m_channel);
     }
 
-    ZenError PcanBasicChannel::subscribe(CanInterface& i)
+    bool PcanBasicChannel::subscribe(CanInterface& i)
     {
         {
             // Did someone already subscribe to this ID?
             auto it = m_subscribers.find(i.id());
             if (it != m_subscribers.cend())
-                return ZenError_Io_AlreadyInitialized;
+                return false;
         }
         {
             // Are we already subscribed to another ID?
             auto it = m_subscribers2.find(&i);
             if (it != m_subscribers2.cend())
-                return ZenError_Io_AlreadyInitialized;
+                return false;
         }
 
         m_subscribers.emplace(i.id(), &i);
         m_subscribers2.emplace(&i, i.id());
-        return ZenError_None;
+        return true;
     }
 
     void PcanBasicChannel::unsubscribe(CanInterface& i)

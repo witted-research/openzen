@@ -35,7 +35,7 @@ namespace zen
 
         bool registerIoSystem(std::string_view key, std::unique_ptr<IIoSystem> system);
 
-        std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenError& outError);
+        std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError);
         ZenError listDevices(std::vector<ZenSensorDesc>& outDevices);
 
         static IAutoIoSystemRegistry* head;

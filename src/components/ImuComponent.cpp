@@ -52,7 +52,7 @@ namespace zen
         , m_id(id)
     {}
 
-    ZenError ImuComponent::init()
+    ZenSensorInitError ImuComponent::init()
     {
         // Legacy sensors require a "Command Mode" to active for accessing properties
         // as well a configuration bitset to determine which data to output
@@ -61,12 +61,12 @@ namespace zen
             auto properties = std::make_unique<LegacyImuProperties>(m_ioInterface, *this);
 
             // Initialize to non-streaming
-            if (auto error = properties->setBool(ZenImuProperty_StreamData, false))
-                return error;
+            if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false))
+                return ZenSensorInitError_RetrieveFailed;
 
             uint32_t newBitset;
-            if (auto error = m_ioInterface.sendAndWaitForResult(0, static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config), static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}, newBitset))
-                return error;
+            if (ZenError_None != m_ioInterface.sendAndWaitForResult(0, static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config), static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}, newBitset))
+                return ZenSensorInitError_RetrieveFailed;
 
             properties->setOutputDataBitset(newBitset);
             m_properties = std::move(properties);
@@ -76,40 +76,38 @@ namespace zen
             m_properties = make_properties(m_id, m_version, m_ioInterface);
         }
 
-        {
-            auto cache = m_cache.borrow();
+        auto cache = m_cache.borrow();
 
-            ZenMatrix3x3f matrix;
-            if (auto error = m_properties->getMatrix33(ZenImuProperty_AccAlignment, &matrix))
-                return error;
+        ZenMatrix3x3f matrix;
+        if (auto error = m_properties->getMatrix33(ZenImuProperty_AccAlignment, &matrix))
+            return ZenSensorInitError_RetrieveFailed;
 
-            convertArrayToLpMatrix(matrix.data, &cache->accAlignMatrix);
-            if (auto error = m_properties->getMatrix33(ZenImuProperty_GyrAlignment, &matrix))
-                return error;
+        convertArrayToLpMatrix(matrix.data, &cache->accAlignMatrix);
+        if (auto error = m_properties->getMatrix33(ZenImuProperty_GyrAlignment, &matrix))
+            return ZenSensorInitError_RetrieveFailed;
 
-            convertArrayToLpMatrix(matrix.data, &cache->gyrAlignMatrix);
-            if (auto error = m_properties->getMatrix33(ZenImuProperty_MagSoftIronMatrix, &matrix))
-                return error;
+        convertArrayToLpMatrix(matrix.data, &cache->gyrAlignMatrix);
+        if (auto error = m_properties->getMatrix33(ZenImuProperty_MagSoftIronMatrix, &matrix))
+            return ZenSensorInitError_RetrieveFailed;
 
-            convertArrayToLpMatrix(matrix.data, &cache->softIronMatrix);
+        convertArrayToLpMatrix(matrix.data, &cache->softIronMatrix);
 
-            size_t size = 3 * sizeof(float);
-            if (auto error = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, cache->accBias.data, &size))
-                return error;
+        size_t size = 3 * sizeof(float);
+        if (auto error = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, cache->accBias.data, &size))
+            return ZenSensorInitError_RetrieveFailed;
 
-            size = 3 * sizeof(float);
-            if (auto error = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, cache->gyrBias.data, &size))
-                return error;
+        size = 3 * sizeof(float);
+        if (auto error = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, cache->gyrBias.data, &size))
+            return ZenSensorInitError_RetrieveFailed;
 
-            size = 3 * sizeof(float);
-            if (auto error = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, cache->hardIronOffset.data, &size))
-                return error;
-        }
+        size = 3 * sizeof(float);
+        if (auto error = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, cache->hardIronOffset.data, &size))
+            return ZenSensorInitError_RetrieveFailed;
 
         if (m_version == 0)
             m_initialized = true;
 
-        return ZenError_None;
+        return ZenSensorInitError_None;
     }
 
     ZenError ImuComponent::processData(uint8_t function, const unsigned char* data, size_t length)
@@ -180,6 +178,8 @@ namespace zen
         // Legacy check to guarantee we are not receiving streaming data before initialized
         if (m_version == 0 && !m_initialized)
             return ZenError_None;
+
+        auto it = data;
 
         // Any properties that are retrieved here should be cached locally, because it
         // will take too much time to retrieve from the sensor!

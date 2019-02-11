@@ -10,10 +10,10 @@ namespace zen
             m_controller.discoverServices();
         });
 
-        connect(&m_controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error), this, [this](QLowEnergyController::Error error) {
-            if (error)
+        connect(&m_controller, QOverload<QLowEnergyController::Error>::of(&QLowEnergyController::error), this, [this]() {
+            if (!m_service)
             {
-                m_error = ZenError_Unknown;
+                m_error = ZenSensorInitError_ConnectFailed;
                 m_fence.terminate();
             }
         });
@@ -27,7 +27,7 @@ namespace zen
         connect(&m_controller, &QLowEnergyController::discoveryFinished, this, [this]() {
             if (!m_service)
             {
-                m_error = ZenError_Io_InitFailed;
+                m_error = ZenSensorInitError_ConnectFailed;
                 m_fence.terminate();
             }
         });
@@ -41,7 +41,7 @@ namespace zen
         m_controller.disconnectFromDevice();
     }
 
-    ZenError BleDeviceHandler::initialize()
+    ZenSensorInitError BleDeviceHandler::initialize()
     {
         m_controller.connectToDevice();
 
@@ -49,7 +49,7 @@ namespace zen
         {
             m_controller.disconnectFromDevice();
             reset();
-            return ZenError_Io_InitFailed;
+            return ZenSensorInitError_ConnectFailed;
         }
         auto result = m_error;
         reset();
@@ -127,7 +127,7 @@ namespace zen
                 }
             }
 
-            m_error = ZenError_Io_InitFailed;
+            m_error = ZenSensorInitError_InvalidAddress;
             m_fence.terminate();
             break;
         }
@@ -157,7 +157,7 @@ namespace zen
 
     void BleDeviceHandler::reset()
     {
-        m_error = ZenError_None;
+        m_error = ZenSensorInitError_None;
         m_fence.reset();
     }
 }

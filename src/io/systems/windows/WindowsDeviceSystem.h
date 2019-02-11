@@ -20,7 +20,7 @@ namespace zen
 
         ZenError listDevices(std::vector<ZenSensorDesc>& outDevices) override;
 
-        std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenError& outError) override;
+        std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError) override;
     };
 }
 

@@ -16,7 +16,7 @@ namespace zen
         return finder.listDevices(outDevices);
     }
 
-    std::unique_ptr<BaseIoInterface> BleSystem::obtain(const ZenSensorDesc& desc, ZenError& outError)
+    std::unique_ptr<BaseIoInterface> BleSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
     {
         auto handle = std::make_unique<BleDeviceHandler>(desc.handle64);
         if (outError = handle->initialize())
@@ -27,7 +27,7 @@ namespace zen
         auto parser = modbus::make_parser(format);
         if (!factory || !parser)
         {
-            outError = ZenError_InvalidArgument;
+            outError = ZenSensorInitError_UnsupportedDataFormat;
             return nullptr;
         }
 

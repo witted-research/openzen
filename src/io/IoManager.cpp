@@ -75,12 +75,12 @@ namespace zen
         return result.second;
     }
 
-    std::unique_ptr<BaseIoInterface> IoManager::obtain(const ZenSensorDesc& desc, ZenError& outError)
+    std::unique_ptr<BaseIoInterface> IoManager::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
     {
         auto it = m_ioSystems.find(desc.ioType);
         if (it == m_ioSystems.end())
         {
-            outError = ZenError_Device_IoTypeInvalid;
+            outError = ZenSensorInitError_UnsupportedIoType;
             return nullptr;
         }
 

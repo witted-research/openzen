@@ -18,7 +18,7 @@ namespace zen
 
         virtual ZenError listDevices(std::vector<ZenSensorDesc>& outDevices) = 0;
 
-        virtual std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenError& outError) = 0;
+        virtual std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError) = 0;
     };
 }
 

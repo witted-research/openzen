@@ -7,6 +7,8 @@
 #include <thread>
 #include <vector>
 
+#include "nonstd/expected.hpp"
+
 #include "InternalTypes.h"
 #include "IZenSensor.h"
 
@@ -22,7 +24,7 @@ namespace zen
         ~Sensor();
 
         /** Allow the sensor to initialize variables, that require an active IO interface */
-        ZenError init();
+        ZenSensorInitError init();
 
         /** On first call, tries to initialize a firmware update, and returns an error on failure.
          * Subsequent calls do not require a valid buffer and buffer size, and only report the current status:
@@ -80,6 +82,16 @@ namespace zen
 
         std::thread m_uploadThread;
     };
+
+    template <class... Args>
+    nonstd::expected<std::unique_ptr<Sensor>, ZenSensorInitError> make_sensor(Args&&... args)
+    {
+        auto sensor = std::make_unique<Sensor>(std::forward<Args>(args)...);
+        if (auto error = sensor->init())
+            return nonstd::make_unexpected(error);
+
+        return std::move(sensor);
+    }
 }
 
 #endif

@@ -24,7 +24,7 @@ namespace zen
         friend class CanManager;
 
         /** Subscribe IO Interface to CAN interface  */
-        virtual ZenError subscribe(CanInterface& i) = 0;
+        virtual bool subscribe(CanInterface& i) = 0;
 
         /** Unsubscribe IO Interface from CAN interface */
         virtual void unsubscribe(CanInterface& i) = 0;

@@ -19,7 +19,7 @@ namespace zen
         /** Tries to initialize settings of the sensor's component that can fail.
          * After succesfully completing init, m_properties should be set.
          */
-        ZenError init() override;
+        ZenSensorInitError init() override;
 
         ZenError processData(uint8_t function, const unsigned char* data, size_t length) override;
 
