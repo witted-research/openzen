@@ -201,6 +201,7 @@ target_link_libraries(OpenZen
         $<$<PLATFORM_ID:Linux>:atomic>
         $<$<PLATFORM_ID:Linux>:dl>
         nonstd::expected-lite
+        nlohmann_json::nlohmann_json
         GSL
         Qt5::Bluetooth
         $<$<PLATFORM_ID:Linux>:stdc++fs>
