@@ -764,7 +764,6 @@ r->data[2] = (float) atan2(2*(qw*qz+qx*qy), 1-2*(qy*qy+qz*qz)) * r2d;
 
 void quaternionToEuler(LpVector4f *q, LpVector3f *r)
 {
-    const float d2r = 0.01745f;
     const float r2d = 57.2958f;
 
     float qx = q->data[0];
@@ -775,7 +774,6 @@ void quaternionToEuler(LpVector4f *q, LpVector3f *r)
     float dx = 1.0f - 2.0f*(qx*qx + qy*qy);
     float dy = 2.0f*(qw*qx + qy*qz);
 
-    float t = 0;
     if (fabs(dx) > 0) {
         float t = (float)atan(dy / dx) * r2d;
 

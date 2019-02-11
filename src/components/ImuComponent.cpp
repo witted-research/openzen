@@ -189,19 +189,28 @@ namespace zen
 
         auto& imuData = event.data.imuData;
         imuDataReset(imuData);
-        imuData.timestamp = *reinterpret_cast<const uint32_t*>(data) / static_cast<float>(m_base.samplingRate());
-        data += sizeof(float);
+
+        const ptrdiff_t size = static_cast<ptrdiff_t>(length);
+        if (std::distance(data, it + sizeof(float)) > size)
+            return ZenError_Io_MsgCorrupt;
+
+        imuData.timestamp = *reinterpret_cast<const uint32_t*>(it) / static_cast<float>(m_base.samplingRate());
+        it += sizeof(float);
 
         bool enabled;
         if (auto error = m_properties->getBool(ZenImuProperty_OutputLowPrecision, &enabled))
             return error;
 
         const bool lowPrec = enabled;
+        const size_t floatSize = lowPrec ? sizeof(uint16_t) : sizeof(float);
 
         if (m_properties->getBool(ZenImuProperty_OutputRawGyr, &enabled) == ZenError_None && enabled)
         {
+            if (std::distance(data, it + 3 * floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
             for (unsigned idx = 0; idx < 3; ++idx)
-                imuData.gRaw[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
+                imuData.gRaw[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(it, 1000.f) : parseFloat32(it));
 
             auto cache = m_cache.borrow();
 
@@ -214,8 +223,11 @@ namespace zen
 
         if (m_properties->getBool(ZenImuProperty_OutputRawAcc, &enabled) == ZenError_None && enabled)
         {
+            if (std::distance(data, it + 3 * floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
             for (unsigned idx = 0; idx < 3; ++idx)
-                imuData.aRaw[idx] = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
+                imuData.aRaw[idx] = lowPrec ? parseFloat16(it, 1000.f) : parseFloat32(it);
 
             auto cache = m_cache.borrow();
 
@@ -228,8 +240,11 @@ namespace zen
 
         if (m_properties->getBool(ZenImuProperty_OutputRawMag, &enabled) == ZenError_None && enabled)
         {
+            if (std::distance(data, it + 3 * floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
             for (unsigned idx = 0; idx < 3; ++idx)
-                imuData.bRaw[idx] = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
+                imuData.bRaw[idx] = lowPrec ? parseFloat16(it, 100.f) : parseFloat32(it);
 
             auto cache = m_cache.borrow();
 
@@ -241,13 +256,21 @@ namespace zen
         }
 
         if (m_properties->getBool(ZenImuProperty_OutputAngularVel, &enabled) == ZenError_None && enabled)
+        {
+            if (std::distance(data, it + 3 * floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
             for (unsigned idx = 0; idx < 3; ++idx)
-                imuData.w[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
+                imuData.w[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(it, 1000.f) : parseFloat32(it));
+        }
 
         if (m_properties->getBool(ZenImuProperty_OutputQuat, &enabled) == ZenError_None && enabled)
         {
+            if (std::distance(data, it + 4 * floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
             for (unsigned idx = 0; idx < 4; ++idx)
-                imuData.q[idx] = lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
+                imuData.q[idx] = lowPrec ? parseFloat16(it, 10000.f) : parseFloat32(it);
 
             LpMatrix3x3f m;
             LpVector4f q;
@@ -257,24 +280,54 @@ namespace zen
         }
 
         if (m_properties->getBool(ZenImuProperty_OutputEuler, &enabled) == ZenError_None && enabled)
+        {
+            if (std::distance(data, it + 3 * floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
             for (unsigned idx = 0; idx < 3; ++idx)
-                imuData.r[idx] = (180.f / float(M_PI)) * lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
+                imuData.r[idx] = (180.f / float(M_PI)) * lowPrec ? parseFloat16(it, 10000.f) : parseFloat32(it);
+        }
 
         if (m_properties->getBool(ZenImuProperty_OutputLinearAcc, &enabled) == ZenError_None && enabled)
+        {
+            if (std::distance(data, it + 3 * floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
             for (unsigned idx = 0; idx < 3; ++idx)
-                imuData.linAcc[idx] = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
+                imuData.linAcc[idx] = lowPrec ? parseFloat16(it, 1000.f) : parseFloat32(it);
+        }
 
         if (m_properties->getBool(ZenImuProperty_OutputPressure, &enabled) == ZenError_None && enabled)
-            imuData.pressure = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
+        {
+            if (std::distance(data, it + floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
+            imuData.pressure = lowPrec ? parseFloat16(it, 100.f) : parseFloat32(it);
+        }
 
         if (m_properties->getBool(ZenImuProperty_OutputAltitude, &enabled) == ZenError_None && enabled)
-            imuData.altitude = lowPrec ? parseFloat16(data, 10.f) : parseFloat32(data);
+        {
+            if (std::distance(data, it + floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
+            imuData.altitude = lowPrec ? parseFloat16(it, 10.f) : parseFloat32(it);
+        }
 
         if (m_properties->getBool(ZenImuProperty_OutputTemperature, &enabled) == ZenError_None && enabled)
-            imuData.temperature = lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
+        {
+            if (std::distance(data, it + floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
+            imuData.temperature = lowPrec ? parseFloat16(it, 100.f) : parseFloat32(it);
+        }
 
         if (m_properties->getBool(ZenImuProperty_OutputHeaveMotion, &enabled) == ZenError_None && enabled)
-            imuData.hm.yHeave = lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
+        {
+            if (std::distance(data, it + floatSize) > size)
+                return ZenError_Io_MsgCorrupt;
+
+            imuData.hm.yHeave = lowPrec ? parseFloat16(it, 1000.f) : parseFloat32(it);
+        }
 
         SensorManager::get().notifyEvent(std::move(event));
         return ZenError_None;

@@ -60,7 +60,7 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError SiUsbInterface::supportedBaudrates(std::vector<int32_t>& outBaudrates) const
+    ZenError SiUsbInterface::supportedBaudrates(std::vector<int32_t>&) const
     {
         return ZenError_Io_BaudratesUnknown;
     }

@@ -38,7 +38,7 @@ namespace zen
         ZenError getString(ZenProperty_t property, char* const buffer, size_t* const bufferSize) override;
 
         /** If successful fills the value with the property's unsigned integer value, otherwise returns an error. */
-        ZenError getUInt64(ZenProperty_t property, uint64_t* const outValue) override { return ZenError_UnknownProperty; }
+        ZenError getUInt64(ZenProperty_t, uint64_t* const) override { return ZenError_UnknownProperty; }
 
         /** If successful sets the array properties, otherwise returns an error. */
         ZenError setArray(ZenProperty_t property, ZenPropertyType type, const void* buffer, size_t bufferSize) override;
@@ -59,7 +59,7 @@ namespace zen
         ZenError setString(ZenProperty_t property, const char* buffer, size_t bufferSize) override;
 
         /** If successful sets the unsigned integer property, otherwise returns an error. */
-        ZenError setUInt64(ZenProperty_t property, uint64_t value) override { return ZenError_UnknownProperty; }
+        ZenError setUInt64(ZenProperty_t, uint64_t) override { return ZenError_UnknownProperty; }
 
         /** Returns whether the property is an array type */
         bool isArray(ZenProperty_t property) const override;

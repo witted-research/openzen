@@ -19,19 +19,19 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError BleInterface::baudrate(int32_t& rate) const
+    ZenError BleInterface::baudrate(int32_t&) const
     {
         // Not supported
         return ZenError_UnknownProperty;
     }
 
-    ZenError BleInterface::setBaudrate(unsigned int rate)
+    ZenError BleInterface::setBaudrate(unsigned int)
     {
         // Not supported
         return ZenError_UnknownProperty;
     }
 
-    ZenError BleInterface::supportedBaudrates(std::vector<int32_t>& outBaudrates) const
+    ZenError BleInterface::supportedBaudrates(std::vector<int32_t>&) const
     {
         // Not supported
         return ZenError_UnknownProperty;

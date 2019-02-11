@@ -57,7 +57,7 @@ namespace zen
         if (m_version == 0)
         {
             // Legacy version are always Imu sensors
-            auto imu = std::make_unique<ImuComponent>(1, 0, *this, m_ioInterface);
+            auto imu = std::make_unique<ImuComponent>(static_cast<uint8_t>(1), 0, *this, m_ioInterface);
 
             m_properties = std::make_unique<LegacyCoreProperties>(m_ioInterface, *imu.get());
             m_samplingRate = 200;
@@ -269,7 +269,7 @@ namespace zen
     {
         constexpr uint32_t PAGE_SIZE = 256;
 
-        auto& error = m_updatingFirmware ? m_updateFirmwareError : m_updateIAPError;
+        auto& outError = m_updatingFirmware ? m_updateFirmwareError : m_updateIAPError;
         auto& updated = m_updatingFirmware ? m_updatedFirmware : m_updatedIAP;
         const DeviceProperty_t property = static_cast<DeviceProperty_t>(m_updatingFirmware ? EDevicePropertyInternal::UpdateFirmware : EDevicePropertyInternal::UpdateIAP);
         const uint8_t function = m_version == 0 ? static_cast<uint8_t>(property) : ZenProtocolFunction_Set;
@@ -281,15 +281,24 @@ namespace zen
         const uint32_t nFullPages = static_cast<uint32_t>(firmware.size() / PAGE_SIZE);
         const uint32_t remainder = firmware.size() % PAGE_SIZE;
         const uint32_t nPages = remainder > 0 ? nFullPages + 1 : nFullPages;
-        if (error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(reinterpret_cast<const unsigned char*>(&nPages), sizeof(nPages))))
+        if (auto error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(reinterpret_cast<const unsigned char*>(&nPages), sizeof(nPages))))
+        {
+            outError = error;
             return;
+        }
 
         for (unsigned idx = 0; idx < nPages; ++idx)
-            if (error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + idx * PAGE_SIZE, PAGE_SIZE)))
+        {
+            if (auto error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + idx * PAGE_SIZE, PAGE_SIZE)))
+            {
+                outError = error;
                 return;
+            }
+        }
+
 
         if (remainder > 0)
-            if (error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + nFullPages * PAGE_SIZE, remainder)))
-                return;
+            if (auto error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + nFullPages * PAGE_SIZE, remainder)))
+                outError = error;
     }
 }

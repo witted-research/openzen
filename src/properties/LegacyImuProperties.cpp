@@ -519,7 +519,7 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyImuProperties::setString(ZenProperty_t property, const char* buffer, size_t bufferSize)
+    ZenError LegacyImuProperties::setString(ZenProperty_t, const char*, size_t)
     {
         // imu::v0 has no string properties that can be set, so no need to add backwards compatibility
         return ZenError_UnknownProperty;

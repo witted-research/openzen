@@ -23,19 +23,19 @@ namespace zen
         return m_handler->send(frame);
     }
 
-    ZenError BluetoothInterface::baudrate(int32_t& rate) const
+    ZenError BluetoothInterface::baudrate(int32_t&) const
     {
         // Not supported
         return ZenError_UnknownProperty;
     }
 
-    ZenError BluetoothInterface::setBaudrate(unsigned int rate)
+    ZenError BluetoothInterface::setBaudrate(unsigned int)
     {
         // Not supported
         return ZenError_UnknownProperty;
     }
 
-    ZenError BluetoothInterface::supportedBaudrates(std::vector<int32_t>& outBaudrates) const
+    ZenError BluetoothInterface::supportedBaudrates(std::vector<int32_t>&) const
     {
         // Not supported
         return ZenError_UnknownProperty;

@@ -200,7 +200,7 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::getMatrix33(ZenProperty_t property, ZenMatrix3x3f* const outValue)
+    ZenError LegacyCoreProperties::getMatrix33(ZenProperty_t, ZenMatrix3x3f* const)
     {
         // base::v0 has no matrix properties that can be retrieved, so no need to add backwards compatibility
         return ZenError_UnknownProperty;
@@ -230,19 +230,19 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::setArray(ZenProperty_t property, ZenPropertyType type, const void* const buffer, size_t bufferSize)
+    ZenError LegacyCoreProperties::setArray(ZenProperty_t, ZenPropertyType, const void* const, size_t)
     {
         // base::v0 has no array properties that can be set, so no need to add backwards compatibility
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::setBool(ZenProperty_t property, bool value)
+    ZenError LegacyCoreProperties::setBool(ZenProperty_t, bool)
     {
         // base::v0 has no boolean properties that can be set, so no need to add backwards compatibility
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::setFloat(ZenProperty_t property, float value)
+    ZenError LegacyCoreProperties::setFloat(ZenProperty_t, float)
     {
         // base::v0 has no floating-point properties that can be set, so no need to add backwards compatibility
         return ZenError_UnknownProperty;
@@ -300,13 +300,13 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::setMatrix33(ZenProperty_t property, const ZenMatrix3x3f* const value)
+    ZenError LegacyCoreProperties::setMatrix33(ZenProperty_t, const ZenMatrix3x3f* const)
     {
         // base::v0 has no matrix properties that can be set, so no need to add backwards compatibility
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::setString(ZenProperty_t property, const char* buffer, size_t bufferSize)
+    ZenError LegacyCoreProperties::setString(ZenProperty_t, const char*, size_t)
     {
         // base::v0 has no string properties that can be set, so no need to add backwards compatibility
         return ZenError_UnknownProperty;

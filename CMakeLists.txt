@@ -184,6 +184,18 @@ target_compile_features(OpenZen
         cxx_std_17
 )
 
+if (MSVC)
+    target_compile_options(OpenZen
+        PRIVATE
+            /W4 /WX
+    )
+else()
+    target_compile_options(OpenZen
+        PRIVATE
+            -Wall -Wextra -pedantic -Werror
+    )
+endif()
+
 target_include_directories(OpenZen
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include

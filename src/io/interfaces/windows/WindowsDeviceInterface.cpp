@@ -113,7 +113,7 @@ namespace zen
         return WindowsDeviceSystem::KEY;
     }
 
-    bool WindowsDeviceInterface::equals(const ZenSensorDesc& desc) const
+    bool WindowsDeviceInterface::equals(const ZenSensorDesc&) const
     {
         // [XXX] TODO
         return false;
