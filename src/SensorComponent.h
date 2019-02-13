@@ -20,6 +20,7 @@ namespace zen
         virtual ZenSensorInitError init() = 0;
 
         virtual ZenError processData(uint8_t function, const unsigned char* data, size_t length) = 0;
+        virtual ZenError processEvent(ZenEvent_t type, const unsigned char* data, size_t length) noexcept = 0;
 
         IZenSensorProperties* properties() override { return m_properties.get(); }
 

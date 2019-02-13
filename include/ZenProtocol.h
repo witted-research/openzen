@@ -14,6 +14,7 @@ typedef enum EZenProtocolFunction : uint8_t
     ZenProtocolFunction_Set = 5,
     ZenProtocolFunction_Ack = 6,
     ZenProtocolFunction_Result = 7,
+    ZenProtocolFunction_Event = 8,
 
     ZenProtocolFunction_Max
 } EZenProtocolFunction;

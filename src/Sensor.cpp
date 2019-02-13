@@ -44,6 +44,14 @@ namespace zen
             return result;
         }
 
+        ZenEvent_t parseEvent(const unsigned char*& data, size_t& length)
+        {
+            const auto result = *reinterpret_cast<const ZenEvent_t*>(data);
+            data += sizeof(ZenEvent_t);
+            length -= sizeof(ZenEvent_t);
+            return result;
+        }
+
         ZenProperty_t parseProperty(const unsigned char*& data, size_t& length)
         {
             const auto result = *reinterpret_cast<const ZenProperty_t*>(data);
@@ -288,6 +296,9 @@ namespace zen
 
             case ZenProtocolFunction_Result:
                 return properties::publishResult(getProperties(address, *this, m_components), m_ioInterface, parseProperty(data, length), parseError(data, length), data, length);
+
+            case ZenProtocolFunction_Event:
+                return address ? m_components[address - 1]->processEvent(parseEvent(data, length), data, length) : ZenError_UnsupportedEvent;
 
             default:
                 return ZenError_Io_UnsupportedFunction;

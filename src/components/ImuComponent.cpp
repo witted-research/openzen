@@ -95,7 +95,7 @@ namespace zen
             return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data));
 
         case EDevicePropertyV0::GetRawSensorData:
-            return processSensorData(data, length);
+            return processEvent(ZenImuEvent_Sample, data, length);
 
         case EDevicePropertyV0::GetAccBias:
         case EDevicePropertyV0::GetGyrBias:
@@ -120,18 +120,34 @@ namespace zen
         }
     }
 
-    ZenError ImuComponent::processSensorData(const unsigned char* data, size_t length)
+    ZenError ImuComponent::processEvent(ZenEvent_t type, const unsigned char* data, size_t length) noexcept
     {
-        auto it = data;
-
-        // Any properties that are retrieved here should be cached locally, because it
-        // will take too much time to retrieve from the sensor!
         ZenEvent event{0};
-        event.eventType = ZenEvent_Imu;
+        event.eventType = type;
         event.sensor = this;
 
-        auto& imuData = event.data.imuData;
+        switch (type)
+        {
+        case ZenImuEvent_Sample:
+            if (auto error = parseSensorData(event.data.imuData, data, length))
+                return error;
+            break;
+
+        default:
+            return ZenError_UnsupportedEvent;
+        }
+
+        SensorManager::get().notifyEvent(std::move(event));
+        return ZenError_None;
+    }
+
+    ZenError ImuComponent::parseSensorData(ZenImuData& imuData, const unsigned char* data, size_t length) const noexcept
+    {
+        // Any properties that are retrieved here should be cached locally, because it
+        // will take too much time to retrieve from the sensor!
         imuDataReset(imuData);
+
+        auto* it = data;
 
         const ptrdiff_t size = static_cast<ptrdiff_t>(length);
         if (std::distance(data, it + sizeof(float)) > size)
@@ -272,7 +288,6 @@ namespace zen
             imuData.hm.yHeave = lowPrec ? parseFloat16(it, 1000.f) : parseFloat32(it);
         }
 
-        SensorManager::get().notifyEvent(std::move(event));
         return ZenError_None;
     }
 }

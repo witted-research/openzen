@@ -23,10 +23,12 @@ namespace zen
 
         ZenError processData(uint8_t function, const unsigned char* data, size_t length) override;
 
+        ZenError processEvent(ZenEvent_t type, const unsigned char* data, size_t length) noexcept override;
+
         const char* type() const override { return g_zenSensorType_Imu; }
 
     private:
-        ZenError processSensorData(const unsigned char* data, size_t length);
+        ZenError parseSensorData(ZenImuData& imuData, const unsigned char* data, size_t length) const noexcept;
 
         struct IMUState
         {
@@ -38,7 +40,7 @@ namespace zen
             LpVector3f hardIronOffset;
             int32_t samplingRate;
         };
-        Owner<IMUState> m_cache;
+        mutable Owner<IMUState> m_cache;
 
         AsyncIoInterface& m_ioInterface;
         

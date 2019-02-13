@@ -79,6 +79,7 @@ typedef enum ZenError : ZenError_t
 
     ZenError_UnknownProperty = 850,          // Sensor does not support the property
     ZenError_UnknownCommandMode = 851,       // Sensor does not support the command mode
+    ZenError_UnsupportedEvent = 852,        // Host does not support the event type
 
     // [XXX] What to do with other errors in the hardware?
     ZenError_FW_FunctionFailed = 900,        // Firmware failed to execute the requested function
@@ -196,25 +197,38 @@ typedef union
     ZenEventData_Imu imuData;
 } ZenEventData;
 
+typedef uint32_t ZenEvent_t;
+
 typedef struct ZenEvent
 {
-    uint32_t eventType;     // ZenEventType
+    ZenEvent_t eventType;
     void* sensor;
     ZenEventData data;
 } ZenEvent;
 
-typedef enum ZenEventType
+typedef enum ZenSensorEvent : ZenEvent_t
 {
-    ZenEvent_None = 0,
-
-    ZenEvent_Imu,
+    ZenSensorEvent_None = 0,
 
     // Sensors are free to expose private events in this reserved region
-    ZenEvent_SensorSpecific_Start = 10000,
-    ZenEvent_SensorSpecific_End = 19999,
+    ZenSensorEvent_SensorSpecific_Start = 10000,
+    ZenSensorEvent_SensorSpecific_End = 19999,
 
-    ZenEvent_Max
-} ZenEventType;
+    ZenSensorEvent_Max
+} ZenSensorEventType;
+
+typedef enum ZenImuEvent : ZenEvent_t
+{
+    ZenImuEvent_None = 0,
+
+    ZenImuEvent_Sample = 1,
+
+    // Components are free to expose private events in this reserved region
+    ZenImuEvent_ComponentSpecific_Start = 10000,
+    ZenImuEvent_ComponentSpecific_End = 19999,
+
+    ZenImuEvent_Max
+} ZenImuEventType;
 
 typedef uint32_t ZenProperty_t;
 
