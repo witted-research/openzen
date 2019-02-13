@@ -12,7 +12,7 @@ namespace zen
     class LegacyCoreProperties : public IZenSensorProperties
     {
     public:
-        LegacyCoreProperties(AsyncIoInterface& ioInterface, ImuComponent& imu);
+        LegacyCoreProperties(AsyncIoInterface& ioInterface, IZenSensorProperties& imu);
 
         /** If successful executes the command, therwise returns an error. */
         ZenError execute(ZenProperty_t property) override;
@@ -79,7 +79,7 @@ namespace zen
         ZenError supportedBaudRates(void* buffer, size_t& bufferSize) const;
 
         AsyncIoInterface& m_ioInterface;
-        ImuComponent& m_imu;
+        IZenSensorProperties& m_imu;
 
         std::atomic_int32_t m_samplingRate;
     };

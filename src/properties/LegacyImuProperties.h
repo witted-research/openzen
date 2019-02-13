@@ -10,7 +10,7 @@ namespace zen
     class LegacyImuProperties : public IZenSensorProperties
     {
     public:
-        LegacyImuProperties(AsyncIoInterface& ioInterface, ImuComponent& imu);
+        LegacyImuProperties(AsyncIoInterface& ioInterface);
 
         /** If successful executes the command, therwise returns an error. */
         ZenError execute(ZenProperty_t property) override;
@@ -96,7 +96,8 @@ namespace zen
         } m_cache;
 
         AsyncIoInterface& m_ioInterface;
-        ImuComponent& m_imu;
+
+        std::atomic_bool m_streaming;
     };
 }
 

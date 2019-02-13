@@ -14,7 +14,7 @@ namespace zen
     class ImuComponent : public SensorComponent
     {
     public:
-        ImuComponent(uint8_t id, unsigned int version, class Sensor& base, AsyncIoInterface& ioInterface);
+        ImuComponent(uint8_t id, unsigned int version, std::unique_ptr<IZenSensorProperties> properties, AsyncIoInterface& ioInterface);
 
         /** Tries to initialize settings of the sensor's component that can fail.
          * After succesfully completing init, m_properties should be set.
@@ -24,10 +24,6 @@ namespace zen
         ZenError processData(uint8_t function, const unsigned char* data, size_t length) override;
 
         const char* type() const override { return g_zenSensorType_Imu; }
-
-        bool streaming() const { return m_streaming; }
-
-        void setStreaming(bool streaming) { m_streaming = streaming; }
 
     private:
         ZenError processSensorData(const unsigned char* data, size_t length);
@@ -40,15 +36,11 @@ namespace zen
             LpVector3f accBias;
             LpVector3f gyrBias;
             LpVector3f hardIronOffset;
+            int32_t samplingRate;
         };
         Owner<IMUState> m_cache;
 
-        class Sensor& m_base;
         AsyncIoInterface& m_ioInterface;
-
-        // Legacy
-        std::atomic_bool m_initialized;
-        std::atomic_bool m_streaming;
         
         const unsigned int m_version;
         const uint8_t m_id;

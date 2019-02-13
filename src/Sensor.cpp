@@ -7,7 +7,8 @@
 
 #include "ZenProtocol.h"
 #include "SensorProperties.h"
-#include "components/ImuComponent.h"
+#include "components/ComponentFactoryManager.h"
+#include "components/factories/ImuComponentFactory.h"
 #include "io/IIoInterface.h"
 #include "properties/BaseSensorPropertiesV0.h"
 #include "properties/CorePropertyRulesV1.h"
@@ -31,15 +32,29 @@ namespace zen
         }
     }
 
-    Sensor::Sensor(std::unique_ptr<BaseIoInterface> ioInterface)
+    static auto imuRegistry = make_registry<ImuComponentFactory>(g_zenSensorType_Imu);
+
+    nonstd::expected<std::unique_ptr<Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface)
+    {
+        auto sensor = std::make_unique<Sensor>(std::move(config), std::move(ioInterface));
+        if (auto error = sensor->init())
+            return nonstd::make_unexpected(error);
+
+        return std::move(sensor);
+    }
+
+    Sensor::Sensor(SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface)
         : IIoDataSubscriber(*ioInterface.get())
+        , m_config(std::move(config))
         , m_ioInterface(std::move(ioInterface))
         , m_updatingFirmware(false)
         , m_updatedFirmware(false)
         , m_updatingIAP(false)
         , m_updatedIAP(false)
-        , m_version(0)
-    {}
+        , m_initialized(false)
+    {
+        m_components.reserve(m_config.components.size());
+    }
 
     Sensor::~Sensor()
     {
@@ -50,39 +65,36 @@ namespace zen
 
     ZenSensorInitError Sensor::init()
     {
-        // [XXX] Even before this we'd want to know the IOs baudrate, and set the IO Interface baudrate accordingly
-        // [XXX] That way we can remove this from the external API
-
-        // [TODO] Determine version based on init
-        if (m_version == 0)
+        auto& manager = ComponentFactoryManager::get();
+        uint8_t idx = 1;
+        for (const auto& config : m_config.components)
         {
-            // Legacy version are always Imu sensors
-            auto imu = std::make_unique<ImuComponent>(static_cast<uint8_t>(1), 0, *this, m_ioInterface);
+            auto factory = manager.getFactory(config.id);
+            if (!factory)
+                return ZenSensorInitError_UnsupportedComponent;
 
-            m_properties = std::make_unique<LegacyCoreProperties>(m_ioInterface, *imu.get());
-            m_samplingRate = 200;
+            auto component = factory.value()->make_component(idx++, config.version, m_ioInterface);
+            if (!component)
+                return component.error();
 
-            m_components.emplace_back(std::move(imu));
+            m_components.push_back(std::move(*component));
         }
-        else
-        {
-            if (auto properties = make_properties(0, m_version, m_ioInterface))
-                m_properties = std::move(properties);
-            else
-                return ZenSensorInitError_UnsupportedProtocol;
 
-            int32_t samplingRate;
-            if (m_properties->getInt32(ZenSensorProperty_SamplingRate, &samplingRate) != ZenError_None)
-                return ZenSensorInitError_InvalidConfig;
-
-            m_samplingRate = samplingRate;
-
-            // [TODO] Add components based on init
-        }
+        if (m_config.version == 0)
+            m_initialized = true;
 
         for (auto& component : m_components)
             if (auto error = component->init())
                 return error;
+
+        // [LEGACY] Fix for sensors that did not support negotiation yet
+        // [LEGACY] Swap the order of sensor-component initialization in the future
+        if (m_config.version == 0)
+            m_properties = std::make_unique<LegacyCoreProperties>(m_ioInterface, *m_components[0]->properties());
+        else if (auto properties = make_properties(0, m_config.version, m_ioInterface))
+            m_properties = std::move(properties);
+        else
+            return ZenSensorInitError_UnsupportedProtocol;
 
         return ZenSensorInitError_None;
     }
@@ -187,7 +199,7 @@ namespace zen
 
     ZenError Sensor::processData(uint8_t address, uint8_t function, const unsigned char* data, size_t length)
     {
-        if (m_version == 0)
+        if (m_config.version == 0)
         {
             if (auto optInternal = base::v0::internal::map(function))
             {
@@ -199,8 +211,13 @@ namespace zen
                 case EDevicePropertyInternal::Nack:
                     return m_ioInterface.publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
 
+                case EDevicePropertyInternal::Config:
+                    if (length != sizeof(uint32_t))
+                        return ZenError_Io_MsgCorrupt;
+                    return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data));
+
                 default:
-                    break;
+                    return ZenError_Io_UnsupportedFunction;
                 }
             }
             else
@@ -231,11 +248,12 @@ namespace zen
                     return m_ioInterface.publishArray(function, ZenError_None, reinterpret_cast<const uint32_t*>(data), 3);
 
                 default:
-                    break;
+                    if (m_initialized)
+                        return m_components.at(0)->processData(function, data, length);
+                    else
+                        return ZenError_None;
                 }
             }
-
-            return m_components.at(0)->processData(function, data, length);
         }
         else
         {
@@ -272,7 +290,7 @@ namespace zen
         auto& outError = m_updatingFirmware ? m_updateFirmwareError : m_updateIAPError;
         auto& updated = m_updatingFirmware ? m_updatedFirmware : m_updatedIAP;
         const DeviceProperty_t property = static_cast<DeviceProperty_t>(m_updatingFirmware ? EDevicePropertyInternal::UpdateFirmware : EDevicePropertyInternal::UpdateIAP);
-        const uint8_t function = m_version == 0 ? static_cast<uint8_t>(property) : ZenProtocolFunction_Set;
+        const uint8_t function = m_config.version == 0 ? static_cast<uint8_t>(property) : ZenProtocolFunction_Set;
 
         auto guard = finally([&updated]() {
             updated = true;

@@ -10,6 +10,10 @@ namespace zen
     class SensorComponent : public IZenSensorComponent
     {
     public:
+        SensorComponent(std::unique_ptr<IZenSensorProperties> properties)
+            : m_properties(std::move(properties))
+        {}
+
         /** Tries to initialize settings of the sensor's component that can fail.
          * After succesfully completing init, m_properties should be set.
          */

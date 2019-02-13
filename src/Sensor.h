@@ -12,15 +12,18 @@
 #include "InternalTypes.h"
 #include "IZenSensor.h"
 
+#include "SensorConfig.h"
 #include "SensorComponent.h"
 #include "io/interfaces/AsyncIoInterface.h"
 
 namespace zen
 {
+    nonstd::expected<std::unique_ptr<class Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface);
+
     class Sensor : public IZenSensor, private IIoDataSubscriber
     {
     public:
-        Sensor(std::unique_ptr<BaseIoInterface> ioInterface);
+        Sensor(SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface);
         ~Sensor();
 
         /** Allow the sensor to initialize variables, that require an active IO interface */
@@ -55,20 +58,16 @@ namespace zen
         /** Returns whether the sensor is equal to the sensor description */
         bool equals(const ZenSensorDesc* desc) const override;
 
-        /** Returns the sensor's sampling rate. */
-        int32_t samplingRate() const { return m_samplingRate; }
-
     private:
         ZenError processData(uint8_t address, uint8_t function, const unsigned char* data, size_t length) override;
 
         void upload(std::vector<unsigned char> firmware);
 
+        SensorConfig m_config;
+
         std::vector<std::unique_ptr<SensorComponent>> m_components;
         std::unique_ptr<IZenSensorProperties> m_properties;
-
         AsyncIoInterface m_ioInterface;
-
-        std::atomic_int32_t m_samplingRate;
 
         std::atomic_bool m_updatingFirmware;
         std::atomic_bool m_updatedFirmware;
@@ -78,20 +77,11 @@ namespace zen
         std::atomic_bool m_updatedIAP;
         ZenError m_updateIAPError;
 
-        unsigned int m_version;
-
         std::thread m_uploadThread;
+
+        // [LEGACY]
+        std::atomic_bool m_initialized;
     };
-
-    template <class... Args>
-    nonstd::expected<std::unique_ptr<Sensor>, ZenSensorInitError> make_sensor(Args&&... args)
-    {
-        auto sensor = std::make_unique<Sensor>(std::forward<Args>(args)...);
-        if (auto error = sensor->init())
-            return nonstd::make_unexpected(error);
-
-        return std::move(sensor);
-    }
 }
 
 #endif

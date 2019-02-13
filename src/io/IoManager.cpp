@@ -50,7 +50,6 @@ namespace zen
     }
 
     IoManager& IoManager::get()
-
     {
         return g_singleton;
     }

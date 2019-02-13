@@ -21,6 +21,8 @@ namespace zen
             {
                 if (function <= static_cast<uint8_t>(EDevicePropertyInternal::Nack))
                     return static_cast<EDevicePropertyInternal>(function);
+                else if (function == static_cast<uint8_t>(EDevicePropertyInternal::Config))
+                    return EDevicePropertyInternal::Config;
 
                 return {};
             }

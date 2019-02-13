@@ -4,12 +4,9 @@
 #include <math.h>
 #include <string>
 
-#include "SensorManager.h"
-#include "SensorProperties.h"
 #include "ImuHelpers.h"
+#include "SensorManager.h"
 #include "properties/ImuSensorPropertiesV0.h"
-#include "properties/ImuPropertyRulesV1.h"
-#include "properties/LegacyImuProperties.h"
 
 namespace zen
 {
@@ -28,55 +25,24 @@ namespace zen
             it += sizeof(int32_t);
             return *reinterpret_cast<const float*>(&temp);
         }
-
-        std::unique_ptr<IZenSensorProperties> make_properties(uint8_t id, unsigned int version, AsyncIoInterface& ioInterface)
-        {
-            switch (version)
-            {
-            case 1:
-                return std::make_unique<SensorProperties<ImuPropertyRulesV1>>(id, ioInterface);
-
-            default:
-                return nullptr;
-            }
-        }
     }
 
-    ImuComponent::ImuComponent(uint8_t id, unsigned int version, Sensor& base, AsyncIoInterface& ioInterface)
-        : m_cache{}
-        , m_base(base)
+    ImuComponent::ImuComponent(uint8_t id, unsigned int version, std::unique_ptr<IZenSensorProperties> properties, AsyncIoInterface& ioInterface)
+        : SensorComponent(std::move(properties))
+        , m_cache{}
         , m_ioInterface(ioInterface)
-        , m_initialized(false)
-        , m_streaming(true)
         , m_version(version)
         , m_id(id)
     {}
 
     ZenSensorInitError ImuComponent::init()
     {
-        // Legacy sensors require a "Command Mode" to active for accessing properties
-        // as well a configuration bitset to determine which data to output
-        if (m_version == 0)
-        {
-            auto properties = std::make_unique<LegacyImuProperties>(m_ioInterface, *this);
-
-            // Initialize to non-streaming
-            if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false))
-                return ZenSensorInitError_RetrieveFailed;
-
-            uint32_t newBitset;
-            if (ZenError_None != m_ioInterface.sendAndWaitForResult(0, static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config), static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}, newBitset))
-                return ZenSensorInitError_RetrieveFailed;
-
-            properties->setOutputDataBitset(newBitset);
-            m_properties = std::move(properties);
-        }
-        else
-        {
-            m_properties = make_properties(m_id, m_version, m_ioInterface);
-        }
-
         auto cache = m_cache.borrow();
+
+        if (m_version == 0)
+            cache->samplingRate = 200;
+        else if (ZenError_None != m_properties->getInt32(ZenSensorProperty_SamplingRate, &cache->samplingRate))
+            return ZenSensorInitError_InvalidConfig;
 
         ZenMatrix3x3f matrix;
         if (auto error = m_properties->getMatrix33(ZenImuProperty_AccAlignment, &matrix))
@@ -104,81 +70,58 @@ namespace zen
         if (auto error = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, cache->hardIronOffset.data, &size))
             return ZenSensorInitError_RetrieveFailed;
 
-        if (m_version == 0)
-            m_initialized = true;
-
         return ZenSensorInitError_None;
     }
 
     ZenError ImuComponent::processData(uint8_t function, const unsigned char* data, size_t length)
     {
-        if (auto optInternal = imu::v0::internal::map(function))
+        const auto property = static_cast<EDevicePropertyV0>(function);
+        switch (property)
         {
-            switch (*optInternal)
-            {
-            case EDevicePropertyInternal::Config:
-                if (length != sizeof(uint32_t))
-                    return ZenError_Io_MsgCorrupt;
-                return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data));
+        case EDevicePropertyV0::GetLinearCompensationRate:
+        case EDevicePropertyV0::GetFilterMode:
+        case EDevicePropertyV0::GetFilterPreset:
+        case EDevicePropertyV0::GetAccRange:
+        case EDevicePropertyV0::GetGyrRange:
+        case EDevicePropertyV0::GetMagRange:
+            if (length != sizeof(uint32_t))
+                return ZenError_Io_MsgCorrupt;
+            return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data));
 
-            default:
-                throw std::invalid_argument(std::to_string(static_cast<DeviceProperty_t>(*optInternal)));
-            }
-        }
-        else
-        {
-            const auto property = static_cast<EDevicePropertyV0>(function);
-            switch (property)
-            {
-            case EDevicePropertyV0::GetLinearCompensationRate:
-            case EDevicePropertyV0::GetFilterMode:
-            case EDevicePropertyV0::GetFilterPreset:
-            case EDevicePropertyV0::GetAccRange:
-            case EDevicePropertyV0::GetGyrRange:
-            case EDevicePropertyV0::GetMagRange:
-                if (length != sizeof(uint32_t))
-                    return ZenError_Io_MsgCorrupt;
-                return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data));
+        case EDevicePropertyV0::GetCentricCompensationRate:
+        case EDevicePropertyV0::GetFieldRadius:
+            if (length != sizeof(float))
+                return ZenError_Io_MsgCorrupt;
+            return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data));
 
-            case EDevicePropertyV0::GetCentricCompensationRate:
-            case EDevicePropertyV0::GetFieldRadius:
-                if (length != sizeof(float))
-                    return ZenError_Io_MsgCorrupt;
-                return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data));
+        case EDevicePropertyV0::GetRawSensorData:
+            return processSensorData(data, length);
 
-            case EDevicePropertyV0::GetRawSensorData:
-                return processSensorData(data, length);
+        case EDevicePropertyV0::GetAccBias:
+        case EDevicePropertyV0::GetGyrBias:
+        case EDevicePropertyV0::GetMagBias:
+        case EDevicePropertyV0::GetMagReference:
+        case EDevicePropertyV0::GetMagHardIronOffset:
+            if (length != sizeof(float) * 3)
+                return ZenError_Io_MsgCorrupt;
+            return m_ioInterface.publishArray(function, ZenError_None, reinterpret_cast<const float*>(data), 3);
 
-            case EDevicePropertyV0::GetAccBias:
-            case EDevicePropertyV0::GetGyrBias:
-            case EDevicePropertyV0::GetMagBias:
-            case EDevicePropertyV0::GetMagReference:
-            case EDevicePropertyV0::GetMagHardIronOffset:
-                if (length != sizeof(float) * 3)
-                    return ZenError_Io_MsgCorrupt;
-                return m_ioInterface.publishArray(function, ZenError_None, reinterpret_cast<const float*>(data), 3);
+        case EDevicePropertyV0::GetAccAlignment:
+        case EDevicePropertyV0::GetGyrAlignment:
+        case EDevicePropertyV0::GetMagAlignment:
+        case EDevicePropertyV0::GetMagSoftIronMatrix:
+            // Is this valid? Row-major? Column-major transmission?
+            if (length != sizeof(float) * 9)
+                return ZenError_Io_MsgCorrupt;
+            return m_ioInterface.publishArray(function, ZenError_None, reinterpret_cast<const float*>(data), 9);
 
-            case EDevicePropertyV0::GetAccAlignment:
-            case EDevicePropertyV0::GetGyrAlignment:
-            case EDevicePropertyV0::GetMagAlignment:
-            case EDevicePropertyV0::GetMagSoftIronMatrix:
-                // Is this valid? Row-major? Column-major transmission?
-                if (length != sizeof(float) * 9)
-                    return ZenError_Io_MsgCorrupt;
-                return m_ioInterface.publishArray(function, ZenError_None, reinterpret_cast<const float*>(data), 9);
-
-            default:
-                return ZenError_Io_UnsupportedFunction;
-            }
+        default:
+            return ZenError_Io_UnsupportedFunction;
         }
     }
 
     ZenError ImuComponent::processSensorData(const unsigned char* data, size_t length)
     {
-        // Legacy check to guarantee we are not receiving streaming data before initialized
-        if (m_version == 0 && !m_initialized)
-            return ZenError_None;
-
         auto it = data;
 
         // Any properties that are retrieved here should be cached locally, because it
@@ -194,7 +137,7 @@ namespace zen
         if (std::distance(data, it + sizeof(float)) > size)
             return ZenError_Io_MsgCorrupt;
 
-        imuData.timestamp = *reinterpret_cast<const uint32_t*>(it) / static_cast<float>(m_base.samplingRate());
+        imuData.timestamp = *reinterpret_cast<const uint32_t*>(it) / static_cast<float>(m_cache.borrow()->samplingRate);
         it += sizeof(float);
 
         bool enabled;

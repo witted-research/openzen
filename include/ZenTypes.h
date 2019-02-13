@@ -96,6 +96,7 @@ typedef enum ZenSensorInitError : ZenError_t
     ZenSensorInitError_None = 0,
 
     ZenSensorInitError_IsNull,                  // Provided pointer is null
+    ZenSensorInitError_UnsupportedComponent,    // At least one of the sensor's component types is not supported by the host
     ZenSensorInitError_UnsupportedDataFormat,   // Provided Modbus Format is not supported
     ZenSensorInitError_UnsupportedIoType,       // Provided IO type is not supported
     ZenSensorInitError_UnsupportedProtocol,     // The sensor's protocol version is not supported by the host

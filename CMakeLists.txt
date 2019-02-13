@@ -24,10 +24,13 @@ set(zen_includes
 )
 
 set(zen_sources
+    src/ConnectionNegotiator.cpp
+    src/ConnectionNegotiator.h
     src/ImuHelpers.h
     src/InternalTypes.h
     src/Sensor.cpp
     src/Sensor.h
+    src/SensorConfig.h
     src/SensorComponent.h
     src/SensorManager.cpp
     src/SensorManager.h
@@ -36,6 +39,19 @@ set(zen_sources
     
     src/LpMatrix.c
     src/LpMatrix.h
+)
+
+set(components_sources
+    src/components/ComponentFactoryManager.cpp
+    src/components/ComponentFactoryManager.h
+    src/components/IComponentFactory.h
+    src/components/ImuComponent.cpp
+    src/components/ImuComponent.h
+)
+
+set(components_factories_sources
+    src/components/factories/ImuComponentFactory.cpp
+    src/components/factories/ImuComponentFactory.h
 )
 
 set(io_sources
@@ -102,11 +118,6 @@ set(properties_sources
     src/properties/LegacyImuProperties.h
 )
 
-set(components_sources
-    src/components/ImuComponent.cpp
-    src/components/ImuComponent.h
-)
-
 set(utility_sources
     src/utility/Finally.h
     src/utility/IPlatformDll.h
@@ -158,6 +169,7 @@ set(all_sources
     ${zen_includes}
     ${zen_sources}
     ${components_sources}
+    ${components_factories_sources}
     ${io_sources}
     ${io_ble_sources}
     ${io_bluetooth_sources}

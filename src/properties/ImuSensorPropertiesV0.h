@@ -16,17 +16,6 @@ namespace zen
 {
     namespace imu::v0
     {
-        namespace internal
-        {
-            constexpr std::optional<EDevicePropertyInternal> map(uint8_t function)
-            {
-                if (function == static_cast<uint8_t>(EDevicePropertyInternal::Config))
-                    return EDevicePropertyInternal::Config;
-
-                return {};
-            }
-        }
-
         constexpr EDevicePropertyV0 mapCommand(ZenProperty_t command)
         {
             switch (command)

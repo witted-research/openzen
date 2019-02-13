@@ -3,7 +3,9 @@
 #include <optional>
 #include <QCoreApplication>
 
+#include "ConnectionNegotiator.h"
 #include "Sensor.h"
+#include "components/ComponentFactoryManager.h"
 #include "io/IoManager.h"
 #include "io/can/CanManager.h"
 #include "utility/StringView.h"
@@ -103,7 +105,12 @@ namespace zen
         if (!ioInterface)
             return ioError;
 
-        auto sensor = make_sensor(std::move(ioInterface));
+        ConnectionNegotiator negotiator(*ioInterface);
+        auto agreement = negotiator.negotiate();
+        if (!agreement)
+                return agreement.error();
+
+        auto sensor = make_sensor(std::move(*agreement), std::move(ioInterface));
         if (!sensor)
             return sensor.error();
 
@@ -253,6 +260,7 @@ namespace zen
             app = std::make_unique<QCoreApplication>(argv, argc);
         }
 
+        ComponentFactoryManager::get().initialize();
         IoManager::get().initialize();
 
         // To guarantee initialization of IoManager
