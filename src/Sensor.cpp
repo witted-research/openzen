@@ -30,6 +30,27 @@ namespace zen
                 return nullptr;
             }
         }
+
+        IZenSensorProperties& getProperties(uint8_t address, Sensor& self, const std::vector<std::unique_ptr<SensorComponent>>& components)
+        {
+            return *(address ? components[address - 1]->properties() : self.properties());
+        }
+
+        ZenError parseError(const unsigned char*& data, size_t& length)
+        {
+            const auto result = *reinterpret_cast<const ZenError*>(data);
+            data += sizeof(ZenError);
+            length -= sizeof(ZenError);
+            return result;
+        }
+
+        ZenProperty_t parseProperty(const unsigned char*& data, size_t& length)
+        {
+            const auto result = *reinterpret_cast<const ZenProperty_t*>(data);
+            data += sizeof(ZenProperty_t);
+            length -= sizeof(ZenProperty_t);
+            return result;
+        }
     }
 
     static auto imuRegistry = make_registry<ImuComponentFactory>(g_zenSensorType_Imu);
@@ -260,22 +281,13 @@ namespace zen
             if (address > m_components.size())
                 return ZenError_Io_MsgCorrupt;
 
-            if (address > 0)
-                return m_components.at(address - 1)->processData(function, data, length);
-
-            const ZenProperty_t property = *reinterpret_cast<const ZenProperty_t*>(data);
-            data += sizeof(ZenProperty_t);
-            const ZenError error = *reinterpret_cast<const ZenError*>(data);
-            data += sizeof(ZenError);
-            length -= sizeof(ZenProperty_t) + sizeof(ZenError);
-
             switch (function)
             {
             case ZenProtocolFunction_Ack:
-                return properties::publishAck(*m_properties.get(), m_ioInterface, property, error);
+                return properties::publishAck(getProperties(address, *this, m_components), m_ioInterface, parseProperty(data, length), parseError(data, length));
 
             case ZenProtocolFunction_Result:
-                return properties::publishResult(*m_properties.get(), m_ioInterface, property, error, data, length);
+                return properties::publishResult(getProperties(address, *this, m_components), m_ioInterface, parseProperty(data, length), parseError(data, length), data, length);
 
             default:
                 return ZenError_Io_UnsupportedFunction;
