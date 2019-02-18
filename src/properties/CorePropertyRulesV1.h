@@ -24,19 +24,6 @@ namespace zen
             }
         }
 
-        constexpr bool isCommand(ZenProperty_t property) const
-        {
-            switch (property)
-            {
-            case ZenSensorProperty_RestoreFactorySettings:
-            case ZenSensorProperty_StoreSettingsInFlash:
-                return true;
-
-            default:
-                return false;
-            }
-        }
-
         constexpr bool isConstant(ZenProperty_t property) const
         {
             switch (property)
@@ -52,6 +39,19 @@ namespace zen
 
             default:
                 return true;
+            }
+        }
+
+        constexpr bool isExecutable(ZenProperty_t property) const
+        {
+            switch (property)
+            {
+            case ZenSensorProperty_RestoreFactorySettings:
+            case ZenSensorProperty_StoreSettingsInFlash:
+                return true;
+
+            default:
+                return false;
             }
         }
 

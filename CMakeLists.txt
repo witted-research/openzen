@@ -16,9 +16,8 @@ set(CMAKE_AUTOMOC ON)
 find_package(Qt5Bluetooth REQUIRED)
 
 set(zen_includes
-    include/IZenSensor.h
-    include/IZenSensorManager.h
     include/OpenZen.h
+    include/OpenZenCAPI.h
     include/ZenProtocol.h
     include/ZenTypes.h
 )
@@ -28,6 +27,8 @@ set(zen_sources
     src/ConnectionNegotiator.h
     src/ImuHelpers.h
     src/InternalTypes.h
+    src/ISensorProperties.h
+    src/OpenZen.cpp
     src/Sensor.cpp
     src/Sensor.h
     src/SensorConfig.h

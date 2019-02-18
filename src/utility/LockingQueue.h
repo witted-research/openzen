@@ -67,7 +67,7 @@ namespace zen
             m_cv.notify_one();
         }
 
-        std::optional<T> tryToPop()
+        std::optional<T> tryToPop() noexcept
         {
             std::unique_lock<std::mutex> lock(m_mutex);
             if (m_container.empty())
@@ -78,7 +78,7 @@ namespace zen
             return result;
         }
 
-        std::optional<T> waitToPop()
+        std::optional<T> waitToPop() noexcept
         {
             std::unique_lock<std::mutex> lock(m_mutex);
             auto guard = finally([&]() {

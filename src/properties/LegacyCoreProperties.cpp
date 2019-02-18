@@ -5,7 +5,7 @@
 
 namespace zen
 {
-    LegacyCoreProperties::LegacyCoreProperties(AsyncIoInterface& ioInterface, IZenSensorProperties& imu)
+    LegacyCoreProperties::LegacyCoreProperties(AsyncIoInterface& ioInterface, ISensorProperties& imu)
         : m_ioInterface(ioInterface)
         , m_imu(imu)
     {}
@@ -16,7 +16,7 @@ namespace zen
         if (base::v0::supportsExecutingDeviceCommand(commandV0))
         {
             bool streaming;
-            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, &streaming))
+            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, streaming))
                 return error;
 
             if (streaming)
@@ -35,11 +35,8 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::getArray(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t* const bufferSize)
+    ZenError LegacyCoreProperties::getArray(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t& bufferSize)
     {
-        if (bufferSize == nullptr)
-            return ZenError_IsNull;
-
         const auto propertyV0 = base::v0::map(property, true);
         ZenPropertyType expectedType = base::v0::supportsGettingArrayDeviceProperty(propertyV0);
         if (property == ZenSensorProperty_SupportedSamplingRates ||
@@ -53,7 +50,7 @@ namespace zen
                 return ZenError_WrongDataType;
 
             bool streaming;
-            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, &streaming))
+            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, streaming))
                 return error;
 
             if (streaming)
@@ -68,32 +65,32 @@ namespace zen
             switch (type)
             {
             case ZenPropertyType_Bool:
-                return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<bool*>(buffer), *bufferSize);
+                return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<bool*>(buffer), bufferSize);
 
             case ZenPropertyType_Float:
-                return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<float*>(buffer), *bufferSize);
+                return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<float*>(buffer), bufferSize);
 
             case ZenPropertyType_Int32:
             {
                 if (property == ZenSensorProperty_SupportedBaudRates)
-                    return supportedBaudRates(buffer, *bufferSize);
+                    return supportedBaudRates(buffer, bufferSize);
                 else if (property == ZenSensorProperty_SupportedSamplingRates)
-                    return base::v0::supportedSamplingRates(reinterpret_cast<int32_t* const>(buffer), *bufferSize);
+                    return base::v0::supportedSamplingRates(reinterpret_cast<int32_t* const>(buffer), bufferSize);
 
                 // As the communication protocol only supports uint32_t for getting arrays, we need to cast all values to guarantee the correct sign
                 // This only applies to Sensor, as IMUComponent has no integer array properties
                 uint32_t* uiBuffer = reinterpret_cast<uint32_t*>(buffer);
-                if (auto error = m_ioInterface.sendAndWaitForArray(0, function, function, {}, uiBuffer, *bufferSize))
+                if (auto error = m_ioInterface.sendAndWaitForArray(0, function, function, {}, uiBuffer, bufferSize))
                     return error;
 
                 int32_t* iBuffer = reinterpret_cast<int32_t*>(buffer);
-                for (size_t idx = 0; idx < *bufferSize; ++idx)
+                for (size_t idx = 0; idx < bufferSize; ++idx)
                     iBuffer[idx] = static_cast<int32_t>(uiBuffer[idx]);
 
                 // Some properties need to be reversed
                 const bool reverse = property == ZenSensorProperty_FirmwareVersion;
                 if (reverse)
-                    std::reverse(iBuffer, iBuffer + *bufferSize);
+                    std::reverse(iBuffer, iBuffer + bufferSize);
 
                 return ZenError_None;
             }
@@ -106,17 +103,14 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::getBool(ZenProperty_t property, bool* const outValue)
+    ZenError LegacyCoreProperties::getBool(ZenProperty_t property, bool& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         // base::v0 has no boolean properties that can be retrieved, so no need to add backwards compatibility
         const auto propertyV0 = base::v0::map(property, true);
         if (propertyV0 == EDevicePropertyV0::GetBatteryCharging)
         {
             bool streaming;
-            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, &streaming))
+            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, streaming))
                 return error;
 
             if (streaming)
@@ -134,7 +128,7 @@ namespace zen
             if (auto error = m_ioInterface.sendAndWaitForResult(0, function, function, {}, temp))
                 return error;
 
-            *outValue = temp != 0;
+            outValue = temp != 0;
             return ZenError_None;
         }
 
@@ -142,16 +136,13 @@ namespace zen
 
     }
 
-    ZenError LegacyCoreProperties::getFloat(ZenProperty_t property, float* const outValue)
+    ZenError LegacyCoreProperties::getFloat(ZenProperty_t property, float& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         const auto propertyV0 = base::v0::map(property, true);
         if (base::v0::supportsGettingFloatDeviceProperty(propertyV0))
         {
             bool streaming;
-            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, &streaming))
+            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, streaming))
                 return error;
 
             if (streaming)
@@ -164,22 +155,19 @@ namespace zen
             });
 
             const auto function = static_cast<DeviceProperty_t>(propertyV0);
-            return m_ioInterface.sendAndWaitForResult(0, function, function, {}, *outValue);
+            return m_ioInterface.sendAndWaitForResult(0, function, function, {}, outValue);
         }
 
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::getInt32(ZenProperty_t property, int32_t* const outValue)
+    ZenError LegacyCoreProperties::getInt32(ZenProperty_t property, int32_t& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         if (property == ZenSensorProperty_BaudRate)
-            return m_ioInterface.baudrate(*outValue);
+            return m_ioInterface.baudrate(outValue);
         else if (property == ZenSensorProperty_SamplingRate)
         {
-            *outValue = m_samplingRate;
+            outValue = m_samplingRate;
             return ZenError_None;
         }
         else
@@ -188,7 +176,7 @@ namespace zen
             if (base::v0::supportsGettingInt32DeviceProperty(propertyV0))
             {
                 bool streaming;
-                if (auto error = m_imu.getBool(ZenImuProperty_StreamData, &streaming))
+                if (auto error = m_imu.getBool(ZenImuProperty_StreamData, streaming))
                     return error;
 
                 if (streaming)
@@ -207,7 +195,7 @@ namespace zen
                 if (auto error = m_ioInterface.sendAndWaitForResult(0, function, function, {}, uiValue))
                     return error;
 
-                *outValue = static_cast<int32_t>(uiValue);
+                outValue = static_cast<int32_t>(uiValue);
                 return ZenError_None;
             }
         }
@@ -215,21 +203,18 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::getMatrix33(ZenProperty_t, ZenMatrix3x3f* const)
+    ZenError LegacyCoreProperties::getMatrix33(ZenProperty_t, ZenMatrix3x3f&)
     {
         // base::v0 has no matrix properties that can be retrieved, so no need to add backwards compatibility
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::getString(ZenProperty_t property, char* const buffer, size_t* const bufferSize)
+    ZenError LegacyCoreProperties::getString(ZenProperty_t property, char* const buffer, size_t& bufferSize)
     {
-        if (bufferSize == nullptr)
-            return ZenError_IsNull;
-
         if (isArray(property) && type(property) == ZenPropertyType_String)
         {
             bool streaming;
-            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, &streaming))
+            if (auto error = m_imu.getBool(ZenImuProperty_StreamData, streaming))
                 return error;
 
             if (streaming)
@@ -242,7 +227,7 @@ namespace zen
             });
 
             const auto propertyV0 = base::v0::map(property, true);
-            return m_ioInterface.sendAndWaitForArray(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, buffer, *bufferSize);
+            return m_ioInterface.sendAndWaitForArray(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, buffer, bufferSize);
         }
         
         return ZenError_UnknownProperty;
@@ -277,7 +262,7 @@ namespace zen
             if (propertyV0 == EDevicePropertyV0::SetSamplingRate)
             {
                 bool streaming;
-                if (auto error = m_imu.getBool(ZenImuProperty_StreamData, &streaming))
+                if (auto error = m_imu.getBool(ZenImuProperty_StreamData, streaming))
                     return error;
 
                 if (streaming)
@@ -300,7 +285,7 @@ namespace zen
             else if (base::v0::supportsSettingInt32DeviceProperty(propertyV0))
             {
                 bool streaming;
-                if (auto error = m_imu.getBool(ZenImuProperty_StreamData, &streaming))
+                if (auto error = m_imu.getBool(ZenImuProperty_StreamData, streaming))
                     return error;
 
                 if (streaming)
@@ -324,7 +309,7 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyCoreProperties::setMatrix33(ZenProperty_t, const ZenMatrix3x3f* const)
+    ZenError LegacyCoreProperties::setMatrix33(ZenProperty_t, const ZenMatrix3x3f&)
     {
         // base::v0 has no matrix properties that can be set, so no need to add backwards compatibility
         return ZenError_UnknownProperty;
@@ -353,19 +338,6 @@ namespace zen
         }
     }
 
-    bool LegacyCoreProperties::isCommand(ZenProperty_t property) const
-    {
-        switch (property)
-        {
-        case ZenSensorProperty_RestoreFactorySettings:
-        case ZenSensorProperty_StoreSettingsInFlash:
-            return true;
-
-        default:
-            return false;
-        }
-    }
-
     bool LegacyCoreProperties::isConstant(ZenProperty_t property) const
     {
         switch (property)
@@ -378,6 +350,19 @@ namespace zen
         case ZenSensorProperty_SupportedSamplingRates:
         case ZenSensorProperty_BatteryLevel:
         case ZenSensorProperty_BatteryVoltage:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
+    bool LegacyCoreProperties::isExecutable(ZenProperty_t property) const
+    {
+        switch (property)
+        {
+        case ZenSensorProperty_RestoreFactorySettings:
+        case ZenSensorProperty_StoreSettingsInFlash:
             return true;
 
         default:

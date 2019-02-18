@@ -14,10 +14,6 @@ namespace zen
     {
         quit();
         wait();
-
-        auto promise = m_promise.borrow();
-        if (promise->has_value())
-            promise->value().set_value(nonstd::make_unexpected(ZenError_None));
     }
 
     ZenSensorInitError BluetoothDeviceHandler::initialize()

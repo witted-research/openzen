@@ -28,20 +28,6 @@ namespace zen
             }
         }
 
-        constexpr bool isCommand(ZenProperty_t property) const
-        {
-            switch (property)
-            {
-            case ZenImuProperty_PollSensorData:
-            case ZenImuProperty_CalibrateGyro:
-            case ZenImuProperty_ResetOrientationOffset:
-                return true;
-
-            default:
-                return false;
-            }
-        }
-
         constexpr bool isConstant(ZenProperty_t property) const
         {
             switch (property)
@@ -50,6 +36,20 @@ namespace zen
             case ZenImuProperty_AccSupportedRanges:
             case ZenImuProperty_GyrSupportedRanges:
             case ZenImuProperty_MagSupportedRanges:
+                return true;
+
+            default:
+                return false;
+            }
+        }
+
+        constexpr bool isExecutable(ZenProperty_t property) const
+        {
+            switch (property)
+            {
+            case ZenImuProperty_PollSensorData:
+            case ZenImuProperty_CalibrateGyro:
+            case ZenImuProperty_ResetOrientationOffset:
                 return true;
 
             default:

@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <numeric>
 #include <string>
 
 #include "ZenProtocol.h"
@@ -19,7 +18,7 @@ namespace zen
 {
     namespace
     {
-        std::unique_ptr<IZenSensorProperties> make_properties(uint8_t id, unsigned int version, AsyncIoInterface& ioInterface)
+        std::unique_ptr<ISensorProperties> make_properties(uint8_t id, unsigned int version, AsyncIoInterface& ioInterface)
         {
             switch (version)
             {
@@ -31,7 +30,7 @@ namespace zen
             }
         }
 
-        IZenSensorProperties& getProperties(uint8_t address, Sensor& self, const std::vector<std::unique_ptr<SensorComponent>>& components)
+        ISensorProperties& getProperties(uint8_t address, Sensor& self, const std::vector<std::shared_ptr<SensorComponent>>& components)
         {
             return *(address ? components[address - 1]->properties() : self.properties());
         }
@@ -59,23 +58,33 @@ namespace zen
             length -= sizeof(ZenProperty_t);
             return result;
         }
+
+        ZenEvent make_event(ZenEvent_t type, uintptr_t sensorHandle, uintptr_t componentHandle)
+        {
+            ZenEvent event{0};
+            event.eventType = type;
+            event.sensor.handle = sensorHandle;
+            event.component.handle = componentHandle;
+            return event;
+        }
     }
 
     static auto imuRegistry = make_registry<ImuComponentFactory>(g_zenSensorType_Imu);
 
-    nonstd::expected<std::unique_ptr<Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface)
+    nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> make_sensor(uintptr_t token, SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface)
     {
-        auto sensor = std::make_unique<Sensor>(std::move(config), std::move(ioInterface));
+        auto sensor = std::make_shared<Sensor>(token, std::move(config), std::move(ioInterface));
         if (auto error = sensor->init())
             return nonstd::make_unexpected(error);
 
         return std::move(sensor);
     }
 
-    Sensor::Sensor(SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface)
+    Sensor::Sensor(uintptr_t token, SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface)
         : IIoDataSubscriber(*ioInterface.get())
         , m_config(std::move(config))
         , m_ioInterface(std::move(ioInterface))
+        , m_token(token)
         , m_updatingFirmware(false)
         , m_updatedFirmware(false)
         , m_updatingIAP(false)
@@ -128,11 +137,8 @@ namespace zen
         return ZenSensorInitError_None;
     }
 
-    ZenAsyncStatus Sensor::updateFirmwareAsync(const char* const buffer, size_t bufferSize)
+    ZenAsyncStatus Sensor::updateFirmwareAsync(const unsigned char* const buffer, size_t bufferSize) noexcept
     {
-        if (buffer == nullptr)
-            return ZenAsync_InvalidArgument;
-
         if (m_updatingFirmware.exchange(true))
         {
             if (m_updatedFirmware.exchange(false))
@@ -153,6 +159,12 @@ namespace zen
             return ZenAsync_ThreadBusy;
         }
 
+        if (buffer == nullptr)
+        {
+            m_updatingFirmware = false;
+            return ZenAsync_InvalidArgument;
+        }
+
         std::vector<unsigned char> firmware(bufferSize);
         std::memcpy(firmware.data(), buffer, bufferSize);
 
@@ -161,11 +173,8 @@ namespace zen
         return ZenAsync_Updating;
     }
 
-    ZenAsyncStatus Sensor::updateIAPAsync(const char* const buffer, size_t bufferSize)
+    ZenAsyncStatus Sensor::updateIAPAsync(const unsigned char* const buffer, size_t bufferSize) noexcept
     {
-        if (buffer == nullptr)
-            return ZenAsync_InvalidArgument;
-
         if (m_updatingIAP.exchange(true))
         {
             if (m_updatedIAP.exchange(false))
@@ -186,6 +195,12 @@ namespace zen
             return ZenAsync_ThreadBusy;
         }
 
+        if (buffer == nullptr)
+        {
+            m_updatingFirmware = false;
+            return ZenAsync_InvalidArgument;
+        }
+
         std::vector<unsigned char> iap(bufferSize);
         std::memcpy(iap.data(), buffer, bufferSize);
 
@@ -194,36 +209,9 @@ namespace zen
         return ZenAsync_Updating;
     }
 
-    ZenError Sensor::components(IZenSensorComponent*** outComponents, size_t* outLength, const char* type) const
+    bool Sensor::equals(const ZenSensorDesc& desc) const
     {
-        if (outLength == nullptr)
-            return ZenError_IsNull;
-
-        const size_t length = !type ? m_components.size() : std::accumulate(m_components.cbegin(), m_components.cend(), static_cast<size_t>(0), [=](size_t count, const auto& component) {
-            return component->type() == std::string_view(type) ? count + 1 : count;
-        });
-
-        *outLength = length;
-        if (!m_components.empty())
-        {
-            if (outComponents == nullptr)
-                return ZenError_None;
-
-            IZenSensorComponent** components = new IZenSensorComponent*[length];
-            size_t idx = 0;
-            for (const auto& component : m_components)
-                if (!type || component->type() == std::string_view(type))
-                    components[idx++] = component.get();
-            
-            *outComponents = components;
-        }
-
-        return ZenError_None;
-    }
-
-    bool Sensor::equals(const ZenSensorDesc* desc) const
-    {
-        return m_ioInterface.equals(*desc);
+        return m_ioInterface.equals(desc);
     }
 
     ZenError Sensor::processData(uint8_t address, uint8_t function, const unsigned char* data, size_t length)
@@ -276,11 +264,14 @@ namespace zen
                         return ZenError_Io_MsgCorrupt;
                     return m_ioInterface.publishArray(function, ZenError_None, reinterpret_cast<const uint32_t*>(data), 3);
 
-                default:
+                case EDevicePropertyV0::GetRawSensorData:
                     if (m_initialized)
-                        return m_components.at(0)->processData(function, data, length);
+                        return m_components[0]->processEvent(make_event(ZenImuEvent_Sample, m_token, 1), data, length);
                     else
                         return ZenError_None;
+
+                default:
+                    return m_components[0]->processData(function, data, length);
                 }
             }
         }
@@ -298,7 +289,7 @@ namespace zen
                 return properties::publishResult(getProperties(address, *this, m_components), m_ioInterface, parseProperty(data, length), parseError(data, length), data, length);
 
             case ZenProtocolFunction_Event:
-                return address ? m_components[address - 1]->processEvent(parseEvent(data, length), data, length) : ZenError_UnsupportedEvent;
+                return address ? m_components[address - 1]->processEvent(make_event(parseEvent(data, length), m_token, address - 1), data, length) : ZenError_UnsupportedEvent;
 
             default:
                 return ZenError_Io_UnsupportedFunction;
@@ -308,7 +299,7 @@ namespace zen
 
     void Sensor::upload(std::vector<unsigned char> firmware)
     {
-        constexpr uint32_t PAGE_SIZE = 256;
+        constexpr uint32_t PAGE_SIZE = 255;
 
         auto& outError = m_updatingFirmware ? m_updateFirmwareError : m_updateIAPError;
         auto& updated = m_updatingFirmware ? m_updatedFirmware : m_updatedIAP;

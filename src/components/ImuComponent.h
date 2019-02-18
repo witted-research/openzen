@@ -14,7 +14,7 @@ namespace zen
     class ImuComponent : public SensorComponent
     {
     public:
-        ImuComponent(uint8_t id, unsigned int version, std::unique_ptr<IZenSensorProperties> properties, AsyncIoInterface& ioInterface);
+        ImuComponent(unsigned int version, std::unique_ptr<ISensorProperties> properties, AsyncIoInterface& ioInterface);
 
         /** Tries to initialize settings of the sensor's component that can fail.
          * After succesfully completing init, m_properties should be set.
@@ -23,9 +23,9 @@ namespace zen
 
         ZenError processData(uint8_t function, const unsigned char* data, size_t length) override;
 
-        ZenError processEvent(ZenEvent_t type, const unsigned char* data, size_t length) noexcept override;
+        ZenError processEvent(ZenEvent event, const unsigned char* data, size_t length) noexcept override;
 
-        const char* type() const override { return g_zenSensorType_Imu; }
+        std::string_view type() const noexcept override { return g_zenSensorType_Imu; }
 
     private:
         ZenError parseSensorData(ZenImuData& imuData, const unsigned char* data, size_t length) const noexcept;
@@ -45,7 +45,6 @@ namespace zen
         AsyncIoInterface& m_ioInterface;
         
         const unsigned int m_version;
-        const uint8_t m_id;
     };
 }
 #endif

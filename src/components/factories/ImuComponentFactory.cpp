@@ -9,7 +9,7 @@
 
 namespace zen
 {
-    std::unique_ptr<IZenSensorProperties> make_properties(uint8_t id, unsigned int version, AsyncIoInterface& ioInterface)
+    std::unique_ptr<ISensorProperties> make_properties(uint8_t id, unsigned int version, AsyncIoInterface& ioInterface)
     {
         switch (version)
         {
@@ -42,11 +42,11 @@ namespace zen
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
 
             properties->setOutputDataBitset(newBitset);
-            return std::make_unique<ImuComponent>(id, version, std::move(properties), ioInterface);
+            return std::make_unique<ImuComponent>(version, std::move(properties), ioInterface);
         }
 
         if (auto properties = make_properties(id, version, ioInterface))
-            return std::make_unique<ImuComponent>(id, version, std::move(properties), ioInterface);
+            return std::make_unique<ImuComponent>(version, std::move(properties), ioInterface);
 
         return nonstd::make_unexpected(ZenSensorInitError_UnsupportedProtocol);
     }

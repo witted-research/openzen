@@ -1,5 +1,4 @@
-#include "IZenSensor.h"
-#include "IZenSensorManager.h"
+#include "OpenZen.h"
 
 #include <array>
 #include <atomic>
@@ -12,29 +11,30 @@
 
 std::atomic_bool g_terminate(false);
 
+using namespace zen;
+
 namespace
 {
-    std::optional<IZenSensorComponent*> getImuComponent(gsl::span<IZenSensorComponent*> components)
+    std::optional<ZenSensorComponent> getImuComponent(gsl::span<ZenSensorComponent> components)
     {
-        for (auto* component : components)
-            if (component->type() == std::string_view(g_zenSensorType_Imu))
+        for (const auto& component : components)
+            if (component.type() == g_zenSensorType_Imu)
                 return component;
 
         return std::nullopt;
     }
 }
 
-void pollLoop(IZenSensorManager* manager)
+void pollLoop(ZenClient* const client)
 {
     std::cout << "--- Start polling ---" << std::endl;
 
-    ZenEvent event;
     while (!g_terminate)
     {
         unsigned int i = 0;
-        while (manager->waitForNextEvent(&event))
+        while (auto event = client->waitForNextEvent())
             if (i++ % 100 == 0)
-                std::cout << "Event type: " << event.eventType << std::endl;
+                std::cout << "Event type: " << event->eventType << std::endl;
     }
 
     std::cout << "--- Finish polling ---" << std::endl;
@@ -42,83 +42,60 @@ void pollLoop(IZenSensorManager* manager)
 
 int main(int argc, char *argv[])
 {
-    ZenError error;
-    IZenSensorManager* manager = ZenInit(&error);
-    if (error)
-        return error;
+    auto [clientError, client] = make_client();
+    if (clientError)
+        return clientError;
 
     std::cout << "Listing IMU devices:" << std::endl;
 
-    ZenSensorDesc* list = nullptr;
-    size_t nSensors;
-    while (auto status = manager->listSensorsAsync(&list, &nSensors, g_zenSensorType_Imu))
-    {
-        if (status != ZenAsync_Updating)
-        {
-            ZenShutdown();
-            return error;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
-
-    for (int i = 0; i < nSensors; ++i)
-        std::cout << i << ": " << list[i].name << " ("  << list[i].ioType << ")" << std::endl;
-
-    if (nSensors == 0)
-    {
-        ZenShutdown();
+    const auto descriptions = client.listSensors(g_zenSensorType_Imu);
+    if (!descriptions)
         return 1;
-    }
+
+    for (const auto& desc : *descriptions)
+        std::cout << desc.name << " ("  << desc.ioType << ")" << std::endl;
+
+    if (descriptions->empty())
+        return 1;
 
     unsigned int idx;
     do
     {
-        std::cout << "Provide an index within the range 0-" << nSensors - 1 << ":" << std::endl;
+        std::cout << "Provide an index within the range 0-" << descriptions->size() - 1 << ":" << std::endl;
         std::cin >> idx;
-    } while (idx >= nSensors);
+    } while (idx >= descriptions->size());
 
-    IZenSensor* sensor = nullptr;
-    if (auto error = manager->obtain(&list[idx], &sensor))
-    {
-        ZenShutdown();
-        return error;
-    }
-    
-    IZenSensorComponent** components = nullptr;
-    size_t nComponents;
-    if (auto error = sensor->components(&components, &nComponents, g_zenSensorType_Imu))
-        return error;
+    auto[obtainError, sensor] = client.obtainSensor(descriptions->at(idx));
+    if (obtainError)
+        return obtainError;
 
-    if (nComponents == 0)
-    {
-        ZenShutdown();
+    const auto optImu = sensor.getAnyComponentOfType(g_zenSensorType_Imu);
+    if (!optImu)
         return ZenError_WrongSensorType;
-    }
 
-    auto* imu = components[0];
+    auto imu = *optImu;
 
-    std::thread pollingThread(&pollLoop, manager);
+    std::thread pollingThread(&pollLoop, &client);
 
     // Get a sensor property
-    int32_t time;
-    if (auto error = sensor->properties()->getInt32(ZenSensorProperty_TimeOffset, &time))
+    auto [timeError, time] = sensor.getInt32Property(ZenSensorProperty_TimeOffset);
+    if (timeError)
     {
         g_terminate = true;
-        ZenShutdown();
+        client.close();
         pollingThread.join();
-        return error;
+        return timeError;
     }
 
     // Get an array property
     std::array<int32_t, 3> version;
-    size_t length = version.size();
-    if (auto error = sensor->properties()->getArray(ZenSensorProperty_FirmwareVersion, ZenPropertyType_Int32, version.data(), &length))
+    auto [versionError, versionSize] = sensor.getArrayProperty(ZenSensorProperty_FirmwareVersion, version.data(), version.size());
+    if (versionError)
     {
         g_terminate = true;
-        ZenShutdown();
+        client.close();
         pollingThread.join();
-        return error;
+        return versionError;
     }
 
     std::cout << "Firmware version: " << version.at(0) << "." << version.at(1) << "." << version.at(2) << std::endl;
@@ -126,10 +103,10 @@ int main(int argc, char *argv[])
     // Do something based on the sensor property
     if (time)
     {
-        if (auto error = imu->properties()->setBool(ZenImuProperty_StreamData, true))
+        if (auto error = imu.setBoolProperty(ZenImuProperty_StreamData, true))
         {
             g_terminate = true;
-            ZenShutdown();
+            client.close();
             pollingThread.join();
             return error;
         }
@@ -145,7 +122,7 @@ int main(int argc, char *argv[])
     }
 
     g_terminate = true;
-    ZenShutdown();
+    client.close();
     pollingThread.join();
     return 0;
 }

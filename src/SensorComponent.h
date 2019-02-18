@@ -2,15 +2,16 @@
 #define ZEN_SENSORCOMPONENT_H_
 
 #include <memory>
+#include <string_view>
 
-#include "IZenSensor.h"
+#include "ISensorProperties.h"
 
 namespace zen
 {
-    class SensorComponent : public IZenSensorComponent
+    class SensorComponent
     {
     public:
-        SensorComponent(std::unique_ptr<IZenSensorProperties> properties)
+        SensorComponent(std::unique_ptr<ISensorProperties> properties)
             : m_properties(std::move(properties))
         {}
 
@@ -20,12 +21,14 @@ namespace zen
         virtual ZenSensorInitError init() = 0;
 
         virtual ZenError processData(uint8_t function, const unsigned char* data, size_t length) = 0;
-        virtual ZenError processEvent(ZenEvent_t type, const unsigned char* data, size_t length) noexcept = 0;
+        virtual ZenError processEvent(ZenEvent event, const unsigned char* data, size_t length) noexcept = 0;
 
-        IZenSensorProperties* properties() override { return m_properties.get(); }
+        virtual std::string_view type() const noexcept = 0;
+
+        ISensorProperties* properties() noexcept { return m_properties.get(); }
 
     protected:
-        std::unique_ptr<IZenSensorProperties> m_properties;
+        std::unique_ptr<ISensorProperties> m_properties;
     };
 }
 

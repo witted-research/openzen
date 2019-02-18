@@ -36,11 +36,8 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyImuProperties::getArray(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t* const bufferSize)
+    ZenError LegacyImuProperties::getArray(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t& bufferSize)
     {
-        if (bufferSize == nullptr)
-            return ZenError_IsNull;
-
         const auto propertyV0 = imu::v0::map(property, true);
         ZenPropertyType expectedType = imu::v0::supportsGettingArrayDeviceProperty(propertyV0);
         if (property == ZenImuProperty_AccSupportedRanges ||
@@ -67,20 +64,20 @@ namespace zen
             switch (type)
             {
             case ZenPropertyType_Bool:
-                return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<bool*>(buffer), *bufferSize);
+                return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<bool*>(buffer), bufferSize);
 
             case ZenPropertyType_Float:
-                return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<float*>(buffer), *bufferSize);
+                return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<float*>(buffer), bufferSize);
 
             case ZenPropertyType_Int32:
                 if (property == ZenImuProperty_AccSupportedRanges)
-                    return imu::v0::supportedAccRanges(reinterpret_cast<int32_t* const>(buffer), *bufferSize);
+                    return imu::v0::supportedAccRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
                 else if (property == ZenImuProperty_GyrSupportedRanges)
-                    return imu::v0::supportedGyrRanges(reinterpret_cast<int32_t* const>(buffer), *bufferSize);
+                    return imu::v0::supportedGyrRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
                 else if (property == ZenImuProperty_MagSupportedRanges)
-                    return imu::v0::supportedMagRanges(reinterpret_cast<int32_t* const>(buffer), *bufferSize);
+                    return imu::v0::supportedMagRanges(reinterpret_cast<int32_t* const>(buffer), bufferSize);
                 else
-                    return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<int32_t*>(buffer), *bufferSize);
+                    return m_ioInterface.sendAndWaitForArray(0, function, function, {}, reinterpret_cast<int32_t*>(buffer), bufferSize);
 
             default:
                 return ZenError_WrongDataType;
@@ -90,79 +87,76 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyImuProperties::getBool(ZenProperty_t property, bool* const outValue)
+    ZenError LegacyImuProperties::getBool(ZenProperty_t property, bool& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         if (property == ZenImuProperty_GyrUseThreshold)
         {
-            *outValue = m_cache.gyrUseThreshold;
+            outValue = m_cache.gyrUseThreshold;
             return ZenError_None;
         }
         else if (property == ZenImuProperty_StreamData)
         {
-            *outValue = m_streaming;
+            outValue = m_streaming;
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputLowPrecision)
         {
-            *outValue = getConfigDataFlag(22);
+            outValue = getConfigDataFlag(22);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputLinearAcc)
         {
-            *outValue = getConfigDataFlag(21);
+            outValue = getConfigDataFlag(21);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputAltitude)
         {
-            *outValue = getConfigDataFlag(19);
+            outValue = getConfigDataFlag(19);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputQuat)
         {
-            *outValue = getConfigDataFlag(18);
+            outValue = getConfigDataFlag(18);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputEuler)
         {
-            *outValue = getConfigDataFlag(17);
+            outValue = getConfigDataFlag(17);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputAngularVel)
         {
-            *outValue = getConfigDataFlag(16);
+            outValue = getConfigDataFlag(16);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputHeaveMotion)
         {
-            *outValue = getConfigDataFlag(14);
+            outValue = getConfigDataFlag(14);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputTemperature)
         {
-            *outValue = getConfigDataFlag(13);
+            outValue = getConfigDataFlag(13);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputRawGyr)
         {
-            *outValue = getConfigDataFlag(12);
+            outValue = getConfigDataFlag(12);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputRawAcc)
         {
-            *outValue = getConfigDataFlag(11);
+            outValue = getConfigDataFlag(11);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputRawMag)
         {
-            *outValue = getConfigDataFlag(10);
+            outValue = getConfigDataFlag(10);
             return ZenError_None;
         }
         else if (property == ZenImuProperty_OutputPressure)
         {
-            *outValue = getConfigDataFlag(9);
+            outValue = getConfigDataFlag(9);
             return ZenError_None;
         }
 
@@ -170,11 +164,8 @@ namespace zen
 
     }
 
-    ZenError LegacyImuProperties::getFloat(ZenProperty_t property, float* const outValue)
+    ZenError LegacyImuProperties::getFloat(ZenProperty_t property, float& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         const auto propertyV0 = imu::v0::map(property, true);
         if (propertyV0 == EDevicePropertyV0::GetCentricCompensationRate)
         {
@@ -192,7 +183,7 @@ namespace zen
             if (auto error = m_ioInterface.sendAndWaitForResult(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, value))
                 return error;
 
-            *outValue = value > 0 ? 1.f : 0.f;
+            outValue = value > 0 ? 1.f : 0.f;
             return ZenError_None;
         }
         else if (propertyV0 == EDevicePropertyV0::GetLinearCompensationRate)
@@ -211,7 +202,7 @@ namespace zen
             if (auto error = m_ioInterface.sendAndWaitForResult(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, value))
                 return error;
 
-            *outValue = static_cast<float>(value);
+            outValue = static_cast<float>(value);
             return ZenError_None;
         }
         else if (imu::v0::supportsGettingFloatDeviceProperty(propertyV0))
@@ -226,17 +217,14 @@ namespace zen
                     setBool(ZenImuProperty_StreamData, true);
             });
 
-            return m_ioInterface.sendAndWaitForResult(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, *outValue);
+            return m_ioInterface.sendAndWaitForResult(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, outValue);
         }
 
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyImuProperties::getInt32(ZenProperty_t property, int32_t* const outValue)
+    ZenError LegacyImuProperties::getInt32(ZenProperty_t property, int32_t& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         const auto propertyV0 = imu::v0::map(property, true);
         if (imu::v0::supportsGettingInt32DeviceProperty(propertyV0))
         {
@@ -255,18 +243,15 @@ namespace zen
             if (auto error = m_ioInterface.sendAndWaitForResult(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, uiValue))
                 return error;
 
-            *outValue = static_cast<int32_t>(uiValue);
+            outValue = static_cast<int32_t>(uiValue);
             return ZenError_None;
         }
 
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyImuProperties::getMatrix33(ZenProperty_t property, ZenMatrix3x3f* const outValue)
+    ZenError LegacyImuProperties::getMatrix33(ZenProperty_t property, ZenMatrix3x3f& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         const auto propertyV0 = imu::v0::map(property, true);
         if (imu::v0::supportsGettingMatrix33DeviceProperty(propertyV0))
         {
@@ -281,19 +266,16 @@ namespace zen
             });
 
             size_t length = 9;
-            return m_ioInterface.sendAndWaitForArray(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, outValue->data, length);
+            return m_ioInterface.sendAndWaitForArray(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, outValue.data, length);
         }
 
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyImuProperties::getString(ZenProperty_t property, char* const buffer, size_t* const bufferSize)
+    ZenError LegacyImuProperties::getString(ZenProperty_t property, char* const buffer, size_t& bufferSize)
     {
-        if (bufferSize == nullptr)
-            return ZenError_IsNull;
-
         if (property == ZenImuProperty_SupportedFilterModes)
-            return imu::v0::supportedFilterModes(buffer, *bufferSize);
+            return imu::v0::supportedFilterModes(buffer, bufferSize);
 
         return ZenError_UnknownProperty;
     }
@@ -498,7 +480,7 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyImuProperties::setMatrix33(ZenProperty_t property, const ZenMatrix3x3f* const value)
+    ZenError LegacyImuProperties::setMatrix33(ZenProperty_t property, const ZenMatrix3x3f& value)
     {
         const auto propertyV0 = imu::v0::map(property, false);
         if (imu::v0::supportsSettingMatrix33DeviceProperty(propertyV0))
@@ -513,7 +495,7 @@ namespace zen
                     setBool(ZenImuProperty_StreamData, true);
             });
 
-            return m_ioInterface.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<const unsigned char*>(value->data), 9 * sizeof(float)));
+            return m_ioInterface.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<const unsigned char*>(value.data), 9 * sizeof(float)));
         }
 
         return ZenError_UnknownProperty;
@@ -545,20 +527,6 @@ namespace zen
         }
     }
 
-    bool LegacyImuProperties::isCommand(ZenProperty_t property) const
-    {
-        switch (property)
-        {
-        case ZenImuProperty_PollSensorData:
-        case ZenImuProperty_CalibrateGyro:
-        case ZenImuProperty_ResetOrientationOffset:
-            return true;
-
-        default:
-            return false;
-        }
-    }
-
     bool LegacyImuProperties::isConstant(ZenProperty_t property) const
     {
         switch (property)
@@ -567,6 +535,20 @@ namespace zen
         case ZenImuProperty_AccSupportedRanges:
         case ZenImuProperty_GyrSupportedRanges:
         case ZenImuProperty_MagSupportedRanges:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
+    bool LegacyImuProperties::isExecutable(ZenProperty_t property) const
+    {
+        switch (property)
+        {
+        case ZenImuProperty_PollSensorData:
+        case ZenImuProperty_CalibrateGyro:
+        case ZenImuProperty_ResetOrientationOffset:
             return true;
 
         default:

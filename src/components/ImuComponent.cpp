@@ -27,12 +27,11 @@ namespace zen
         }
     }
 
-    ImuComponent::ImuComponent(uint8_t id, unsigned int version, std::unique_ptr<IZenSensorProperties> properties, AsyncIoInterface& ioInterface)
+    ImuComponent::ImuComponent(unsigned int version, std::unique_ptr<ISensorProperties> properties, AsyncIoInterface& ioInterface)
         : SensorComponent(std::move(properties))
         , m_cache{}
         , m_ioInterface(ioInterface)
         , m_version(version)
-        , m_id(id)
     {}
 
     ZenSensorInitError ImuComponent::init()
@@ -41,33 +40,33 @@ namespace zen
 
         if (m_version == 0)
             cache->samplingRate = 200;
-        else if (ZenError_None != m_properties->getInt32(ZenSensorProperty_SamplingRate, &cache->samplingRate))
+        else if (ZenError_None != m_properties->getInt32(ZenSensorProperty_SamplingRate, cache->samplingRate))
             return ZenSensorInitError_InvalidConfig;
 
         ZenMatrix3x3f matrix;
-        if (auto error = m_properties->getMatrix33(ZenImuProperty_AccAlignment, &matrix))
+        if (auto error = m_properties->getMatrix33(ZenImuProperty_AccAlignment, matrix))
             return ZenSensorInitError_RetrieveFailed;
 
         convertArrayToLpMatrix(matrix.data, &cache->accAlignMatrix);
-        if (auto error = m_properties->getMatrix33(ZenImuProperty_GyrAlignment, &matrix))
+        if (auto error = m_properties->getMatrix33(ZenImuProperty_GyrAlignment, matrix))
             return ZenSensorInitError_RetrieveFailed;
 
         convertArrayToLpMatrix(matrix.data, &cache->gyrAlignMatrix);
-        if (auto error = m_properties->getMatrix33(ZenImuProperty_MagSoftIronMatrix, &matrix))
+        if (auto error = m_properties->getMatrix33(ZenImuProperty_MagSoftIronMatrix, matrix))
             return ZenSensorInitError_RetrieveFailed;
 
         convertArrayToLpMatrix(matrix.data, &cache->softIronMatrix);
 
         size_t size = 3 * sizeof(float);
-        if (auto error = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, cache->accBias.data, &size))
+        if (auto error = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, cache->accBias.data, size))
             return ZenSensorInitError_RetrieveFailed;
 
         size = 3 * sizeof(float);
-        if (auto error = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, cache->gyrBias.data, &size))
+        if (auto error = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, cache->gyrBias.data, size))
             return ZenSensorInitError_RetrieveFailed;
 
         size = 3 * sizeof(float);
-        if (auto error = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, cache->hardIronOffset.data, &size))
+        if (auto error = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, cache->hardIronOffset.data, size))
             return ZenSensorInitError_RetrieveFailed;
 
         return ZenSensorInitError_None;
@@ -94,9 +93,6 @@ namespace zen
                 return ZenError_Io_MsgCorrupt;
             return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data));
 
-        case EDevicePropertyV0::GetRawSensorData:
-            return processEvent(ZenImuEvent_Sample, data, length);
-
         case EDevicePropertyV0::GetAccBias:
         case EDevicePropertyV0::GetGyrBias:
         case EDevicePropertyV0::GetMagBias:
@@ -120,13 +116,9 @@ namespace zen
         }
     }
 
-    ZenError ImuComponent::processEvent(ZenEvent_t type, const unsigned char* data, size_t length) noexcept
+    ZenError ImuComponent::processEvent(ZenEvent event, const unsigned char* data, size_t length) noexcept
     {
-        ZenEvent event{0};
-        event.eventType = type;
-        event.sensor = this;
-
-        switch (type)
+        switch (event.eventType)
         {
         case ZenImuEvent_Sample:
             if (auto error = parseSensorData(event.data.imuData, data, length))
@@ -157,13 +149,13 @@ namespace zen
         it += sizeof(float);
 
         bool enabled;
-        if (auto error = m_properties->getBool(ZenImuProperty_OutputLowPrecision, &enabled))
+        if (auto error = m_properties->getBool(ZenImuProperty_OutputLowPrecision, enabled))
             return error;
 
         const bool lowPrec = enabled;
         const size_t floatSize = lowPrec ? sizeof(uint16_t) : sizeof(float);
 
-        if (m_properties->getBool(ZenImuProperty_OutputRawGyr, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputRawGyr, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + 3 * floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -180,7 +172,7 @@ namespace zen
             convertLpVector3fToArray(&g, imuData.g);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputRawAcc, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputRawAcc, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + 3 * floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -197,7 +189,7 @@ namespace zen
             convertLpVector3fToArray(&a, imuData.a);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputRawMag, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputRawMag, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + 3 * floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -214,7 +206,7 @@ namespace zen
             convertLpVector3fToArray(&b, imuData.b);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputAngularVel, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputAngularVel, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + 3 * floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -223,7 +215,7 @@ namespace zen
                 imuData.w[idx] = (180.f / float(M_PI)) * (lowPrec ? parseFloat16(it, 1000.f) : parseFloat32(it));
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputQuat, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputQuat, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + 4 * floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -238,7 +230,7 @@ namespace zen
             convertLpMatrixToArray(&m, imuData.rotationM);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputEuler, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputEuler, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + 3 * floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -247,7 +239,7 @@ namespace zen
                 imuData.r[idx] = (180.f / float(M_PI)) * lowPrec ? parseFloat16(it, 10000.f) : parseFloat32(it);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputLinearAcc, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputLinearAcc, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + 3 * floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -256,7 +248,7 @@ namespace zen
                 imuData.linAcc[idx] = lowPrec ? parseFloat16(it, 1000.f) : parseFloat32(it);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputPressure, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputPressure, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -264,7 +256,7 @@ namespace zen
             imuData.pressure = lowPrec ? parseFloat16(it, 100.f) : parseFloat32(it);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputAltitude, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputAltitude, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -272,7 +264,7 @@ namespace zen
             imuData.altitude = lowPrec ? parseFloat16(it, 10.f) : parseFloat32(it);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputTemperature, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputTemperature, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + floatSize) > size)
                 return ZenError_Io_MsgCorrupt;
@@ -280,7 +272,7 @@ namespace zen
             imuData.temperature = lowPrec ? parseFloat16(it, 100.f) : parseFloat32(it);
         }
 
-        if (m_properties->getBool(ZenImuProperty_OutputHeaveMotion, &enabled) == ZenError_None && enabled)
+        if (m_properties->getBool(ZenImuProperty_OutputHeaveMotion, enabled) == ZenError_None && enabled)
         {
             if (std::distance(data, it + floatSize) > size)
                 return ZenError_Io_MsgCorrupt;

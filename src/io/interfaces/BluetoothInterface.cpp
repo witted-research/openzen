@@ -62,19 +62,26 @@ namespace zen
             auto future = m_handler->readAsync();
             future->wait();
 
-            auto buffer = future->get();
-            if (buffer.has_value())
+            try
             {
-                if (auto error = processReceivedData(buffer->data(), buffer->size()))
-                    return error;
-            }
-            else
-            {
-                if (buffer.error() == ZenError_Io_NotInitialized)
+                auto buffer = future->get();
+                if (buffer.has_value())
                 {
-                    // [TODO] Try to reconnect
+                    if (auto error = processReceivedData(buffer->data(), buffer->size()))
+                        return error;
                 }
-                return buffer.error();
+                else
+                {
+                    if (buffer.error() == ZenError_Io_NotInitialized)
+                    {
+                        // [TODO] Try to reconnect
+                    }
+                    return buffer.error();
+                }
+            }
+            catch (...)
+            {
+                return ZenError_Unknown;
             }
         }
 

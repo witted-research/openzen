@@ -6,79 +6,58 @@
 #include <thread>
 #include <type_traits>
 #include <set>
+#include <unordered_map>
 
-#include "IZenSensorManager.h"
+#include "nonstd/expected.hpp"
+
 #include "Sensor.h"
 #include "utility/LockingQueue.h"
 
 namespace zen
 {
-    template <typename T>
-    struct PointerCmp
+    class SensorManager
     {
-        using is_transparent = std::true_type;
+    private:
+        using key_value_t = std::pair<uintptr_t, std::shared_ptr<Sensor>>;
 
-        struct UniversalPtr
-        {
-            T* ptr;
-
-            UniversalPtr() = default;
-            UniversalPtr(const UniversalPtr&) = default;
-
-            template <typename U>
-            UniversalPtr(U* p) : ptr(p)
-            { static_assert(std::is_base_of<T, U>()); }
-
-            template <typename U, class... Args>
-            UniversalPtr(const std::unique_ptr<U, Args...>& p) : ptr(p.get())
-            { static_assert(std::is_base_of<T, U>()); }
-
-            template <typename U>
-            UniversalPtr(const std::shared_ptr<U>& p) : ptr(p.get())
-            { static_assert(std::is_base_of<T, U>()); }
-
-            bool operator<(UniversalPtr rhs) const { return std::less<T*>()(ptr, rhs.ptr); }
-        };
-
-        bool operator()(const UniversalPtr&& lhs, const UniversalPtr&& rhs) const { return lhs < rhs; }
-    };
-
-    class SensorManager : public IZenSensorManager
-    {
     public:
         static SensorManager& get();
 
-        SensorManager();
-        ~SensorManager();
+        SensorManager() noexcept;
+        ~SensorManager() noexcept;
 
-        ZenError init();
-        ZenError deinit();
+        ZenError init() noexcept;
+        ZenError deinit() noexcept;
 
-        ZenSensorInitError obtain(const ZenSensorDesc* sensorDesc, IZenSensor** outSensor) override;
+        std::optional<std::shared_ptr<Sensor>> getSensorByToken(uintptr_t token) const noexcept;
 
-        ZenError release(IZenSensor* sensor) override;
+        nonstd::expected<key_value_t, ZenSensorInitError> obtain(const ZenSensorDesc& desc) noexcept;
+
+        ZenError release(uintptr_t token) noexcept;
+
+        nonstd::expected<std::vector<ZenSensorDesc>, ZenAsyncStatus> listSensorsAsync(std::optional<std::string_view> typeFilter) noexcept;
 
         /** Returns true and fills the next event on the queue if there is one, otherwise returns false. */
-        bool pollNextEvent(ZenEvent* outEvent) override;
+        std::optional<ZenEvent> pollNextEvent() noexcept;
 
         /** Returns true and fills the next event on the queue when there is a new one, otherwise returns false upon a call to ZenShutdown() */
-        bool waitForNextEvent(ZenEvent* outEvent) override;
-
-        ZenAsyncStatus listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength, const char* typeFilter) override;
+        std::optional<ZenEvent> waitForNextEvent() noexcept;
 
         /** Pushes an event to the event queue */
-        void notifyEvent(ZenEvent&& event) { m_eventQueue.push(std::move(event)); }
+        void notifyEvent(ZenEvent&& event) noexcept;
 
     private:
-        IZenSensor* findSensor(const ZenSensorDesc* sensorDesc);
+        std::optional<key_value_t> findSensor(const ZenSensorDesc& sensorDesc) noexcept;
 
         void listSensorLoop();
         void sensorLoop();
 
-        LockingQueue<ZenEvent> m_eventQueue;
-        std::set<std::unique_ptr<Sensor>, PointerCmp<IZenSensor>> m_sensors;
-
         std::vector<ZenSensorDesc> m_devices;
+
+        LockingQueue<ZenEvent> m_eventQueue;
+        std::unordered_map<uintptr_t, std::shared_ptr<Sensor>> m_sensors;
+
+        uintptr_t m_nextToken;
 
         std::thread m_listSensorThread;
         std::thread m_sensorThread;

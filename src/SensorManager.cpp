@@ -10,54 +10,49 @@
 #include "io/can/CanManager.h"
 #include "utility/StringView.h"
 
-ZEN_API IZenSensorManager* ZenInit(ZenError* outError)
-{
-    auto& sensorManager = zen::SensorManager::get();
-    if (auto error = sensorManager.init())
-    {
-        *outError = error;
-        return nullptr;
-    }
-
-    *outError = ZenError_None;
-    return &sensorManager;
-}
-
-ZEN_API ZenError ZenShutdown()
-{
-    if (auto error = zen::SensorManager::get().deinit())
-        return error;
-
-    return ZenError_None;
-}
-
 namespace zen
 {
+    namespace
+    {
+        bool hasComponentOfType(const std::vector<std::shared_ptr<SensorComponent>>& components, std::string_view type)
+        {
+            for (const auto& component : components)
+                if (component->type() == type)
+                    return true;
+
+            return false;
+        }
+    }
+
     SensorManager& SensorManager::get()
     {
         static SensorManager singleton;
         return singleton;
     }
 
-    SensorManager::SensorManager()
+    SensorManager::SensorManager() noexcept
         : m_initialized(false) 
         , m_startedListing(false)
         , m_listing(false)
         , m_finished(false)
         , m_terminate(false)
         , m_destructing(false)
+        , m_nextToken(1)
     {}
 
-    SensorManager::~SensorManager()
+    SensorManager::~SensorManager() noexcept
     {
         m_destructing = true;
         m_terminate = true;
 
         if (m_sensorThread.joinable())
             m_sensorThread.join();
+
+        if (m_listSensorThread.joinable())
+            m_listSensorThread.join();
     }
 
-    ZenError SensorManager::init()
+    ZenError SensorManager::init() noexcept
     {
         if (m_initialized)
             return ZenError_AlreadyInitialized;
@@ -73,7 +68,7 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError SensorManager::deinit()
+    ZenError SensorManager::deinit() noexcept
     {
         if (!m_initialized)
             return ZenError_NotInitialized;
@@ -86,118 +81,96 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenSensorInitError SensorManager::obtain(const ZenSensorDesc* sensorDesc, IZenSensor** outSensor)
+    std::optional<std::shared_ptr<Sensor>> SensorManager::getSensorByToken(uintptr_t token) const noexcept
     {
-        if (sensorDesc == nullptr)
-            return ZenSensorInitError_IsNull;
+        auto it = m_sensors.find(token);
+        if (it == m_sensors.cend())
+            return std::nullopt;
 
-        if (outSensor == nullptr)
-            return ZenSensorInitError_IsNull;
+        return it->second;
+    }
 
-        if (auto* sensor = findSensor(sensorDesc))
-        {
-            *outSensor = sensor;
-            return ZenSensorInitError_None;
-        }
+    nonstd::expected<SensorManager::key_value_t, ZenSensorInitError> SensorManager::obtain(const ZenSensorDesc& desc) noexcept
+    {
+        if (auto sensor = findSensor(desc))
+            return std::move(*sensor);
 
         ZenSensorInitError ioError;
-        auto ioInterface = IoManager::get().obtain(*sensorDesc, ioError);
+        auto ioInterface = IoManager::get().obtain(desc, ioError);
         if (!ioInterface)
-            return ioError;
+            return nonstd::make_unexpected(ioError);
 
         ConnectionNegotiator negotiator(*ioInterface);
         auto agreement = negotiator.negotiate();
         if (!agreement)
-                return agreement.error();
-
-        auto sensor = make_sensor(std::move(*agreement), std::move(ioInterface));
-        if (!sensor)
-            return sensor.error();
+                return nonstd::make_unexpected(agreement.error());
 
         std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = m_sensors.emplace(std::move(*sensor));
-        *outSensor = it.first->get();
+        const auto token = m_nextToken++;
+        auto sensor = make_sensor(token, std::move(*agreement), std::move(ioInterface));
+        if (!sensor)
+            return nonstd::make_unexpected(sensor.error());
 
-        return ZenSensorInitError_None;
+        auto it = m_sensors.emplace(token, std::move(*sensor));
+        return *it.first;
     }
 
-    ZenError SensorManager::release(IZenSensor* sensor)
+    ZenError SensorManager::release(uintptr_t token) noexcept
     {
-        if (sensor == nullptr)
-            return ZenError_IsNull;
-
         std::lock_guard<std::mutex> lock(m_mutex);
 
-        auto it = m_sensors.find(sensor);
+        auto it = m_sensors.find(token);
         if (it != m_sensors.end())
             m_sensors.erase(it);
 
         return ZenError_None;
     }
 
-    bool SensorManager::pollNextEvent(ZenEvent* outEvent)
+    nonstd::expected<std::vector<ZenSensorDesc>, ZenAsyncStatus> SensorManager::listSensorsAsync(std::optional<std::string_view> typeFilter) noexcept
     {
-        if (auto optEvent = m_eventQueue.tryToPop())
-        {
-            *outEvent = *optEvent;
-            return true;
-        }
-
-        return false;
-    }
-
-    bool SensorManager::waitForNextEvent(ZenEvent* outEvent)
-    {
-        if (auto optEvent = m_eventQueue.waitToPop())
-        {
-            *outEvent = *optEvent;
-            return true;
-        }
-
-        return false;
-    }
-
-    ZenAsyncStatus SensorManager::listSensorsAsync(ZenSensorDesc** outSensors, size_t* outLength, const char* typeFilter)
-    {
-        if (outLength == nullptr)
-            return ZenAsync_InvalidArgument;
-
         if (m_startedListing.exchange(true))
         {
             if (m_finished.exchange(false))
             {
-                if (!m_devices.empty())
-                {
-                    ZenSensorDesc* sensors = new ZenSensorDesc[m_devices.size()];
-                    std::copy(m_devices.cbegin(), m_devices.cend(), sensors);
+                const auto expected = m_listingError
+                    ? nonstd::make_unexpected(ZenAsync_Failed)
+                    : nonstd::expected<std::vector<ZenSensorDesc>, ZenAsyncStatus>(std::move(m_devices));
 
-                    *outSensors = sensors;
-                }
-
-                *outLength = m_devices.size();
-                m_devices.clear();
-
-                const auto error = m_listingError ? ZenAsync_Failed : ZenAsync_Finished;
                 m_listing = false;
                 m_startedListing = false;
-                return error;
+                return std::move(expected);
             }
 
-            return ZenAsync_Updating;
+            return nonstd::make_unexpected(ZenAsync_Updating);
         }
 
-        m_listingTypeFilter = typeFilter ? std::make_optional<std::string>(typeFilter) : std::nullopt;
+        m_listingTypeFilter = typeFilter;
         m_listing = true;
-        return ZenAsync_Updating;
+        return nonstd::make_unexpected(ZenAsync_Updating);
     }
 
-    IZenSensor* SensorManager::findSensor(const ZenSensorDesc* sensorDesc)
+    std::optional<ZenEvent> SensorManager::pollNextEvent() noexcept
+    {
+        return m_eventQueue.tryToPop();
+    }
+
+    std::optional<ZenEvent> SensorManager::waitForNextEvent() noexcept
+    {
+        return m_eventQueue.waitToPop();
+    }
+
+    void SensorManager::notifyEvent(ZenEvent&& event) noexcept
+    {
+        m_eventQueue.push(std::move(event));
+    }
+
+    std::optional<SensorManager::key_value_t> SensorManager::findSensor(const ZenSensorDesc& sensorDesc) noexcept
     {
         for (const auto& sensor : m_sensors)
-            if (sensor->equals(sensorDesc))
-                return sensor.get();
+            if (sensor.second->equals(sensorDesc))
+                return sensor;
 
-        return nullptr;
+        return std::nullopt;
     }
 
     void SensorManager::listSensorLoop()
@@ -215,29 +188,30 @@ namespace zen
                     const auto requiredComponents = util::split(*m_listingTypeFilter, ",");
                     for (auto it = m_devices.cbegin(); it != m_devices.cend();)
                     {
-                        IZenSensor* sensor = nullptr;
-                        if (ZenSensorInitError_None != obtain(&*it, &sensor))
+                        auto sensor = obtain(*it);
+                        if (!sensor)
                         {
                             it = m_devices.erase(it);
                             continue;
                         }
 
+                        const auto& components = sensor->second->components();
+
                         bool valid = true;
                         for (const std::string_view& type : requiredComponents)
                         {
-                            size_t nComponents;
-                            sensor->components(nullptr, &nComponents, type.data());
-                            if (nComponents == 0)
+                            if (!hasComponentOfType(components, type))
                             {
-                                valid = false;
                                 it = m_devices.erase(it);
+                                valid = false;
                                 break;
                             }
                         }
 
-                        release(sensor);
                         if (valid)
                             ++it;
+
+                        release(sensor->first);
                     }
                 }
 

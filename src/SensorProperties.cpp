@@ -43,7 +43,7 @@ namespace zen
     template <typename PropertyRules>
     ZenError SensorProperties<PropertyRules>::execute(ZenProperty_t property)
     {
-        if (m_rules.isCommand(property))
+        if (m_rules.isExecutable(property))
         {
             const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
             return m_ioInterface.sendAndWaitForAck(m_id, ZenProtocolFunction_Execute, property, span);
@@ -53,11 +53,8 @@ namespace zen
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getArray(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t* const bufferSize)
+    ZenError SensorProperties<PropertyRules>::getArray(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t& bufferSize)
     {
-        if (bufferSize == nullptr)
-            return ZenError_IsNull;
-
         if (m_rules.isArray(property) && m_rules.type(property) == type)
         {
             switch (type)
@@ -65,25 +62,25 @@ namespace zen
             case ZenPropertyType_Bool:
             {
                 const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<bool*>(buffer), *bufferSize);
+                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<bool*>(buffer), bufferSize);
             }
 
             case ZenPropertyType_Float:
             {
                 const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<float*>(buffer), *bufferSize);
+                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<float*>(buffer), bufferSize);
             }
 
             case ZenPropertyType_Int32:
             {
                 const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<int32_t*>(buffer), *bufferSize);
+                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<int32_t*>(buffer), bufferSize);
             }
 
             case ZenPropertyType_UInt64:
             {
                 const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<uint64_t*>(buffer), *bufferSize);
+                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<uint64_t*>(buffer), bufferSize);
             }
 
             default:
@@ -95,56 +92,50 @@ namespace zen
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getBool(ZenProperty_t property, bool* const outValue)
+    ZenError SensorProperties<PropertyRules>::getBool(ZenProperty_t property, bool& outValue)
     {
         return getResult<ZenPropertyType_Bool>(property, outValue);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getFloat(ZenProperty_t property, float* const outValue)
+    ZenError SensorProperties<PropertyRules>::getFloat(ZenProperty_t property, float& outValue)
     {
         return getResult<ZenPropertyType_Float>(property, outValue);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getInt32(ZenProperty_t property, int32_t* const outValue)
+    ZenError SensorProperties<PropertyRules>::getInt32(ZenProperty_t property, int32_t& outValue)
     {
         return getResult<ZenPropertyType_Int32>(property, outValue);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getMatrix33(ZenProperty_t property, ZenMatrix3x3f* const outValue)
+    ZenError SensorProperties<PropertyRules>::getMatrix33(ZenProperty_t property, ZenMatrix3x3f& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         if (m_rules.type(property) == ZenPropertyType_Matrix)
         {
             size_t length = 9;
             const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-            return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, outValue->data, length);
+            return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, outValue.data, length);
         }
 
         return ZenError_UnknownProperty;
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getString(ZenProperty_t property, char* const buffer, size_t* const bufferSize)
+    ZenError SensorProperties<PropertyRules>::getString(ZenProperty_t property, char* const buffer, size_t& bufferSize)
     {
-        if (bufferSize == nullptr)
-            return ZenError_IsNull;
-
         if (m_rules.type(property) == ZenPropertyType_String)
         {
             const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-            return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, buffer, *bufferSize);
+            return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, buffer, bufferSize);
         }
 
         return ZenError_UnknownProperty;
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getUInt64(ZenProperty_t property, uint64_t* const outValue)
+    ZenError SensorProperties<PropertyRules>::getUInt64(ZenProperty_t property, uint64_t& outValue)
     {
         return getResult<ZenPropertyType_UInt64>(property, outValue);
     }
@@ -152,9 +143,6 @@ namespace zen
     template <typename PropertyRules>
     ZenError SensorProperties<PropertyRules>::setArray(ZenProperty_t property, ZenPropertyType type, const void* const buffer, size_t bufferSize)
     {
-        if (buffer == nullptr)
-            return ZenError_IsNull;
-
         if (m_rules.isArray(property) && !m_rules.isConstant(property) && m_rules.type(property) == type)
         {
             const PropertyData wrapper(property, buffer, sizeOfPropertyType(type) * bufferSize);
@@ -183,14 +171,11 @@ namespace zen
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setMatrix33(ZenProperty_t property, const ZenMatrix3x3f* const value)
+    ZenError SensorProperties<PropertyRules>::setMatrix33(ZenProperty_t property, const ZenMatrix3x3f& value)
     {
-        if (value == nullptr)
-            return ZenError_IsNull;
-
         if (!m_rules.isConstant(property) && m_rules.type(property) == ZenPropertyType_Matrix)
         {
-            const PropertyData wrapper(property, value->data, 9 * sizeof(float));
+            const PropertyData wrapper(property, value.data, 9 * sizeof(float));
             return m_ioInterface.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
         }
 
@@ -200,9 +185,6 @@ namespace zen
     template <typename PropertyRules>
     ZenError SensorProperties<PropertyRules>::setString(ZenProperty_t property, const char* buffer, size_t bufferSize)
     {
-        if (buffer == nullptr)
-            return ZenError_IsNull;
-
         if (!m_rules.isConstant(property) && m_rules.type(property) == ZenPropertyType_String)
         {
             const PropertyData wrapper(property, buffer, bufferSize);
@@ -233,15 +215,12 @@ namespace zen
 
     template <typename PropertyRules>
     template <ZenPropertyType PropertyType, typename T>
-    ZenError SensorProperties<PropertyRules>::getResult(ZenProperty_t property, T* const outValue)
+    ZenError SensorProperties<PropertyRules>::getResult(ZenProperty_t property, T& outValue)
     {
-        if (outValue == nullptr)
-            return ZenError_IsNull;
-
         if (m_rules.type(property) == PropertyType)
         {
             const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-            return m_ioInterface.sendAndWaitForResult(m_id, ZenProtocolFunction_Get, property, span, *outValue);
+            return m_ioInterface.sendAndWaitForResult(m_id, ZenProtocolFunction_Get, property, span, outValue);
         }
 
         return ZenError_UnknownProperty;
@@ -252,15 +231,15 @@ namespace zen
 
     namespace properties
     {
-        ZenError publishAck(IZenSensorProperties& self, AsyncIoInterface& ioInterface, ZenProperty_t property, ZenError error)
+        ZenError publishAck(ISensorProperties& self, AsyncIoInterface& ioInterface, ZenProperty_t property, ZenError error)
         {
-            if (self.isCommand(property) || (!self.isConstant(property) && self.type(property) != ZenPropertyType_Invalid))
+            if (self.isExecutable(property) || (!self.isConstant(property) && self.type(property) != ZenPropertyType_Invalid))
                 return ioInterface.publishAck(property, error);
 
             return ZenError_InvalidArgument;
         }
 
-        ZenError publishResult(IZenSensorProperties& self, AsyncIoInterface& ioInterface, ZenProperty_t property, ZenError error, const unsigned char* data, size_t length)
+        ZenError publishResult(ISensorProperties& self, AsyncIoInterface& ioInterface, ZenProperty_t property, ZenError error, const unsigned char* data, size_t length)
         {
             if (auto type = self.type(property))
             {

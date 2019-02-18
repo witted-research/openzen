@@ -10,7 +10,6 @@
 #include "nonstd/expected.hpp"
 
 #include "InternalTypes.h"
-#include "IZenSensor.h"
 
 #include "SensorConfig.h"
 #include "SensorComponent.h"
@@ -18,12 +17,12 @@
 
 namespace zen
 {
-    nonstd::expected<std::unique_ptr<class Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface);
+    nonstd::expected<std::shared_ptr<class Sensor>, ZenSensorInitError> make_sensor(uintptr_t token, SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface);
 
-    class Sensor : public IZenSensor, private IIoDataSubscriber
+    class Sensor : private IIoDataSubscriber
     {
     public:
-        Sensor(SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface);
+        Sensor(uintptr_t token, SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface);
         ~Sensor();
 
         /** Allow the sensor to initialize variables, that require an active IO interface */
@@ -35,7 +34,7 @@ namespace zen
          * Returns ZenAsync_Finished once the entire firmware has been written to the sensor.
          * Returns ZenAsync_Failed if an error has occured while updating.
          */
-        ZenAsyncStatus updateFirmwareAsync(const char* const buffer, size_t bufferSize) override;
+        ZenAsyncStatus updateFirmwareAsync(const unsigned char* const buffer, size_t bufferSize) noexcept;
 
         /** On first call, tries to initialize an IAP update, and returns an error on failure.
          * Subsequent calls do not require a valid buffer and buffer size, and only report the current status:
@@ -43,20 +42,20 @@ namespace zen
          * Returns ZenAsync_Finished once the entire IAP has been written to the sensor.
          * Returns ZenAsync_Failed if an error has occured while updating.
          */
-        ZenAsyncStatus updateIAPAsync(const char* const buffer, size_t bufferSize) override;
+        ZenAsyncStatus updateIAPAsync(const unsigned char* const buffer, size_t bufferSize) noexcept;
 
-        IZenSensorProperties* properties() override { return m_properties.get(); }
+        ISensorProperties* properties() { return m_properties.get(); }
 
         /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength, otherwise, returns an error.
          * If the type variable points to a string, only components of that type are returned. If it is a nullptr, all components are returned, irrespective of type.
          */
-        ZenError components(IZenSensorComponent*** outComponents, size_t* outLength, const char* type) const override;
+        const std::vector<std::shared_ptr<SensorComponent>>& components() const noexcept { return m_components; }
 
         /** Returns the sensor's IO type */
-        const char* ioType() const override { return m_ioInterface.type(); }
+        const char* ioType() const { return m_ioInterface.type(); }
 
         /** Returns whether the sensor is equal to the sensor description */
-        bool equals(const ZenSensorDesc* desc) const override;
+        bool equals(const ZenSensorDesc& desc) const;
 
     private:
         ZenError processData(uint8_t address, uint8_t function, const unsigned char* data, size_t length) override;
@@ -65,9 +64,11 @@ namespace zen
 
         SensorConfig m_config;
 
-        std::vector<std::unique_ptr<SensorComponent>> m_components;
-        std::unique_ptr<IZenSensorProperties> m_properties;
+        std::vector<std::shared_ptr<SensorComponent>> m_components;
+        std::unique_ptr<ISensorProperties> m_properties;
         AsyncIoInterface m_ioInterface;
+
+        uintptr_t m_token;
 
         std::atomic_bool m_updatingFirmware;
         std::atomic_bool m_updatedFirmware;

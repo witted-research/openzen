@@ -5,7 +5,7 @@
 
 #ifdef _WIN32
 
-#ifdef ZEN_API_STATIC
+#if defined(ZEN_API_STATIC) || !defined(__cplusplus)
 #define ZEN_API
 #elif defined(ZEN_API_EXPORT)
 #define ZEN_API extern "C" __declspec(dllexport)
@@ -34,6 +34,10 @@
 #else
 #define ZEN_CALLTYPE
 #endif
+
+typedef struct ZenClientHandle { uintptr_t handle; } ZenClientHandle_t;
+typedef struct ZenSensorHandle { uintptr_t handle; } ZenSensorHandle_t;
+typedef struct ZenComponentHandle { uintptr_t handle; } ZenComponentHandle_t;
 
 typedef uint32_t ZenError_t;
 
@@ -89,6 +93,10 @@ typedef enum ZenError : ZenError_t
     ZenError_Can_ResetFailed = 1006,         // Failed to reset queues of CAN interface
     ZenError_Can_AddressOutOfRange = 1009,   // Trying to send message to an address that is too big (max: 255)
 
+    ZenError_InvalidClientHandle = 2000,    // Invalid client handle
+    ZenError_InvalidSensorHandle = 2001,    // Invalid sensor handle
+    ZenError_InvalidComponentHandle = 2002, // Invalid component handle
+
     ZenError_Max
 } ZenError;
 
@@ -96,6 +104,7 @@ typedef enum ZenSensorInitError : ZenError_t
 {
     ZenSensorInitError_None = 0,
 
+    ZenSensorInitError_InvalidHandle,           // Provided client handle is invalid
     ZenSensorInitError_IsNull,                  // Provided pointer is null
     ZenSensorInitError_UnsupportedComponent,    // At least one of the sensor's component types is not supported by the host
     ZenSensorInitError_UnsupportedDataFormat,   // Provided Modbus Format is not supported
@@ -202,7 +211,8 @@ typedef uint32_t ZenEvent_t;
 typedef struct ZenEvent
 {
     ZenEvent_t eventType;
-    void* sensor;
+    ZenSensorHandle_t sensor;
+    ZenComponentHandle_t component;
     ZenEventData data;
 } ZenEvent;
 
