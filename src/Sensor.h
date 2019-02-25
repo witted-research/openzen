@@ -13,16 +13,16 @@
 
 #include "SensorConfig.h"
 #include "SensorComponent.h"
-#include "io/interfaces/AsyncIoInterface.h"
+#include "communication/SyncedModbusCommunicator.h"
 
 namespace zen
 {
-    nonstd::expected<std::shared_ptr<class Sensor>, ZenSensorInitError> make_sensor(uintptr_t token, SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface);
+    nonstd::expected<std::shared_ptr<class Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token) noexcept;
 
-    class Sensor : private IIoDataSubscriber
+    class Sensor : private IModbusFrameSubscriber
     {
     public:
-        Sensor(uintptr_t token, SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface);
+        Sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token);
         ~Sensor();
 
         /** Allow the sensor to initialize variables, that require an active IO interface */
@@ -34,7 +34,7 @@ namespace zen
          * Returns ZenAsync_Finished once the entire firmware has been written to the sensor.
          * Returns ZenAsync_Failed if an error has occured while updating.
          */
-        ZenAsyncStatus updateFirmwareAsync(const unsigned char* const buffer, size_t bufferSize) noexcept;
+        ZenAsyncStatus updateFirmwareAsync(gsl::span<const std::byte> buffer) noexcept;
 
         /** On first call, tries to initialize an IAP update, and returns an error on failure.
          * Subsequent calls do not require a valid buffer and buffer size, and only report the current status:
@@ -42,31 +42,31 @@ namespace zen
          * Returns ZenAsync_Finished once the entire IAP has been written to the sensor.
          * Returns ZenAsync_Failed if an error has occured while updating.
          */
-        ZenAsyncStatus updateIAPAsync(const unsigned char* const buffer, size_t bufferSize) noexcept;
+        ZenAsyncStatus updateIAPAsync(gsl::span<const std::byte> buffer) noexcept;
 
         ISensorProperties* properties() { return m_properties.get(); }
 
         /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength, otherwise, returns an error.
          * If the type variable points to a string, only components of that type are returned. If it is a nullptr, all components are returned, irrespective of type.
          */
-        const std::vector<std::shared_ptr<SensorComponent>>& components() const noexcept { return m_components; }
+        const std::vector<std::unique_ptr<SensorComponent>>& components() const noexcept { return m_components; }
 
         /** Returns the sensor's IO type */
-        const char* ioType() const { return m_ioInterface.type(); }
+        std::string_view ioType() const noexcept { return m_communicator.ioType(); }
 
         /** Returns whether the sensor is equal to the sensor description */
         bool equals(const ZenSensorDesc& desc) const;
 
     private:
-        ZenError processData(uint8_t address, uint8_t function, const unsigned char* data, size_t length) override;
+        ZenError processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept override;
 
-        void upload(std::vector<unsigned char> firmware);
+        void upload(std::vector<std::byte> firmware);
 
         SensorConfig m_config;
 
-        std::vector<std::shared_ptr<SensorComponent>> m_components;
+        std::vector<std::unique_ptr<SensorComponent>> m_components;
         std::unique_ptr<ISensorProperties> m_properties;
-        AsyncIoInterface m_ioInterface;
+        SyncedModbusCommunicator m_communicator;
 
         uintptr_t m_token;
 

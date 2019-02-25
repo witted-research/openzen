@@ -41,8 +41,8 @@ namespace zen
         }
     }
 
-    WindowsDeviceInterface::WindowsDeviceInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
-        : BaseIoInterface(std::move(factory), std::move(parser))
+    WindowsDeviceInterface::WindowsDeviceInterface(IIoDataSubscriber& subscriber, HANDLE handle) noexcept
+        : IIoInterface(subscriber)
         , m_terminate(false)
         , m_pollingThread(&WindowsDeviceInterface::run, this)
         , m_handle(handle)
@@ -55,22 +55,21 @@ namespace zen
         ::CloseHandle(m_handle);
     }
 
-    ZenError WindowsDeviceInterface::send(std::vector<unsigned char> frame)
+    ZenError WindowsDeviceInterface::send(gsl::span<const std::byte> data) noexcept
     {
         DWORD nBytesWritten;
-        if (!::WriteFile(m_handle, frame.data(), static_cast<DWORD>(frame.size()), &nBytesWritten, nullptr))
+        if (!::WriteFile(m_handle, data.data(), static_cast<DWORD>(data.size()), &nBytesWritten, nullptr))
             return ZenError_Io_SendFailed;
 
         return ZenError_None;
     }
 
-    ZenError WindowsDeviceInterface::baudrate(int32_t& rate) const
+    nonstd::expected<int32_t, ZenError> WindowsDeviceInterface::baudRate() const noexcept
     {
-        rate = m_baudrate;
-        return ZenError_None;
+        return m_baudrate;
     }
 
-    ZenError WindowsDeviceInterface::setBaudrate(unsigned int rate)
+    ZenError WindowsDeviceInterface::setBaudRate(unsigned int rate) noexcept
     {
         if (m_baudrate == rate)
             return ZenError_None;
@@ -88,46 +87,38 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError WindowsDeviceInterface::supportedBaudrates(std::vector<int32_t>& outBaudrates) const
+    nonstd::expected<std::vector<int32_t>, ZenError> WindowsDeviceInterface::supportedBaudRates() const noexcept
     {
-        outBaudrates.reserve(14);
-        outBaudrates.emplace_back(CBR_110);
-        outBaudrates.emplace_back(CBR_300);
-        outBaudrates.emplace_back(CBR_600);
-        outBaudrates.emplace_back(CBR_1200);
-        outBaudrates.emplace_back(CBR_2400);
-        outBaudrates.emplace_back(CBR_4800);
-        outBaudrates.emplace_back(CBR_9600);
-        outBaudrates.emplace_back(CBR_14400);
-        outBaudrates.emplace_back(CBR_19200);
-        outBaudrates.emplace_back(CBR_38400);
-        outBaudrates.emplace_back(CBR_57600);
-        outBaudrates.emplace_back(CBR_115200);
-        outBaudrates.emplace_back(CBR_128000);
-        outBaudrates.emplace_back(CBR_256000);
-        return ZenError_None;
+        std::vector<int32_t> baudRates;
+        baudRates.reserve(14);
+
+        baudRates.emplace_back(CBR_110);
+        baudRates.emplace_back(CBR_300);
+        baudRates.emplace_back(CBR_600);
+        baudRates.emplace_back(CBR_1200);
+        baudRates.emplace_back(CBR_2400);
+        baudRates.emplace_back(CBR_4800);
+        baudRates.emplace_back(CBR_9600);
+        baudRates.emplace_back(CBR_14400);
+        baudRates.emplace_back(CBR_19200);
+        baudRates.emplace_back(CBR_38400);
+        baudRates.emplace_back(CBR_57600);
+        baudRates.emplace_back(CBR_115200);
+        baudRates.emplace_back(CBR_128000);
+        baudRates.emplace_back(CBR_256000);
+
+        return std::move(baudRates);
     }
 
-    const char* WindowsDeviceInterface::type() const
+    std::string_view WindowsDeviceInterface::type() const noexcept
     {
         return WindowsDeviceSystem::KEY;
     }
 
-    bool WindowsDeviceInterface::equals(const ZenSensorDesc&) const
+    bool WindowsDeviceInterface::equals(const ZenSensorDesc&) const noexcept
     {
         // [XXX] TODO
         return false;
-    }
-
-    ZenError WindowsDeviceInterface::receiveInBuffer(bool& received)
-    {
-        DWORD nReceivedBytes;
-        if (!::ReadFile(m_handle, m_buffer.data(), static_cast<DWORD>(m_buffer.size()), &nReceivedBytes, nullptr))
-            return ZenError_Io_ReadFailed;
-
-        m_usedBufferSize = nReceivedBytes;
-        received = nReceivedBytes > 0;
-        return ZenError_None;
     }
 
     int WindowsDeviceInterface::run()
@@ -137,11 +128,13 @@ namespace zen
             bool shouldParse = true;
             while (shouldParse)
             {
-                if (auto error = processReceivedData(m_buffer.data(), m_usedBufferSize))
-                    return error;
+                DWORD nReceivedBytes;
+                if (!::ReadFile(m_handle, m_buffer.data(), static_cast<DWORD>(m_buffer.size()), &nReceivedBytes, nullptr))
+                    return ZenError_Io_ReadFailed;
 
-                if (auto error = receiveInBuffer(shouldParse))
-                    return error;
+                if (nReceivedBytes > 0)
+                    if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nReceivedBytes)))
+                        return error;
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));

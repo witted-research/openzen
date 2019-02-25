@@ -4,7 +4,7 @@
 #include <atomic>
 
 #include "SensorComponent.h"
-#include "io/interfaces/AsyncIoInterface.h"
+#include "communication/SyncedModbusCommunicator.h"
 #include "utility/Ownership.h"
 
 #include "LpMatrix.h"
@@ -14,21 +14,21 @@ namespace zen
     class ImuComponent : public SensorComponent
     {
     public:
-        ImuComponent(unsigned int version, std::unique_ptr<ISensorProperties> properties, AsyncIoInterface& ioInterface);
+        ImuComponent(std::unique_ptr<ISensorProperties> properties, SyncedModbusCommunicator& communicator, unsigned int version) noexcept;
 
         /** Tries to initialize settings of the sensor's component that can fail.
          * After succesfully completing init, m_properties should be set.
          */
-        ZenSensorInitError init() override;
+        ZenSensorInitError init() noexcept override;
 
-        ZenError processData(uint8_t function, const unsigned char* data, size_t length) override;
+        ZenError processData(uint8_t function, gsl::span<const std::byte> data) noexcept override;
 
-        ZenError processEvent(ZenEvent event, const unsigned char* data, size_t length) noexcept override;
+        ZenError processEvent(ZenEvent event, gsl::span<const std::byte> data) noexcept override;
 
         std::string_view type() const noexcept override { return g_zenSensorType_Imu; }
 
     private:
-        ZenError parseSensorData(ZenImuData& imuData, const unsigned char* data, size_t length) const noexcept;
+        ZenError parseSensorData(ZenImuData& imuData, gsl::span<const std::byte> data) const noexcept;
 
         struct IMUState
         {
@@ -42,7 +42,7 @@ namespace zen
         };
         mutable Owner<IMUState> m_cache;
 
-        AsyncIoInterface& m_ioInterface;
+        SyncedModbusCommunicator& m_communicator;
         
         const unsigned int m_version;
     };

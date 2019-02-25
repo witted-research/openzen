@@ -2,36 +2,52 @@
 #define ZEN_IO_IIOINTERFACE_H_
 
 #include <cstdint>
-#include <vector>
 #include <string_view>
+#include <vector>
 
-#include "LpMatrix.h"
+#include <gsl/span>
+#include <nonstd/expected.hpp>
+
 #include "ZenTypes.h"
 
 namespace zen
 {
+    class IIoDataSubscriber
+    {
+    public:
+        virtual ZenError processData(gsl::span<const std::byte> data) noexcept = 0;
+    };
+
     class IIoInterface
     {
     public:
+        IIoInterface(IIoDataSubscriber& subscriber) : m_subscriber(subscriber) {}
         virtual ~IIoInterface() = default;
 
         /** Send data to IO interface */
-        virtual ZenError send(uint8_t address, uint8_t function, const unsigned char* data, size_t length) = 0;
+        virtual ZenError send(gsl::span<const std::byte> data) noexcept = 0;
 
         /** Returns the IO interface's baudrate (bit/s) */
-        virtual ZenError baudrate(int32_t& rate) const = 0;
+        virtual nonstd::expected<int32_t, ZenError> baudRate() const noexcept = 0;
 
         /** Set Baudrate of IO interface (bit/s) */
-        virtual ZenError setBaudrate(unsigned int rate) = 0;
+        virtual ZenError setBaudRate(unsigned int rate) noexcept = 0;
 
         /** Returns the supported baudrates of the IO interface (bit/s) */
-        virtual ZenError supportedBaudrates(std::vector<int32_t>& outBaudrates) const = 0;
+        virtual nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept = 0;
 
         /** Returns the type of IO interface */
-        virtual const char* type() const = 0;
+        virtual std::string_view type() const noexcept = 0;
 
         /** Returns whether the IO interface equals the sensor description */
-        virtual bool equals(const ZenSensorDesc& desc) const = 0;
+        virtual bool equals(const ZenSensorDesc& desc) const noexcept = 0;
+
+    protected:
+        /** Publish received data to the subscriber */
+        ZenError publishReceivedData(gsl::span<const std::byte> data) { return m_subscriber.processData(data); }
+
+    private:
+        IIoDataSubscriber& m_subscriber;
     };
 }
 

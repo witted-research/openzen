@@ -4,8 +4,8 @@
 
 namespace zen
 {
-    BluetoothInterface::BluetoothInterface(std::unique_ptr<BluetoothDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
-        : BaseIoInterface(std::move(factory), std::move(parser))
+    BluetoothInterface::BluetoothInterface(IIoDataSubscriber& subscriber, std::unique_ptr<BluetoothDeviceHandler> handler) noexcept
+        : IIoInterface(subscriber)
         , m_handler(std::move(handler))
         , m_terminate(false)
         , m_ioReader(&BluetoothInterface::run, this)
@@ -18,35 +18,35 @@ namespace zen
         m_ioReader.join();
     }
 
-    ZenError BluetoothInterface::send(std::vector<unsigned char> frame)
+    ZenError BluetoothInterface::send(gsl::span<const std::byte> data) noexcept
     {
-        return m_handler->send(frame);
+        return m_handler->send(data);
     }
 
-    ZenError BluetoothInterface::baudrate(int32_t&) const
+    nonstd::expected<int32_t, ZenError> BluetoothInterface::baudRate() const noexcept
+    {
+        // Not supported
+        return nonstd::make_unexpected(ZenError_UnknownProperty);
+    }
+
+    ZenError BluetoothInterface::setBaudRate(unsigned int) noexcept
     {
         // Not supported
         return ZenError_UnknownProperty;
     }
 
-    ZenError BluetoothInterface::setBaudrate(unsigned int)
+    nonstd::expected<std::vector<int32_t>, ZenError> BluetoothInterface::supportedBaudRates() const noexcept
     {
         // Not supported
-        return ZenError_UnknownProperty;
+        return nonstd::make_unexpected(ZenError_UnknownProperty);
     }
 
-    ZenError BluetoothInterface::supportedBaudrates(std::vector<int32_t>&) const
-    {
-        // Not supported
-        return ZenError_UnknownProperty;
-    }
-
-    const char* BluetoothInterface::type() const
+    std::string_view BluetoothInterface::type() const noexcept
     {
         return BluetoothSystem::KEY;
     }
 
-    bool BluetoothInterface::equals(const ZenSensorDesc& desc) const
+    bool BluetoothInterface::equals(const ZenSensorDesc& desc) const noexcept
     {
         if (std::string_view(BluetoothSystem::KEY) != desc.ioType)
             return false;
@@ -67,7 +67,7 @@ namespace zen
                 auto buffer = future->get();
                 if (buffer.has_value())
                 {
-                    if (auto error = processReceivedData(buffer->data(), buffer->size()))
+                    if (auto error = publishReceivedData(*buffer))
                         return error;
                 }
                 else

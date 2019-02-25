@@ -16,9 +16,9 @@ namespace zen
         virtual ~IComponentFactory() = default;
 
         virtual nonstd::expected<std::unique_ptr<SensorComponent>, ZenSensorInitError> make_component(
-            uint8_t id,
             unsigned int version,
-            class AsyncIoInterface& ioInterface
+            uint8_t id,
+            class SyncedModbusCommunicator& communicator
         ) const noexcept = 0;
     };
 }

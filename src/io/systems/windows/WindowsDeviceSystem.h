@@ -20,7 +20,7 @@ namespace zen
 
         ZenError listDevices(std::vector<ZenSensorDesc>& outDevices) override;
 
-        std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError) override;
+        nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept override;
     };
 }
 

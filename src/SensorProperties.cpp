@@ -7,53 +7,80 @@
 
 namespace zen
 {
-    class PropertyData
+    namespace details
     {
-    public:
         template <typename T>
-        PropertyData(ZenProperty_t property, T value) noexcept
-            : m_buffer(sizeof(property) + sizeof(value))
+        struct PropertyType
+        {};
+
+        template <> struct PropertyType<bool>
         {
-            auto dst = m_buffer.data();
-            std::memcpy(dst, &property, sizeof(property));
-            std::memcpy(dst + sizeof(property), &value, sizeof(value));
+            using type = std::integral_constant<ZenPropertyType, ZenPropertyType_Bool>;
+        };
 
-        }
-
-        PropertyData(ZenProperty_t property, const void* array, size_t length) noexcept
-            : m_buffer(sizeof(property) + length)
+        template <> struct PropertyType<float>
         {
-            auto dst = m_buffer.data();
-            std::memcpy(dst, &property, sizeof(property));
-            std::memcpy(dst + sizeof(property), array, length);
-        }
+            using type = std::integral_constant<ZenPropertyType, ZenPropertyType_Float>;
+        };
 
-        gsl::span<const unsigned char> data() const noexcept { return gsl::make_span(m_buffer.data(), m_buffer.size()); }
+        template <> struct PropertyType<int32_t>
+        {
+            using type = std::integral_constant<ZenPropertyType, ZenPropertyType_Int32>;
+        };
 
-    private:
-        std::vector<unsigned char> m_buffer;
-    };
+        template <> struct PropertyType<uint64_t>
+        {
+            using type = std::integral_constant<ZenPropertyType, ZenPropertyType_UInt64>;
+        };
+
+        class PropertyData
+        {
+        public:
+            template <typename T>
+            PropertyData(ZenProperty_t property, T value) noexcept
+                : m_buffer(sizeof(property) + sizeof(value))
+            {
+                auto dst = m_buffer.data();
+                std::memcpy(dst, &property, sizeof(property));
+                std::memcpy(dst + sizeof(property), &value, sizeof(value));
+
+            }
+
+            PropertyData(ZenProperty_t property, const void* buffer, size_t bufferSize) noexcept
+                : m_buffer(sizeof(property) + bufferSize)
+            {
+                auto dst = m_buffer.data();
+                std::memcpy(dst, &property, sizeof(property));
+                std::memcpy(dst + sizeof(property), buffer, bufferSize);
+            }
+
+            gsl::span<const std::byte> data() const noexcept { return m_buffer; }
+
+        private:
+            std::vector<std::byte> m_buffer;
+        };
+    }
 
     template <typename PropertyRules>
-    SensorProperties<PropertyRules>::SensorProperties(uint8_t id, AsyncIoInterface& ioInterface)
-        : m_ioInterface(ioInterface)
+    SensorProperties<PropertyRules>::SensorProperties(uint8_t id, SyncedModbusCommunicator& communicator)
+        : m_communicator(communicator)
         , m_id(id)
     {}
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::execute(ZenProperty_t property)
+    ZenError SensorProperties<PropertyRules>::execute(ZenProperty_t property) noexcept
     {
         if (m_rules.isExecutable(property))
         {
-            const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-            return m_ioInterface.sendAndWaitForAck(m_id, ZenProtocolFunction_Execute, property, span);
+            const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Execute, property, span);
         }
 
         return ZenError_UnknownProperty;
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getArray(ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t& bufferSize)
+    std::pair<ZenError, size_t> SensorProperties<PropertyRules>::getArray(ZenProperty_t property, ZenPropertyType type, gsl::span<std::byte> buffer) noexcept
     {
         if (m_rules.isArray(property) && m_rules.type(property) == type)
         {
@@ -61,169 +88,173 @@ namespace zen
             {
             case ZenPropertyType_Bool:
             {
-                const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<bool*>(buffer), bufferSize);
+                const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+                return m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, gsl::make_span(reinterpret_cast<bool*>(buffer.data()), buffer.size()));
             }
 
             case ZenPropertyType_Float:
             {
-                const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<float*>(buffer), bufferSize);
+                const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+                return m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, gsl::make_span(reinterpret_cast<float*>(buffer.data()), buffer.size()));
             }
 
             case ZenPropertyType_Int32:
             {
-                const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<int32_t*>(buffer), bufferSize);
+                const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+                return m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
             }
 
             case ZenPropertyType_UInt64:
             {
-                const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-                return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, reinterpret_cast<uint64_t*>(buffer), bufferSize);
+                const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+                return m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, gsl::make_span(reinterpret_cast<uint64_t*>(buffer.data()), buffer.size()));
             }
 
             default:
-                return ZenError_WrongDataType;
+                return std::make_pair(ZenError_WrongDataType, buffer.size());
             }
         }
 
-        return ZenError_UnknownProperty;
+        return std::make_pair(ZenError_UnknownProperty, buffer.size());
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getBool(ZenProperty_t property, bool& outValue)
+    nonstd::expected<bool, ZenError> SensorProperties<PropertyRules>::getBool(ZenProperty_t property) noexcept
     {
-        return getResult<ZenPropertyType_Bool>(property, outValue);
+        return getResult<bool>(property);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getFloat(ZenProperty_t property, float& outValue)
+    nonstd::expected<float, ZenError> SensorProperties<PropertyRules>::getFloat(ZenProperty_t property) noexcept
     {
-        return getResult<ZenPropertyType_Float>(property, outValue);
+        return getResult<float>(property);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getInt32(ZenProperty_t property, int32_t& outValue)
+    nonstd::expected<int32_t, ZenError> SensorProperties<PropertyRules>::getInt32(ZenProperty_t property) noexcept
     {
-        return getResult<ZenPropertyType_Int32>(property, outValue);
+        return getResult<int32_t>(property);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getMatrix33(ZenProperty_t property, ZenMatrix3x3f& outValue)
+    nonstd::expected<ZenMatrix3x3f, ZenError> SensorProperties<PropertyRules>::getMatrix33(ZenProperty_t property) noexcept
     {
         if (m_rules.type(property) == ZenPropertyType_Matrix)
         {
-            size_t length = 9;
-            const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-            return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, outValue.data, length);
+            ZenMatrix3x3f matrix;
+            const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+            const auto[error, size] = m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, gsl::make_span(matrix.data, 9));
+            if (error)
+                return nonstd::make_unexpected(error);
+
+            return matrix;
         }
 
-        return ZenError_UnknownProperty;
+        return nonstd::make_unexpected(ZenError_UnknownProperty);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getString(ZenProperty_t property, char* const buffer, size_t& bufferSize)
+    std::pair<ZenError, size_t> SensorProperties<PropertyRules>::getString(ZenProperty_t property, gsl::span<char> buffer) noexcept
     {
         if (m_rules.type(property) == ZenPropertyType_String)
         {
-            const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-            return m_ioInterface.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, buffer, bufferSize);
+            const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+            return m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, buffer);
         }
 
-        return ZenError_UnknownProperty;
+        return std::make_pair(ZenError_UnknownProperty, buffer.size());
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::getUInt64(ZenProperty_t property, uint64_t& outValue)
+    nonstd::expected<uint64_t, ZenError> SensorProperties<PropertyRules>::getUInt64(ZenProperty_t property) noexcept
     {
-        return getResult<ZenPropertyType_UInt64>(property, outValue);
+        return getResult<uint64_t>(property);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setArray(ZenProperty_t property, ZenPropertyType type, const void* const buffer, size_t bufferSize)
+    ZenError SensorProperties<PropertyRules>::setArray(ZenProperty_t property, ZenPropertyType type, gsl::span<const std::byte> buffer) noexcept
     {
         if (m_rules.isArray(property) && !m_rules.isConstant(property) && m_rules.type(property) == type)
         {
-            const PropertyData wrapper(property, buffer, sizeOfPropertyType(type) * bufferSize);
-            return m_ioInterface.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
+            const details::PropertyData wrapper(property, buffer.data(), sizeOfPropertyType(type) * buffer.size());
+            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
         }
 
         return ZenError_UnknownProperty;
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setBool(ZenProperty_t property, bool value)
+    ZenError SensorProperties<PropertyRules>::setBool(ZenProperty_t property, bool value) noexcept
     {
-        return setAndAck<ZenPropertyType_Bool>(property, value);
+        return setAndAck<bool>(property, value);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setFloat(ZenProperty_t property, float value)
+    ZenError SensorProperties<PropertyRules>::setFloat(ZenProperty_t property, float value) noexcept
     {
-        return setAndAck<ZenPropertyType_Float>(property, value);
+        return setAndAck<float>(property, value);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setInt32(ZenProperty_t property, int32_t value)
+    ZenError SensorProperties<PropertyRules>::setInt32(ZenProperty_t property, int32_t value) noexcept
     {
-        return setAndAck<ZenPropertyType_Int32>(property, value);
+        return setAndAck<int32_t>(property, value);
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setMatrix33(ZenProperty_t property, const ZenMatrix3x3f& value)
+    ZenError SensorProperties<PropertyRules>::setMatrix33(ZenProperty_t property, const ZenMatrix3x3f& value) noexcept
     {
         if (!m_rules.isConstant(property) && m_rules.type(property) == ZenPropertyType_Matrix)
         {
-            const PropertyData wrapper(property, value.data, 9 * sizeof(float));
-            return m_ioInterface.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
+            const details::PropertyData wrapper(property, value.data, 9 * sizeof(float));
+            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
         }
 
         return ZenError_UnknownProperty;
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setString(ZenProperty_t property, const char* buffer, size_t bufferSize)
+    ZenError SensorProperties<PropertyRules>::setString(ZenProperty_t property, gsl::span<const char> buffer) noexcept
     {
         if (!m_rules.isConstant(property) && m_rules.type(property) == ZenPropertyType_String)
         {
-            const PropertyData wrapper(property, buffer, bufferSize);
-            return m_ioInterface.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
+            const details::PropertyData wrapper(property, buffer);
+            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
         }
 
         return ZenError_UnknownProperty;
     }
 
     template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setUInt64(ZenProperty_t property, uint64_t value)
+    ZenError SensorProperties<PropertyRules>::setUInt64(ZenProperty_t property, uint64_t value) noexcept
     {
-        return setAndAck<ZenPropertyType_UInt64>(property, value);
+        return setAndAck<uint64_t>(property, value);
     }
 
     template <typename PropertyRules>
-    template <ZenPropertyType PropertyType, typename T>
-    ZenError SensorProperties<PropertyRules>::setAndAck(ZenProperty_t property, T value)
+    template <typename T>
+    ZenError SensorProperties<PropertyRules>::setAndAck(ZenProperty_t property, T value) noexcept
     {
-        if (!m_rules.isConstant(property) && m_rules.type(property) == PropertyType)
+        if (!m_rules.isConstant(property) && m_rules.type(property) == details::PropertyType<T>::type())
         {
-            const PropertyData wrapper(property, value);
-            return m_ioInterface.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
+            const details::PropertyData wrapper(property, value);
+            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
         }
 
         return ZenError_UnknownProperty;
     }
 
     template <typename PropertyRules>
-    template <ZenPropertyType PropertyType, typename T>
-    ZenError SensorProperties<PropertyRules>::getResult(ZenProperty_t property, T& outValue)
+    template <typename T>
+    nonstd::expected<T, ZenError> SensorProperties<PropertyRules>::getResult(ZenProperty_t property) noexcept
     {
-        if (m_rules.type(property) == PropertyType)
+        if (m_rules.type(property) == details::PropertyType<T>::type())
         {
-            const auto span = gsl::make_span(reinterpret_cast<const unsigned char*>(&property), sizeof(property));
-            return m_ioInterface.sendAndWaitForResult(m_id, ZenProtocolFunction_Get, property, span, outValue);
+            const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+            return m_communicator.sendAndWaitForResult<T>(m_id, ZenProtocolFunction_Get, property, span);
         }
 
-        return ZenError_UnknownProperty;
+        return nonstd::make_unexpected(ZenError_UnknownProperty);
     }
 
     template SensorProperties<CorePropertyRulesV1>;
@@ -231,15 +262,15 @@ namespace zen
 
     namespace properties
     {
-        ZenError publishAck(ISensorProperties& self, AsyncIoInterface& ioInterface, ZenProperty_t property, ZenError error)
+        ZenError publishAck(ISensorProperties& self, SyncedModbusCommunicator& communicator, ZenProperty_t property, ZenError error) noexcept
         {
             if (self.isExecutable(property) || (!self.isConstant(property) && self.type(property) != ZenPropertyType_Invalid))
-                return ioInterface.publishAck(property, error);
+                return communicator.publishAck(property, error);
 
             return ZenError_InvalidArgument;
         }
 
-        ZenError publishResult(ISensorProperties& self, AsyncIoInterface& ioInterface, ZenProperty_t property, ZenError error, const unsigned char* data, size_t length)
+        ZenError publishResult(ISensorProperties& self, SyncedModbusCommunicator& communicator, ZenProperty_t property, ZenError error, gsl::span<const std::byte> data) noexcept
         {
             if (auto type = self.type(property))
             {
@@ -248,19 +279,19 @@ namespace zen
                     switch (type)
                     {
                     case ZenPropertyType_Bool:
-                        return ioInterface.publishArray(property, error, reinterpret_cast<const bool*>(data), length / sizeof(bool));
+                        return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const bool*>(data.data()), data.size() / sizeof(bool)));
 
                     case ZenPropertyType_Float:
-                        return ioInterface.publishArray(property, error, reinterpret_cast<const float*>(data), length / sizeof(float));
+                        return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const float*>(data.data()), data.size() / sizeof(float)));
 
                     case ZenPropertyType_Int32:
-                        return ioInterface.publishArray(property, error, reinterpret_cast<const int32_t*>(data), length / sizeof(int32_t));
+                        return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const int32_t*>(data.data()), data.size() / sizeof(int32_t)));
 
                     case ZenPropertyType_UInt64:
-                        return ioInterface.publishArray(property, error, reinterpret_cast<const uint64_t*>(data), length / sizeof(uint64_t));
+                        return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const uint64_t*>(data.data()), data.size() / sizeof(uint64_t)));
 
                     case ZenPropertyType_String:
-                        return ioInterface.publishArray(property, error, reinterpret_cast<const char*>(data), length / sizeof(char));
+                        return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const char*>(data.data()), data.size() / sizeof(char)));
 
                     default:
                         return ZenError_InvalidArgument;
@@ -268,25 +299,25 @@ namespace zen
                 }
                 else
                 {
-                    if (length != sizeOfPropertyType(type))
+                    if (static_cast<size_t>(data.size()) != sizeOfPropertyType(type))
                         return ZenError_Io_MsgCorrupt;
 
                     switch (type)
                     {
                     case ZenPropertyType_Bool:
-                        return ioInterface.publishResult(property, error, *reinterpret_cast<const bool*>(data));
+                        return communicator.publishResult(property, error, *reinterpret_cast<const bool*>(data.data()));
 
                     case ZenPropertyType_Float:
-                        return ioInterface.publishResult(property, error, *reinterpret_cast<const float*>(data));
+                        return communicator.publishResult(property, error, *reinterpret_cast<const float*>(data.data()));
 
                     case ZenPropertyType_Int32:
-                        return ioInterface.publishResult(property, error, *reinterpret_cast<const int32_t*>(data));
+                        return communicator.publishResult(property, error, *reinterpret_cast<const int32_t*>(data.data()));
 
                     case ZenPropertyType_UInt64:
-                        return ioInterface.publishResult(property, error, *reinterpret_cast<const uint64_t*>(data));
+                        return communicator.publishResult(property, error, *reinterpret_cast<const uint64_t*>(data.data()));
 
                     case ZenPropertyType_Matrix:
-                        return ioInterface.publishArray(property, error, reinterpret_cast<const float*>(data), 9);
+                        return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const float*>(data.data()), 9));
 
                     default:
                         return ZenError_InvalidArgument;

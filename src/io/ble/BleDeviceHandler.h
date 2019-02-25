@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 
+#include <gsl/span>
 #include <QLowEnergyController>
 
 #include "ZenTypes.h"
@@ -26,8 +27,8 @@ namespace zen
 
         ZenSensorInitError initialize();
 
-        ZenError send(const std::vector<unsigned char>& data);
-        std::optional<std::vector<unsigned char>> tryToGetReceivedData();
+        ZenError send(gsl::span<const std::byte> data);
+        std::optional<std::vector<std::byte>> tryToGetReceivedData();
 
         bool equals(uint64_t handle) const;
 
@@ -41,7 +42,7 @@ namespace zen
     private:
         void reset();
 
-        LockingQueue<std::vector<unsigned char>> m_queue;
+        LockingQueue<std::vector<std::byte>> m_queue;
 
         QLowEnergyController m_controller;
         QLowEnergyCharacteristic m_characteristic;

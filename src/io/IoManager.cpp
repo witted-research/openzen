@@ -74,23 +74,29 @@ namespace zen
         return result.second;
     }
 
-    std::unique_ptr<BaseIoInterface> IoManager::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
+    std::optional<std::reference_wrapper<IIoSystem>> IoManager::getIoSystem(std::string_view key) const noexcept
     {
-        auto it = m_ioSystems.find(desc.ioType);
+        auto it = m_ioSystems.find(key);
         if (it == m_ioSystems.end())
-        {
-            outError = ZenSensorInitError_UnsupportedIoType;
-            return nullptr;
-        }
+            return std::nullopt;
 
-        return it->second->obtain(desc, outError);
+        return *it->second.get();
     }
 
     ZenError IoManager::listDevices(std::vector<ZenSensorDesc>& outDevices)
     {
         for (auto& pair : m_ioSystems)
-            if (auto error = pair.second->listDevices(outDevices))
-                return error;
+        {
+            try
+            {
+                if (auto error = pair.second->listDevices(outDevices))
+                    return error;
+            }
+            catch (...)
+            {
+                return ZenError_Unknown;
+            }
+        }
 
         return ZenError_None;
     }

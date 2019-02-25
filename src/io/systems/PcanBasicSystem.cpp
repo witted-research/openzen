@@ -50,20 +50,11 @@ namespace zen
         return ZenError_None;
     }
 
-    std::unique_ptr<BaseIoInterface> PcanBasicSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
+    nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> PcanBasicSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
         ICanChannel& channel = *m_channels.begin()->get();
 
-        auto format = modbus::ModbusFormat::LP;
-        auto factory = modbus::make_factory(format);
-        auto parser = modbus::make_parser(format);
-        if (!factory || !parser)
-        {
-            outError = ZenSensorInitError_UnsupportedDataFormat;
-            return nullptr;
-        }
-
-        auto ioInterface = std::make_unique<CanInterface>(desc.handle32, channel, std::move(factory), std::move(parser));
+        auto ioInterface = std::make_unique<CanInterface>(subscriber, channel, desc.handle32);
         if (!channel.subscribe(*ioInterface.get()))
             return nullptr;
 

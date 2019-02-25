@@ -2,7 +2,7 @@
 
 #include <limits>
 
-#include "io/Modbus.h"
+#include "communication/Modbus.h"
 #include "io/can/CanManager.h"
 #include "io/interfaces/CanInterface.h"
 #include "io/systems/PcanBasicSystem.h"
@@ -13,7 +13,7 @@ namespace zen
 {
     namespace
     {
-        TPCANMsg makeMsg(uint32_t id, unsigned char type, const unsigned char* data, uint8_t length)
+        TPCANMsg makeMsg(uint32_t id, unsigned char type, const std::byte* data, uint8_t length) noexcept
         {
             TPCANMsg m;
             m.ID = id;
@@ -23,7 +23,7 @@ namespace zen
             return m;
         }
 
-        ZenError sendMsg(TPCANHandle channel, uint32_t id, const unsigned char* data, uint8_t length)
+        ZenError sendMsg(TPCANHandle channel, uint32_t id, const std::byte* data, uint8_t length) noexcept
         {
             TPCANMsg m = makeMsg(id, PCAN_MESSAGE_STANDARD, data, length);
             if (auto error = PcanBasicSystem::fnTable.write(channel, &m))
@@ -77,7 +77,7 @@ namespace zen
         PcanBasicSystem::fnTable.uninitialize(m_channel);
     }
 
-    bool PcanBasicChannel::subscribe(CanInterface& i)
+    bool PcanBasicChannel::subscribe(CanInterface& i) noexcept
     {
         {
             // Did someone already subscribe to this ID?
@@ -97,7 +97,7 @@ namespace zen
         return true;
     }
 
-    void PcanBasicChannel::unsubscribe(CanInterface& i)
+    void PcanBasicChannel::unsubscribe(CanInterface& i) noexcept
     {
         auto it2 = m_subscribers2.find(&i);
         if (it2 != m_subscribers2.cend())
@@ -107,7 +107,7 @@ namespace zen
         }
     }
 
-    ZenError PcanBasicChannel::listDevices(std::vector<ZenSensorDesc>& outDevices)
+    ZenError PcanBasicChannel::listDevices(std::vector<ZenSensorDesc>& outDevices) noexcept
     {
         for (uint32_t deviceId : m_deviceIds)
         {
@@ -123,7 +123,7 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError PcanBasicChannel::poll()
+    ZenError PcanBasicChannel::poll() noexcept
     {
         TPCANMsg m;
         TPCANTimestamp t;
@@ -140,26 +140,26 @@ namespace zen
                 continue;
             }
 
-            if (auto error = it->second->processReceivedData(m.DATA, static_cast<size_t>(m.LEN)))
+            if (auto error = publishReceivedData(*it->second, gsl::make_span(reinterpret_cast<std::byte*>(m.DATA), static_cast<size_t>(m.LEN))))
                 return error;
         }
     }
 
-    bool PcanBasicChannel::equals(std::string_view ioType) const
+    bool PcanBasicChannel::equals(std::string_view ioType) const noexcept
     {
         return ioType == PcanBasicSystem::KEY;
     }
 
-    ZenError PcanBasicChannel::send(uint32_t id, std::vector<unsigned char> frame)
+    ZenError PcanBasicChannel::send(uint32_t id, gsl::span<const std::byte> data) noexcept
     {
         // [XXX] Should we sleep to see if the hasBusError() dissappears?
         if (hasBusError())
             return ZenError_Can_BusError;
 
-        const auto nFullFrames = frame.size() / 8;
-        const uint8_t remainder = frame.size() % 8;
+        const auto nFullFrames = data.size() / 8;
+        const uint8_t remainder = data.size() % 8;
 
-        auto it = frame.data();
+        auto it = data.data();
         for (auto i = 0; i < nFullFrames; ++i, it += 8)
             if (auto error = sendMsg(m_channel, id, it, 8))
                 return error;
@@ -171,7 +171,7 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError PcanBasicChannel::setBaudrate(unsigned int rate)
+    ZenError PcanBasicChannel::setBaudRate(unsigned int rate) noexcept
     {
         // [XXX] Make sure there are no messages being send
         //if (auto error = close())
@@ -192,27 +192,29 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError PcanBasicChannel::supportedBaudrates(std::vector<int32_t>& outBaudrates) const
+    nonstd::expected<std::vector<int32_t>, ZenError> PcanBasicChannel::supportedBaudRates() const noexcept
     {
-        outBaudrates.reserve(14);
-        outBaudrates.emplace_back(5000);
-        outBaudrates.emplace_back(10000);
-        outBaudrates.emplace_back(20000);
-        outBaudrates.emplace_back(33000);
-        outBaudrates.emplace_back(47000);
-        outBaudrates.emplace_back(50000);
-        outBaudrates.emplace_back(83000);
-        outBaudrates.emplace_back(95000);
-        outBaudrates.emplace_back(100000);
-        outBaudrates.emplace_back(125000);
-        outBaudrates.emplace_back(250000);
-        outBaudrates.emplace_back(500000);
-        outBaudrates.emplace_back(800000);
-        outBaudrates.emplace_back(1000000);
-        return ZenError_None;
+        std::vector<int32_t> baudRates;
+        baudRates.reserve(14);
+
+        baudRates.emplace_back(5000);
+        baudRates.emplace_back(10000);
+        baudRates.emplace_back(20000);
+        baudRates.emplace_back(33000);
+        baudRates.emplace_back(47000);
+        baudRates.emplace_back(50000);
+        baudRates.emplace_back(83000);
+        baudRates.emplace_back(95000);
+        baudRates.emplace_back(100000);
+        baudRates.emplace_back(125000);
+        baudRates.emplace_back(250000);
+        baudRates.emplace_back(500000);
+        baudRates.emplace_back(800000);
+        baudRates.emplace_back(1000000);
+        return std::move(baudRates);
     }
 
-    const char* PcanBasicChannel::type() const
+    std::string_view PcanBasicChannel::type() const noexcept
     {
         return PcanBasicSystem::KEY;
     }

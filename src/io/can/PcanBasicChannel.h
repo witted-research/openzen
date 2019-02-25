@@ -21,38 +21,38 @@ namespace zen
         ~PcanBasicChannel();
 
         /** Subscribe IO Interface to CAN interface  */
-        bool subscribe(CanInterface& i) override;
+        bool subscribe(CanInterface& i) noexcept override;
 
         /** Unsubscribe IO Interface from CAN interface */
-        void unsubscribe(CanInterface& i) override;
+        void unsubscribe(CanInterface& i) noexcept override;
 
         /** List devices connected to the CAN interface */
-        ZenError listDevices(std::vector<ZenSensorDesc>& outDevices);
+        ZenError listDevices(std::vector<ZenSensorDesc>& outDevices) noexcept;
 
         /** Poll data from CAN bus */
-        ZenError poll() override;
+        ZenError poll() noexcept override;
 
         /** Returns the channel Id */
-        unsigned int channel() const override { return m_channel; }
+        unsigned int channel() const noexcept override { return m_channel; }
 
         /** Returns the type of IO interface */
-        const char* type() const override;
+        std::string_view type() const noexcept override;
 
         /** Returns whether the CAN channel equals the IO type */
-        bool equals(std::string_view ioType) const override;
+        bool equals(std::string_view ioType) const noexcept override;
 
     private:
         /** Send data to CAN bus */
-        ZenError send(uint32_t id, std::vector<unsigned char> frame) override;
+        ZenError send(uint32_t id, gsl::span<const std::byte> data) noexcept override;
 
         /** Returns the CAN bus' baudrate (bit/s) */
-        unsigned baudrate() const { return m_baudrate; }
+        unsigned baudRate() const noexcept { return m_baudrate; }
 
         /** Set Baudrate of CAN bus (bit/s) */
-        ZenError setBaudrate(unsigned int rate) override;
+        ZenError setBaudRate(unsigned int rate) noexcept override;
 
         /** Returns the supported baudrates of the CAN bus (bit/s) */
-        ZenError supportedBaudrates(std::vector<int32_t>& outBaudrates) const override;
+        nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept override;
 
         bool hasBusError();
 

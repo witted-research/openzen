@@ -3,8 +3,8 @@
 #include <optional>
 #include <QCoreApplication>
 
-#include "ConnectionNegotiator.h"
 #include "Sensor.h"
+#include "communication/ConnectionNegotiator.h"
 #include "components/ComponentFactoryManager.h"
 #include "io/IoManager.h"
 #include "io/can/CanManager.h"
@@ -14,7 +14,7 @@ namespace zen
 {
     namespace
     {
-        bool hasComponentOfType(const std::vector<std::shared_ptr<SensorComponent>>& components, std::string_view type)
+        bool hasComponentOfType(const std::vector<std::unique_ptr<SensorComponent>>& components, std::string_view type)
         {
             for (const auto& component : components)
                 if (component->type() == type)
@@ -95,19 +95,25 @@ namespace zen
         if (auto sensor = findSensor(desc))
             return std::move(*sensor);
 
-        ZenSensorInitError ioError;
-        auto ioInterface = IoManager::get().obtain(desc, ioError);
-        if (!ioInterface)
-            return nonstd::make_unexpected(ioError);
+        auto ioSystem = IoManager::get().getIoSystem(desc.ioType);
+        if (!ioSystem)
+            return nonstd::make_unexpected(ZenSensorInitError_UnsupportedIoType);
 
-        ConnectionNegotiator negotiator(*ioInterface);
-        auto agreement = negotiator.negotiate();
+        ConnectionNegotiator negotiator;
+        auto communicator = std::make_unique<ModbusCommunicator>(negotiator, std::make_unique<modbus::RTUFrameFactory>(), std::make_unique<modbus::RTUFrameParser>());
+
+        if (auto ioInterface = ioSystem->get().obtain(desc, *communicator.get()))
+            communicator->init(std::move(*ioInterface));
+        else
+            return nonstd::make_unexpected(ioInterface.error());
+
+        auto agreement = negotiator.negotiate(*communicator.get());
         if (!agreement)
-                return nonstd::make_unexpected(agreement.error());
+            return nonstd::make_unexpected(agreement.error());
 
         std::lock_guard<std::mutex> lock(m_mutex);
         const auto token = m_nextToken++;
-        auto sensor = make_sensor(token, std::move(*agreement), std::move(ioInterface));
+        auto sensor = make_sensor(std::move(*agreement), std::move(communicator), token);
         if (!sensor)
             return nonstd::make_unexpected(sensor.error());
 

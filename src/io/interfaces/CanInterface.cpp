@@ -2,10 +2,12 @@
 
 #include <vector>
 
+#include "io/can/ICanChannel.h"
+
 using namespace zen;
 
-CanInterface::CanInterface(uint32_t id, ICanChannel& channel, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
-    : BaseIoInterface(std::move(factory), std::move(parser))
+CanInterface::CanInterface(IIoDataSubscriber& subscriber, ICanChannel& channel, uint32_t id) noexcept
+    : IIoInterface(subscriber)
     , m_channel(channel)
     , m_id(id)
 {}
@@ -15,23 +17,27 @@ CanInterface::~CanInterface()
     m_channel.unsubscribe(*this);
 }
 
-ZenError CanInterface::baudrate(int32_t& rate) const
+nonstd::expected<int32_t, ZenError> CanInterface::baudRate() const noexcept
 {
-    rate = m_channel.baudrate();
-    return ZenError_None;
+    return m_channel.baudRate();
 }
 
-ZenError CanInterface::setBaudrate(unsigned int rate)
+ZenError CanInterface::setBaudRate(unsigned int rate) noexcept
 {
-    return m_channel.setBaudrate(rate);
+    return m_channel.setBaudRate(rate);
 }
 
-ZenError CanInterface::supportedBaudrates(std::vector<int32_t>& outBaudrates) const
+nonstd::expected<std::vector<int32_t>, ZenError> CanInterface::supportedBaudRates() const noexcept
 {
-    return m_channel.supportedBaudrates(outBaudrates);
+    return m_channel.supportedBaudRates();
 }
 
-bool CanInterface::equals(const ZenSensorDesc& desc) const
+std::string_view CanInterface::type() const noexcept
+{
+    return m_channel.type();
+}
+
+bool CanInterface::equals(const ZenSensorDesc& desc) const noexcept
 {
     if (!m_channel.equals(desc.ioType))
         return false;
@@ -39,12 +45,7 @@ bool CanInterface::equals(const ZenSensorDesc& desc) const
     return m_id == desc.handle32;
 }
 
-ZenError CanInterface::send(std::vector<unsigned char> frame)
+ZenError CanInterface::send(gsl::span<const std::byte> data) noexcept
 {
-    return m_channel.send(m_id, std::move(frame));
-}
-
-ZenError CanInterface::processReceivedData(const unsigned char* data, size_t length)
-{
-    return BaseIoInterface::processReceivedData(data, length);
+    return m_channel.send(m_id, data);
 }

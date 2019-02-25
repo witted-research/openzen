@@ -9,9 +9,9 @@ namespace zen
     {
     public:
         nonstd::expected<std::unique_ptr<SensorComponent>, ZenSensorInitError> make_component(
-            uint8_t id,
             unsigned int version,
-            AsyncIoInterface& ioInterface
+            uint8_t id,
+            SyncedModbusCommunicator& communicator
         ) const noexcept override;
     };
 }

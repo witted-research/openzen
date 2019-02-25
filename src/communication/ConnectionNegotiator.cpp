@@ -5,28 +5,27 @@
 #include "nlohmann/json.hpp"
 
 #include "ZenProtocol.h"
+#include "communication/Modbus.h"
 #include "utility/Finally.h"
 
 namespace zen
 {
-    ConnectionNegotiator::ConnectionNegotiator(BaseIoInterface& ioInterface) noexcept
-        : IIoDataSubscriber(ioInterface)
-        , m_ioInterface(ioInterface)
-        , m_error(ZenSensorInitError_None)
+    ConnectionNegotiator::ConnectionNegotiator() noexcept
+        : m_error(ZenSensorInitError_None)
         , m_terminated(false)
     {}
 
-    nonstd::expected<SensorConfig, ZenSensorInitError> ConnectionNegotiator::negotiate() noexcept
+    nonstd::expected<SensorConfig, ZenSensorInitError> ConnectionNegotiator::negotiate(ModbusCommunicator& communicator) const noexcept
     {
         constexpr const auto IO_TIMEOUT = std::chrono::milliseconds(2000);
         std::vector<unsigned int> baudrates;
 
         for (uint32_t baudrate : baudrates)
         {
-            if (auto error = m_ioInterface.setBaudrate(baudrate))
+            if (auto error = communicator.setBaudRate(baudrate))
                 return nonstd::make_unexpected(ZenSensorInitError_IncompatibleBaudRates);
 
-            if (auto error = m_ioInterface.send(0, ZenProtocolFunction_Negotiate, reinterpret_cast<const unsigned char*>(&baudrate), sizeof(baudrate)))
+            if (auto error = communicator.send(0, ZenProtocolFunction_Negotiate, gsl::make_span(reinterpret_cast<const std::byte*>(&baudrate), sizeof(baudrate))))
                 return nonstd::make_unexpected(ZenSensorInitError_SendFailed);
 
             std::unique_lock<std::mutex> lock;
@@ -41,19 +40,21 @@ namespace zen
 
         // [LEGACY] Fix for sensors that did not support negotiation yet
         //return nonstd::make_unexpected(ZenSensorInitError_IncompatibleBaudRates);
-        m_ioInterface.setBaudrate(921600);
-        m_config.version = 0u;
+        communicator.setBaudRate(921600);
+
+        SensorConfig config;
+        config.version = 0u;
 
         ComponentConfig imu;
         imu.id = g_zenSensorType_Imu;
         imu.version = 0;
-        m_config.components.push_back(std::move(imu));
+        config.components.push_back(std::move(imu));
 
-        return std::move(m_config);
+        return std::move(config);
 
     }
 
-    ZenError ConnectionNegotiator::processData(uint8_t, uint8_t function, const unsigned char* data, size_t length)
+    ZenError ConnectionNegotiator::processReceivedData(uint8_t, uint8_t function, gsl::span<const std::byte> data) noexcept
     {
         if (function != ZenProtocolFunction_Handshake)
             return ZenError_Io_UnexpectedFunction;
@@ -68,7 +69,7 @@ namespace zen
             m_cv.notify_one();
         });
 
-        json config = json::parse(data, data + length, nullptr, false);
+        json config = json::parse(data.cbegin(), data.cend(), nullptr, false);
         const auto versionIt = config.find("version");
         const auto componentsIt = config.find("components");
         if (versionIt == config.end() || !versionIt->is_number_integer() ||

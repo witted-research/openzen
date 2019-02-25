@@ -56,7 +56,7 @@ namespace zen
         return result;
     }
 
-    ZenError BleDeviceHandler::send(const std::vector<unsigned char>& data)
+    ZenError BleDeviceHandler::send(gsl::span<const std::byte> data)
     {
         if (!m_service)
             return ZenError_Io_NotInitialized;
@@ -81,7 +81,7 @@ namespace zen
         return ZenError_None;
     }
 
-    std::optional<std::vector<unsigned char>> BleDeviceHandler::tryToGetReceivedData()
+    std::optional<std::vector<std::byte>> BleDeviceHandler::tryToGetReceivedData()
     {
         return m_queue.tryToPop();
     }
@@ -138,7 +138,7 @@ namespace zen
         if (info.uuid() != QUuid(reinterpret_cast<const char*>(ZEN_IMUDATA_UUID)))
             return;
 
-        std::vector<unsigned char> buffer(value.begin(), value.end());
+        std::vector<std::byte> buffer(reinterpret_cast<const std::byte*>(value.begin()), reinterpret_cast<const std::byte*>(value.end()));
         m_queue.emplace(std::move(buffer));
     }
 

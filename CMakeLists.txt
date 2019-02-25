@@ -23,8 +23,6 @@ set(zen_includes
 )
 
 set(zen_sources
-    src/ConnectionNegotiator.cpp
-    src/ConnectionNegotiator.h
     src/ImuHelpers.h
     src/InternalTypes.h
     src/ISensorProperties.h
@@ -40,6 +38,17 @@ set(zen_sources
     
     src/LpMatrix.c
     src/LpMatrix.h
+)
+
+set(communication_sources
+    src/communication/ConnectionNegotiator.cpp
+    src/communication/ConnectionNegotiator.h
+    src/communication/Modbus.cpp
+    src/communication/Modbus.h
+    src/communication/ModbusCommunicator.cpp
+    src/communication/ModbusCommunicator.h
+    src/communication/SyncedModbusCommunicator.cpp
+    src/communication/SyncedModbusCommunicator.h
 )
 
 set(components_sources
@@ -60,8 +69,6 @@ set(io_sources
     src/io/IIoSystem.h
     src/io/IoManager.cpp
     src/io/IoManager.h
-    src/io/Modbus.cpp
-    src/io/Modbus.h
 )
 
 set(io_ble_sources
@@ -85,10 +92,6 @@ set(io_can_sources
 )
 
 set(io_interfaces_sources
-    src/io/interfaces/AsyncIoInterface.cpp
-    src/io/interfaces/AsyncIoInterface.h
-    src/io/interfaces/BaseIoInterface.cpp
-    src/io/interfaces/BaseIoInterface.h
     src/io/interfaces/BleInterface.cpp
     src/io/interfaces/BleInterface.h
     src/io/interfaces/BluetoothInterface.cpp
@@ -169,6 +172,7 @@ endif()
 set(all_sources
     ${zen_includes}
     ${zen_sources}
+    ${communication_sources}
     ${components_sources}
     ${components_factories_sources}
     ${io_sources}

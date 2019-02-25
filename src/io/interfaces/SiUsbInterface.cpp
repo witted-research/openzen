@@ -4,8 +4,8 @@
 
 namespace zen
 {
-    SiUsbInterface::SiUsbInterface(HANDLE handle, OVERLAPPED ioReader, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
-        : BaseIoInterface(std::move(factory), std::move(parser))
+    SiUsbInterface::SiUsbInterface(IIoDataSubscriber& subscriber, HANDLE handle, OVERLAPPED ioReader) noexcept
+        : IIoInterface(subscriber)
         , m_ioReader(ioReader)
         , m_terminate(false)
         , m_pollingThread(&SiUsbInterface::run, this)
@@ -27,25 +27,25 @@ namespace zen
         ::CloseHandle(m_ioReader.hEvent);
     }
 
-    ZenError SiUsbInterface::send(std::vector<unsigned char> frame)
+    ZenError SiUsbInterface::send(gsl::span<const std::byte> data) noexcept
     {
         DWORD nBytesWritten = 0;
-        if (auto error = SiUsbSystem::fnTable.write(m_handle, frame.data(), static_cast<DWORD>(frame.size()), &nBytesWritten, nullptr))
+        // Need to cast do a non-const because the SI_Write interface expects a void pointer
+        if (auto error = SiUsbSystem::fnTable.write(m_handle, const_cast<std::byte*>(data.data()), static_cast<DWORD>(data.size()), &nBytesWritten, nullptr))
             return ZenError_Io_SendFailed;
 
-        if (nBytesWritten != frame.size())
+        if (nBytesWritten != data.size())
             return ZenError_Io_SendFailed;
 
         return ZenError_None;
     }
 
-    ZenError SiUsbInterface::baudrate(int32_t& rate) const
+    nonstd::expected<int32_t, ZenError> SiUsbInterface::baudRate() const noexcept
     {
-        rate = m_baudrate;
-        return ZenError_None;
+        return m_baudrate;
     }
 
-    ZenError SiUsbInterface::setBaudrate(unsigned int rate)
+    ZenError SiUsbInterface::setBaudRate(unsigned int rate) noexcept
     {
         if (rate == m_baudrate)
             return ZenError_None;
@@ -60,17 +60,17 @@ namespace zen
         return ZenError_None;
     }
 
-    ZenError SiUsbInterface::supportedBaudrates(std::vector<int32_t>&) const
+    nonstd::expected<std::vector<int32_t>, ZenError> SiUsbInterface::supportedBaudRates() const noexcept
     {
-        return ZenError_Io_BaudratesUnknown;
+        return nonstd::make_unexpected(ZenError_Io_BaudratesUnknown);
     }
 
-    const char* SiUsbInterface::type() const
+    std::string_view SiUsbInterface::type() const noexcept
     {
         return SiUsbSystem::KEY;
     }
 
-    bool SiUsbInterface::equals(const ZenSensorDesc& desc) const
+    bool SiUsbInterface::equals(const ZenSensorDesc& desc) const noexcept
     {
         if (std::string_view(SiUsbSystem::KEY) != desc.ioType)
             return false;
@@ -101,7 +101,7 @@ namespace zen
             }
 
             if (nReceivedBytes > 0)
-                if (auto error = processReceivedData(m_buffer.data(), nReceivedBytes))
+                if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nReceivedBytes)))
                     return error;
         }
 

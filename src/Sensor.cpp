@@ -6,9 +6,11 @@
 
 #include "ZenProtocol.h"
 #include "SensorProperties.h"
+#include "communication/ConnectionNegotiator.h"
 #include "components/ComponentFactoryManager.h"
 #include "components/factories/ImuComponentFactory.h"
 #include "io/IIoInterface.h"
+#include "io/IoManager.h"
 #include "properties/BaseSensorPropertiesV0.h"
 #include "properties/CorePropertyRulesV1.h"
 #include "properties/LegacyCoreProperties.h"
@@ -18,48 +20,45 @@ namespace zen
 {
     namespace
     {
-        std::unique_ptr<ISensorProperties> make_properties(uint8_t id, unsigned int version, AsyncIoInterface& ioInterface)
+        std::unique_ptr<ISensorProperties> make_properties(uint8_t id, unsigned int version, SyncedModbusCommunicator& communicator) noexcept
         {
             switch (version)
             {
             case 1:
-                return std::make_unique<SensorProperties<CorePropertyRulesV1>>(id, ioInterface);
+                return std::make_unique<SensorProperties<CorePropertyRulesV1>>(id, communicator);
 
             default:
                 return nullptr;
             }
         }
 
-        ISensorProperties& getProperties(uint8_t address, Sensor& self, const std::vector<std::shared_ptr<SensorComponent>>& components)
+        ISensorProperties& getProperties(Sensor& self, const std::vector<std::unique_ptr<SensorComponent>>& components, uint8_t address) noexcept
         {
             return *(address ? components[address - 1]->properties() : self.properties());
         }
 
-        ZenError parseError(const unsigned char*& data, size_t& length)
+        ZenError parseError(gsl::span<const std::byte>& data) noexcept
         {
-            const auto result = *reinterpret_cast<const ZenError*>(data);
-            data += sizeof(ZenError);
-            length -= sizeof(ZenError);
+            const auto result = *reinterpret_cast<const ZenError*>(data.data());
+            data = data.subspan(sizeof(ZenError));
             return result;
         }
 
-        ZenEvent_t parseEvent(const unsigned char*& data, size_t& length)
+        ZenEvent_t parseEvent(gsl::span<const std::byte>& data) noexcept
         {
-            const auto result = *reinterpret_cast<const ZenEvent_t*>(data);
-            data += sizeof(ZenEvent_t);
-            length -= sizeof(ZenEvent_t);
+            const auto result = *reinterpret_cast<const ZenEvent_t*>(data.data());
+            data = data.subspan(sizeof(ZenEvent_t));
             return result;
         }
 
-        ZenProperty_t parseProperty(const unsigned char*& data, size_t& length)
+        ZenProperty_t parseProperty(gsl::span<const std::byte>& data) noexcept
         {
-            const auto result = *reinterpret_cast<const ZenProperty_t*>(data);
-            data += sizeof(ZenProperty_t);
-            length -= sizeof(ZenProperty_t);
+            const auto result = *reinterpret_cast<const ZenProperty_t*>(data.data());
+            data = data.subspan(sizeof(ZenProperty_t));
             return result;
         }
 
-        ZenEvent make_event(ZenEvent_t type, uintptr_t sensorHandle, uintptr_t componentHandle)
+        ZenEvent make_event(ZenEvent_t type, uintptr_t sensorHandle, uintptr_t componentHandle) noexcept
         {
             ZenEvent event{0};
             event.eventType = type;
@@ -67,23 +66,48 @@ namespace zen
             event.component.handle = componentHandle;
             return event;
         }
+
+        std::unique_ptr<modbus::IFrameFactory> getFactory(uint32_t version) noexcept
+        {
+            if (version == 0)
+                return std::make_unique<modbus::LpFrameFactory>();
+
+            return std::make_unique<modbus::RTUFrameFactory>();
+        }
+
+        std::unique_ptr<modbus::IFrameParser> getParser(uint32_t version) noexcept
+        {
+            if (version == 0)
+                return std::make_unique<modbus::LpFrameParser>();
+
+            return std::make_unique<modbus::RTUFrameParser>();
+        }
+
+        std::unique_ptr<ModbusCommunicator> moveCommunicator(std::unique_ptr<ModbusCommunicator> communicator, IModbusFrameSubscriber& newSubscriber, uint32_t version)
+        {
+            // [LEGACY] Potentially we need to support ModbusFormat::Lp
+            communicator->setSubscriber(newSubscriber);
+            communicator->setFrameFactory(getFactory(version));
+            communicator->setFrameParser(getParser(version));
+
+            return std::move(communicator);
+        }
     }
 
     static auto imuRegistry = make_registry<ImuComponentFactory>(g_zenSensorType_Imu);
 
-    nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> make_sensor(uintptr_t token, SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface)
+    nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token) noexcept
     {
-        auto sensor = std::make_shared<Sensor>(token, std::move(config), std::move(ioInterface));
+        auto sensor = std::make_shared<Sensor>(std::move(config), std::move(communicator), token);
         if (auto error = sensor->init())
             return nonstd::make_unexpected(error);
 
         return std::move(sensor);
     }
 
-    Sensor::Sensor(uintptr_t token, SensorConfig config, std::unique_ptr<BaseIoInterface> ioInterface)
-        : IIoDataSubscriber(*ioInterface.get())
-        , m_config(std::move(config))
-        , m_ioInterface(std::move(ioInterface))
+    Sensor::Sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token)
+        : m_config(std::move(config))
+        , m_communicator(moveCommunicator(std::move(communicator), *this, m_config.version))
         , m_token(token)
         , m_updatingFirmware(false)
         , m_updatedFirmware(false)
@@ -111,7 +135,7 @@ namespace zen
             if (!factory)
                 return ZenSensorInitError_UnsupportedComponent;
 
-            auto component = factory.value()->make_component(idx++, config.version, m_ioInterface);
+            auto component = factory.value()->make_component(config.version, idx++, m_communicator);
             if (!component)
                 return component.error();
 
@@ -128,8 +152,8 @@ namespace zen
         // [LEGACY] Fix for sensors that did not support negotiation yet
         // [LEGACY] Swap the order of sensor-component initialization in the future
         if (m_config.version == 0)
-            m_properties = std::make_unique<LegacyCoreProperties>(m_ioInterface, *m_components[0]->properties());
-        else if (auto properties = make_properties(0, m_config.version, m_ioInterface))
+            m_properties = std::make_unique<LegacyCoreProperties>(m_communicator, *m_components[0]->properties());
+        else if (auto properties = make_properties(0, m_config.version, m_communicator))
             m_properties = std::move(properties);
         else
             return ZenSensorInitError_UnsupportedProtocol;
@@ -137,7 +161,7 @@ namespace zen
         return ZenSensorInitError_None;
     }
 
-    ZenAsyncStatus Sensor::updateFirmwareAsync(const unsigned char* const buffer, size_t bufferSize) noexcept
+    ZenAsyncStatus Sensor::updateFirmwareAsync(gsl::span<const std::byte> buffer) noexcept
     {
         if (m_updatingFirmware.exchange(true))
         {
@@ -159,21 +183,19 @@ namespace zen
             return ZenAsync_ThreadBusy;
         }
 
-        if (buffer == nullptr)
+        if (buffer.data() == nullptr)
         {
             m_updatingFirmware = false;
             return ZenAsync_InvalidArgument;
         }
 
-        std::vector<unsigned char> firmware(bufferSize);
-        std::memcpy(firmware.data(), buffer, bufferSize);
-
+        std::vector<std::byte> firmware(buffer.begin(), buffer.end());
         m_uploadThread = std::thread(&Sensor::upload, this, std::move(firmware));
 
         return ZenAsync_Updating;
     }
 
-    ZenAsyncStatus Sensor::updateIAPAsync(const unsigned char* const buffer, size_t bufferSize) noexcept
+    ZenAsyncStatus Sensor::updateIAPAsync(gsl::span<const std::byte> buffer) noexcept
     {
         if (m_updatingIAP.exchange(true))
         {
@@ -195,15 +217,13 @@ namespace zen
             return ZenAsync_ThreadBusy;
         }
 
-        if (buffer == nullptr)
+        if (buffer.data() == nullptr)
         {
             m_updatingFirmware = false;
             return ZenAsync_InvalidArgument;
         }
 
-        std::vector<unsigned char> iap(bufferSize);
-        std::memcpy(iap.data(), buffer, bufferSize);
-
+        std::vector<std::byte> iap(buffer.begin(), buffer.end());
         m_uploadThread = std::thread(&Sensor::upload, this, std::move(iap));
 
         return ZenAsync_Updating;
@@ -211,10 +231,10 @@ namespace zen
 
     bool Sensor::equals(const ZenSensorDesc& desc) const
     {
-        return m_ioInterface.equals(desc);
+        return m_communicator.equals(desc);
     }
 
-    ZenError Sensor::processData(uint8_t address, uint8_t function, const unsigned char* data, size_t length)
+    ZenError Sensor::processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept
     {
         if (m_config.version == 0)
         {
@@ -223,15 +243,15 @@ namespace zen
                 switch (*optInternal)
                 {
                 case EDevicePropertyInternal::Ack:
-                    return m_ioInterface.publishAck(ZenSensorProperty_Invalid, ZenError_None);
+                    return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_None);
 
                 case EDevicePropertyInternal::Nack:
-                    return m_ioInterface.publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
+                    return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
 
                 case EDevicePropertyInternal::Config:
-                    if (length != sizeof(uint32_t))
+                    if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
-                    return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data));
+                    return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
 
                 default:
                     return ZenError_Io_UnsupportedFunction;
@@ -244,34 +264,34 @@ namespace zen
                 {
                 case EDevicePropertyV0::GetBatteryCharging:
                 case EDevicePropertyV0::GetPing:
-                    if (length != sizeof(uint32_t))
+                    if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
-                    return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data));
+                    return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
 
                 case EDevicePropertyV0::GetBatteryLevel:
                 case EDevicePropertyV0::GetBatteryVoltage:
-                    if (length != sizeof(float))
+                    if (data.size() != sizeof(float))
                         return ZenError_Io_MsgCorrupt;
-                    return m_ioInterface.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data));
+                    return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data.data()));
 
                 case EDevicePropertyV0::GetSerialNumber:
                 case EDevicePropertyV0::GetDeviceName:
                 case EDevicePropertyV0::GetFirmwareInfo:
-                    return m_ioInterface.publishArray(function, ZenError_None, reinterpret_cast<const char*>(data), length);
+                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const char*>(data.data()), data.size()));
 
                 case EDevicePropertyV0::GetFirmwareVersion:
-                    if (length != sizeof(uint32_t) * 3)
+                    if (data.size() != sizeof(uint32_t) * 3)
                         return ZenError_Io_MsgCorrupt;
-                    return m_ioInterface.publishArray(function, ZenError_None, reinterpret_cast<const uint32_t*>(data), 3);
+                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const uint32_t*>(data.data()), 3));
 
                 case EDevicePropertyV0::GetRawSensorData:
                     if (m_initialized)
-                        return m_components[0]->processEvent(make_event(ZenImuEvent_Sample, m_token, 1), data, length);
+                        return m_components[0]->processEvent(make_event(ZenImuEvent_Sample, m_token, 1), data);
                     else
                         return ZenError_None;
 
                 default:
-                    return m_components[0]->processData(function, data, length);
+                    return m_components[0]->processData(function, data);
                 }
             }
         }
@@ -283,13 +303,13 @@ namespace zen
             switch (function)
             {
             case ZenProtocolFunction_Ack:
-                return properties::publishAck(getProperties(address, *this, m_components), m_ioInterface, parseProperty(data, length), parseError(data, length));
+                return properties::publishAck(getProperties(*this, m_components, address), m_communicator, parseProperty(data), parseError(data));
 
             case ZenProtocolFunction_Result:
-                return properties::publishResult(getProperties(address, *this, m_components), m_ioInterface, parseProperty(data, length), parseError(data, length), data, length);
+                return properties::publishResult(getProperties(*this, m_components, address), m_communicator, parseProperty(data), parseError(data), data);
 
             case ZenProtocolFunction_Event:
-                return address ? m_components[address - 1]->processEvent(make_event(parseEvent(data, length), m_token, address - 1), data, length) : ZenError_UnsupportedEvent;
+                return address ? m_components[address - 1]->processEvent(make_event(parseEvent(data), m_token, address - 1), data) : ZenError_UnsupportedEvent;
 
             default:
                 return ZenError_Io_UnsupportedFunction;
@@ -297,7 +317,7 @@ namespace zen
         }
     }
 
-    void Sensor::upload(std::vector<unsigned char> firmware)
+    void Sensor::upload(std::vector<std::byte> firmware)
     {
         constexpr uint32_t PAGE_SIZE = 255;
 
@@ -313,7 +333,7 @@ namespace zen
         const uint32_t nFullPages = static_cast<uint32_t>(firmware.size() / PAGE_SIZE);
         const uint32_t remainder = firmware.size() % PAGE_SIZE;
         const uint32_t nPages = remainder > 0 ? nFullPages + 1 : nFullPages;
-        if (auto error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(reinterpret_cast<const unsigned char*>(&nPages), sizeof(nPages))))
+        if (auto error = m_communicator.sendAndWaitForAck(0, function, property, gsl::make_span(reinterpret_cast<const std::byte*>(&nPages), sizeof(nPages))))
         {
             outError = error;
             return;
@@ -321,16 +341,15 @@ namespace zen
 
         for (unsigned idx = 0; idx < nPages; ++idx)
         {
-            if (auto error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + idx * PAGE_SIZE, PAGE_SIZE)))
+            if (auto error = m_communicator.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + idx * PAGE_SIZE, PAGE_SIZE)))
             {
                 outError = error;
                 return;
             }
         }
 
-
         if (remainder > 0)
-            if (auto error = m_ioInterface.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + nFullPages * PAGE_SIZE, remainder)))
+            if (auto error = m_communicator.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + nFullPages * PAGE_SIZE, remainder)))
                 outError = error;
     }
 }

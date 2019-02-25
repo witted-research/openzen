@@ -5,41 +5,42 @@
 
 #include "ZenTypes.h"
 
-#include "io/can/ICanChannel.h"
-#include "io/interfaces/BaseIoInterface.h"
+#include "io/IIoInterface.h"
 
 namespace zen
 {
-    class CanInterface : public BaseIoInterface
+    class ICanChannel;
+
+    class CanInterface : public IIoInterface
     {
     public:
-        CanInterface(uint32_t id, ICanChannel& channel, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
+        friend class ICanChannel;
+
+        CanInterface(IIoDataSubscriber& subscriber, ICanChannel& channel, uint32_t id) noexcept;
         ~CanInterface();
 
+        /** Send data to IO interface */
+        ZenError send(gsl::span<const std::byte> data) noexcept override;
+
         /** Returns the CAN interface's baudrate (bit/s) */
-        ZenError baudrate(int32_t& rate) const override;
+        nonstd::expected<int32_t, ZenError> baudRate() const noexcept override;
 
         /** Set Baudrate of CAN interface (bit/s) */
-        ZenError setBaudrate(unsigned int rate) override;
+        ZenError setBaudRate(unsigned int rate) noexcept override;
 
         /** Returns the supported baudrates of the CAN interface (bit/s) */
-        ZenError supportedBaudrates(std::vector<int32_t>& outBaudrates) const override;
+        nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept override;
 
         /** Returns the type of IO interface */
-        const char* type() const override { return m_channel.type(); }
+        std::string_view type() const noexcept override;
 
         /** Returns whether the IO interface equals the sensor description */
-        bool equals(const ZenSensorDesc& desc) const override;
-
-        /** Process received data */
-        ZenError processReceivedData(const unsigned char* data, size_t length);
+        bool equals(const ZenSensorDesc& desc) const noexcept override;
 
         /** Returns the CAN ID */
         uint32_t id() const { return m_id; }
 
     private:
-        ZenError send(std::vector<unsigned char> frame) override;
-
         ICanChannel& m_channel;
 
         uint32_t m_id;

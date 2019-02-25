@@ -6,34 +6,34 @@
 #include <string_view>
 #include <thread>
 
-#include "BaseIoInterface.h"
+#include "io/IIoInterface.h"
 #include "io/ble/BleDeviceHandler.h"
 
 namespace zen
 {
-    class BleInterface : public BaseIoInterface
+    class BleInterface : public IIoInterface
     {
     public:
-        BleInterface(std::unique_ptr<BleDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
+        BleInterface(IIoDataSubscriber& subscriber, std::unique_ptr<BleDeviceHandler> handler) noexcept;
         ~BleInterface() = default;
 
         /** Send data to IO interface */
-        ZenError send(std::vector<unsigned char> frame) override;
+        ZenError send(gsl::span<const std::byte> data) noexcept override;
 
         /** Returns the IO interface's baudrate (bit/s) */
-        ZenError baudrate(int32_t& rate) const override;
+        nonstd::expected<int32_t, ZenError> baudRate() const noexcept override { return nonstd::make_unexpected(ZenError_UnknownProperty); }
 
         /** Set Baudrate of IO interface (bit/s) */
-        ZenError setBaudrate(unsigned int rate) override;
+        ZenError setBaudRate(unsigned int) noexcept override { return ZenError_UnknownProperty; }
 
         /** Returns the supported baudrates of the IO interface (bit/s) */
-        ZenError supportedBaudrates(std::vector<int32_t>& outBaudrates) const override;
+        nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept override { return nonstd::make_unexpected(ZenError_UnknownProperty); }
 
         /** Returns the type of IO interface */
-        const char* type() const override;
+        std::string_view type() const noexcept override;
 
         /** Returns whether the IO interface equals the sensor description */
-        bool equals(const ZenSensorDesc& desc) const override;
+        bool equals(const ZenSensorDesc& desc) const noexcept override;
 
     private:
         int run();

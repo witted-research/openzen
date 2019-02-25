@@ -72,52 +72,28 @@ namespace zen
         return ZenError_None;
     }
 
-    std::unique_ptr<BaseIoInterface> FtdiUsbSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
+    nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> FtdiUsbSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
         FT_HANDLE handle;
-        // Need to cast to a non-const because the FT_OpenEx interface expects a void pointer
+        // Need to cast do a non-const because the FT_OpenEx interface expects a void pointer
         if (auto error = fnTable.openEx(const_cast<char*>(desc.serialNumber), FT_OPEN_BY_SERIAL_NUMBER, &handle))
-        {
-            outError = ZenSensorInitError_InvalidAddress;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
 
-        auto format = modbus::ModbusFormat::LP;
-        auto factory = modbus::make_factory(format);
-        auto parser = modbus::make_parser(format);
-        if (!factory || !parser)
-        {
-            outError = ZenSensorInitError_UnsupportedDataFormat;
-            return nullptr;
-        }
-
-        auto ioInterface = std::make_unique<FtdiUsbInterface>(handle, std::move(factory), std::move(parser));
+        auto ioInterface = std::make_unique<FtdiUsbInterface>(subscriber, handle);
         //if (outError = ioInterface->setBaudrate(DEFAULT_BAUDRATE))
         //    return nullptr;
 
         if (auto error = fnTable.setDataCharacteristics(handle, FT_BITS_8, FT_STOP_BITS_1, FT_PARITY_NONE))
-        {
-            outError = ZenSensorInitError_IoFailed;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         if (auto error = fnTable.setFlowControl(handle, FT_FLOW_RTS_CTS, 0x11, 0x12))
-        {
-            outError = ZenSensorInitError_IoFailed;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         if (auto error = fnTable.setLatencyTimer(handle, 2))
-        {
-            outError = ZenSensorInitError_IoFailed;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         if (auto error = fnTable.setUsbParameters(handle, 64, 0))
-        {
-            outError = ZenSensorInitError_IoFailed;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         return ioInterface;
     }

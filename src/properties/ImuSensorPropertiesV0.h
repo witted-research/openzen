@@ -3,7 +3,7 @@
 
 #include <array>
 #include <cstring>
-#include <optional>
+#include <utility>
 
 #include "InternalTypes.h"
 #include "ZenTypes.h"
@@ -115,21 +115,18 @@ namespace zen
                 return 16;
         }
 
-        inline ZenError supportedAccRanges(int32_t* const buffer, size_t& bufferSize)
+        inline std::pair<ZenError, size_t> supportedAccRanges(gsl::span<int32_t> buffer)
         {
             constexpr std::array<int32_t, 4> supported{ 2, 4, 8, 16 };
 
-            if (bufferSize < supported.size())
-            {
-                bufferSize = supported.size();
-                return ZenError_BufferTooSmall;
-            }
+            if (static_cast<size_t>(buffer.size()) < supported.size())
+                return std::make_pair(ZenError_BufferTooSmall, supported.size());
 
-            if (buffer == nullptr)
-                return ZenError_IsNull;
+            if (buffer.data() == nullptr)
+                return std::make_pair(ZenError_IsNull, supported.size());
 
-            std::copy(supported.cbegin(), supported.cend(), buffer);
-            return ZenError_None;
+            std::copy(supported.cbegin(), supported.cend(), buffer.begin());
+            return std::make_pair(ZenError_None, supported.size());
         }
 
         constexpr uint32_t mapGyrRange(int32_t value)
@@ -146,21 +143,18 @@ namespace zen
                 return 2000;
         }
 
-        inline ZenError supportedGyrRanges(int32_t* const buffer, size_t& bufferSize)
+        inline std::pair<ZenError, size_t> supportedGyrRanges(gsl::span<int32_t> buffer)
         {
             constexpr std::array<int32_t, 5> supported{ 125, 245, 500, 1000, 2000 };
 
-            if (bufferSize < supported.size())
-            {
-                bufferSize = supported.size();
-                return ZenError_BufferTooSmall;
-            }
+            if (static_cast<size_t>(buffer.size()) < supported.size())
+                return std::make_pair(ZenError_BufferTooSmall, supported.size());
 
-            if (buffer == nullptr)
-                return ZenError_IsNull;
+            if (buffer.data() == nullptr)
+                return std::make_pair(ZenError_IsNull, supported.size());
 
-            std::copy(supported.cbegin(), supported.cend(), buffer);
-            return ZenError_None;
+            std::copy(supported.cbegin(), supported.cend(), buffer.begin());
+            return std::make_pair(ZenError_None, supported.size());
         }
 
         constexpr uint32_t mapMagRange(int32_t value)
@@ -175,24 +169,21 @@ namespace zen
                 return 16;
         }
 
-        inline ZenError supportedMagRanges(int32_t* const buffer, size_t& bufferSize)
+        inline std::pair<ZenError, size_t> supportedMagRanges(gsl::span<int32_t> buffer)
         {
             constexpr std::array<int32_t, 4> supported{ 4, 8, 12, 16 };
 
-            if (bufferSize < supported.size())
-            {
-                bufferSize = supported.size();
-                return ZenError_BufferTooSmall;
-            }
+            if (static_cast<size_t>(buffer.size()) < supported.size())
+                return std::make_pair(ZenError_BufferTooSmall, supported.size());
 
-            if (buffer == nullptr)
-                return ZenError_IsNull;
+            if (buffer.data() == nullptr)
+                return std::make_pair(ZenError_IsNull, supported.size());
 
-            std::copy(supported.cbegin(), supported.cend(), buffer);
-            return ZenError_None;
+            std::copy(supported.cbegin(), supported.cend(), buffer.begin());
+            return std::make_pair(ZenError_None, supported.size());
         }
 
-        constexpr ZenError supportedFilterModes(char* const buffer, size_t& bufferSize)
+        constexpr std::pair<ZenError, size_t> supportedFilterModes(gsl::span<char> buffer)
         {
             const char json[]{
                 "{\n"
@@ -220,17 +211,14 @@ namespace zen
                 "    ]\n"
                 "}" };
 
-            if (bufferSize < sizeof(json))
-            {
-                bufferSize = sizeof(json);
-                return ZenError_BufferTooSmall;
-            }
+            if (static_cast<size_t>(buffer.size()) < sizeof(json))
+                return std::make_pair(ZenError_BufferTooSmall, sizeof(json));
 
-            if (buffer == nullptr)
-                return ZenError_IsNull;
+            if (buffer.data() == nullptr)
+                return std::make_pair(ZenError_IsNull, sizeof(json));
 
-            std::memcpy(buffer, json, sizeof(json));
-            return ZenError_None;
+            std::memcpy(buffer.data(), json, sizeof(json));
+            return std::make_pair(ZenError_None, sizeof(json));
         }
 
         constexpr bool supportsExecutingDeviceCommand(EDevicePropertyV0 command)

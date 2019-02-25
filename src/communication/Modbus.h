@@ -1,5 +1,5 @@
-#ifndef ZEN_IO_MODBUS_H_
-#define ZEN_IO_MODBUS_H_
+#ifndef ZEN_COMMUNICATION_MODBUS_H_
+#define ZEN_COMMUNICATION_MODBUS_H_
 
 #include <cstdint>
 #include <memory>
@@ -9,7 +9,7 @@ namespace zen::modbus
 {
     struct Frame
     {
-        std::vector<unsigned char> data;
+        std::vector<std::byte> data;
         uint8_t address;
         uint8_t function;
     };
@@ -32,7 +32,7 @@ namespace zen::modbus
     public:
         virtual ~IFrameFactory() = default;
 
-        virtual std::vector<unsigned char> makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length) = 0;
+        virtual std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) = 0;
     };
 
     class IFrameParser
@@ -41,7 +41,7 @@ namespace zen::modbus
         virtual ~IFrameParser() = default;
 
     public:
-        virtual FrameParseError parse(const unsigned char* data, size_t& length) = 0;
+        virtual FrameParseError parse(const std::byte* data, size_t& length) = 0;
         virtual void reset();
 
         virtual bool finished() const = 0;
@@ -88,7 +88,7 @@ namespace zen::modbus
     public:
         ASCIIFrameParser();
 
-        FrameParseError parse(const unsigned char* data, size_t& length) override;
+        FrameParseError parse(const std::byte* data, size_t& length) override;
         void reset() override;
 
         bool finished() const override { return m_state == ASCIIFrameParseState::Finished; }
@@ -96,12 +96,12 @@ namespace zen::modbus
     private:
         ASCIIFrameParseState m_state;
         uint8_t m_length;
-        unsigned char m_buffer;
+        std::byte m_buffer;
     };
 
     class ASCIIFrameFactory : public IFrameFactory
     {
-        std::vector<unsigned char> makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length) override;
+        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) override;
     };
 
     enum class RTUFrameParseState
@@ -119,7 +119,7 @@ namespace zen::modbus
 
     class RTUFrameFactory : public IFrameFactory
     {
-        std::vector<unsigned char> makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length) override;
+        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) override;
     };
 
     class RTUFrameParser : public IFrameParser
@@ -127,7 +127,7 @@ namespace zen::modbus
     public:
         RTUFrameParser();
 
-        FrameParseError parse(const unsigned char* data, size_t& length) override;
+        FrameParseError parse(const std::byte* data, size_t& length) override;
         void reset() override;
 
         bool finished() const override { return m_state == RTUFrameParseState::Finished; }
@@ -135,7 +135,7 @@ namespace zen::modbus
     private:
         RTUFrameParseState m_state;
         uint8_t m_length;
-        unsigned char m_buffer;
+        std::byte m_buffer;
     };
 
     enum class LpFrameParseState
@@ -159,7 +159,7 @@ namespace zen::modbus
 
     class LpFrameFactory : public IFrameFactory
     {
-        std::vector<unsigned char> makeFrame(uint8_t address, uint8_t function, const unsigned char* data, uint8_t length) override;
+        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) override;
     };
 
     class LpFrameParser : public IFrameParser
@@ -167,7 +167,7 @@ namespace zen::modbus
     public:
         LpFrameParser();
 
-        FrameParseError parse(const unsigned char* data, size_t& length) override;
+        FrameParseError parse(const std::byte* data, size_t& length) override;
         void reset() override;
 
         bool finished() const override { return m_state == LpFrameParseState::Finished; }
@@ -175,7 +175,7 @@ namespace zen::modbus
     private:
         LpFrameParseState m_state;
         uint8_t m_length;
-        unsigned char m_buffer;
+        std::byte m_buffer;
     };
 }
 

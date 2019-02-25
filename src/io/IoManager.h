@@ -2,12 +2,12 @@
 #define ZEN_IO_IOMANAGER_H_
 
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <unordered_map>
 
 #include "ZenTypes.h"
 #include "io/IIoSystem.h"
-#include "io/interfaces/BaseIoInterface.h"
 
 namespace zen
 {
@@ -35,7 +35,9 @@ namespace zen
 
         bool registerIoSystem(std::string_view key, std::unique_ptr<IIoSystem> system);
 
-        std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError);
+        std::optional<std::reference_wrapper<IIoSystem>> getIoSystem(std::string_view key) const noexcept;
+
+        std::unique_ptr<IIoInterface> obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError) const noexcept;
         ZenError listDevices(std::vector<ZenSensorDesc>& outDevices);
 
         static IAutoIoSystemRegistry* head;

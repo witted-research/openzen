@@ -11,32 +11,26 @@ namespace zen
 {
     namespace
     {
-        std::pair<ZenSensorInitError, std::unique_ptr<BaseIoInterface>> make_interface(DWORD deviceId)
+        nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> make_interface(IIoDataSubscriber& subscriber, DWORD deviceId)
         {
             HANDLE handle;
             if (auto error = SiUsbSystem::fnTable.open(deviceId, &handle))
-                return std::make_pair(ZenSensorInitError_IoFailed, nullptr);
-
-            const auto format = modbus::ModbusFormat::LP;
-            auto factory = modbus::make_factory(format);
-            auto parser = modbus::make_parser(format);
-            if (!factory || !parser)
-                return std::make_pair(ZenSensorInitError_UnsupportedDataFormat, nullptr);
+                return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
             // Create an overlapped object for asynchronous communication
             OVERLAPPED ioReader{0};
             ioReader.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
             if (!ioReader.hEvent)
-                return std::make_pair(ZenSensorInitError_IoFailed, nullptr);
+                return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
-            auto ioInterface = std::make_unique<SiUsbInterface>(handle, ioReader, std::move(factory), std::move(parser));
+            auto ioInterface = std::make_unique<SiUsbInterface>(subscriber, handle, ioReader);
             //if (auto error = ioInterface->setBaudrate(921600))
             //    return std::make_pair(error, nullptr);
 
             if (auto error = SiUsbSystem::fnTable.setFlowControl(handle, SI_HANDSHAKE_LINE, SI_FIRMWARE_CONTROLLED, SI_HELD_INACTIVE, SI_STATUS_INPUT, SI_STATUS_INPUT, 0))
-                return std::make_pair(ZenSensorInitError_IoFailed, nullptr);
+                return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
-            return std::make_pair(ZenSensorInitError_None, std::move(ioInterface));
+            return std::move(ioInterface);
         }
     }
 
@@ -98,14 +92,11 @@ namespace zen
         return ZenError_None;
     }
 
-    std::unique_ptr<BaseIoInterface> SiUsbSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
+    nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> SiUsbSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
         DWORD nDevices;
         if (auto error = SiUsbSystem::fnTable.getNumDevices(&nDevices))
-        {
-            outError = ZenSensorInitError_IoFailed;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         const std::string_view target = desc.serialNumber;
 
@@ -123,13 +114,8 @@ namespace zen
         }
 
         if (!found)
-        {
-            outError = ZenSensorInitError_InvalidAddress;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
 
-        auto[error, ioInterface] = make_interface(idx);
-        outError = error;
-        return std::move(ioInterface);
+        return make_interface(subscriber, idx);
     }
 }

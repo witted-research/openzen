@@ -11,42 +11,38 @@
 #include <Windows.h>
 #undef NOMINMAX
 
-#include "io/interfaces/BaseIoInterface.h"
+#include "io/IIoInterface.h"
 
 namespace zen
 {
-    class WindowsDeviceInterface : public BaseIoInterface
+    class WindowsDeviceInterface : public IIoInterface
     {
     public:
-        WindowsDeviceInterface(HANDLE handle, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
+        WindowsDeviceInterface(IIoDataSubscriber& subscriber, HANDLE handle) noexcept;
         ~WindowsDeviceInterface();
 
+        /** Send data to IO interface */
+        ZenError send(gsl::span<const std::byte> data) noexcept override;
+
         /** Returns the IO interface's baudrate (bit/s) */
-        ZenError baudrate(int32_t& rate) const override;
+        nonstd::expected<int32_t, ZenError> baudRate() const noexcept override;
 
         /** Set Baudrate of IO interface (bit/s) */
-        ZenError setBaudrate(unsigned int rate) override;
+        ZenError setBaudRate(unsigned int rate) noexcept override;
 
         /** Returns the supported baudrates of the IO interface (bit/s) */
-        ZenError supportedBaudrates(std::vector<int32_t>& outBaudrates) const override;
+        nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept override;
 
         /** Returns the type of IO interface */
-        const char* type() const override;
+        std::string_view type() const noexcept override;
 
         /** Returns whether the IO interface equals the sensor description */
-        bool equals(const ZenSensorDesc& desc) const override;
+        bool equals(const ZenSensorDesc& desc) const noexcept override;
 
     private:
-        /** Send data to IO interface */
-        ZenError send(std::vector<unsigned char> frame) override;
-
-        ZenError parseBuffer();
-        ZenError receiveInBuffer(bool& received);
-
         int run();
 
-        std::array<unsigned char, 1024> m_buffer;
-        size_t m_usedBufferSize;
+        std::array<std::byte, 1024> m_buffer;
 
         std::atomic_bool m_terminate;
         std::thread m_pollingThread;

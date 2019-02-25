@@ -100,21 +100,18 @@ namespace zen
                 return 400;
         }
 
-        inline ZenError supportedSamplingRates(int32_t* const buffer, size_t& bufferSize)
+        inline std::pair<ZenError, size_t> supportedSamplingRates(gsl::span<int32_t> buffer)
         {
             constexpr std::array<int32_t, 7> supported{ 5, 10, 25, 50, 100, 200, 400 };
 
-            if (bufferSize < supported.size())
-            {
-                bufferSize = supported.size();
-                return ZenError_BufferTooSmall;
-            }
+            if (static_cast<size_t>(buffer.size()) < supported.size())
+                return std::make_pair(ZenError_BufferTooSmall, supported.size());
 
-            if (buffer == nullptr)
-                return ZenError_IsNull;
+            if (buffer.data() == nullptr)
+                return std::make_pair(ZenError_IsNull, supported.size());
 
-            std::copy(supported.cbegin(), supported.cend(), buffer);
-            return ZenError_None;
+            std::copy(supported.cbegin(), supported.cend(), buffer.begin());
+            return std::make_pair(ZenError_None, supported.size());
         }
 
         constexpr bool supportsExecutingDeviceCommand(EDevicePropertyV0 command)

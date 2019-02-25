@@ -19,21 +19,12 @@ namespace zen
         return finder.listDevices(outDevices);
     }
 
-    std::unique_ptr<BaseIoInterface> BluetoothSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
+    nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> BluetoothSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
         auto handle = std::make_unique<BluetoothDeviceHandler>(desc.handle64);
-        if (outError = handle->initialize())
-            return nullptr;
+        if (auto error = handle->initialize())
+            return nonstd::make_unexpected(error);
 
-        const auto format = modbus::ModbusFormat::LP;
-        auto factory = modbus::make_factory(format);
-        auto parser = modbus::make_parser(format);
-        if (!factory || !parser)
-        {
-            outError = ZenSensorInitError_UnsupportedDataFormat;
-            return nullptr;
-        }
-
-        return std::make_unique<BluetoothInterface>(std::move(handle), std::move(factory), std::move(parser));
+        return std::make_unique<BluetoothInterface>(subscriber, std::move(handle));
     }
 }

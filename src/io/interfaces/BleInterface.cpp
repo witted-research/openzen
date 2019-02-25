@@ -4,45 +4,27 @@
 
 namespace zen
 {
-    BleInterface::BleInterface(std::unique_ptr<BleDeviceHandler> handler, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
-        : BaseIoInterface(std::move(factory), std::move(parser))
+    BleInterface::BleInterface(IIoDataSubscriber& subscriber, std::unique_ptr<BleDeviceHandler> handler) noexcept
+        : IIoInterface(subscriber)
         , m_handler(std::move(handler))
         , m_terminate(false)
         , m_pollingThread(&BleInterface::run, this)
     {}
 
-    ZenError BleInterface::send(std::vector<unsigned char> frame)
+    ZenError BleInterface::send(gsl::span<const std::byte> data) noexcept
     {
-        if (auto error = m_handler->send(frame))
+        if (auto error = m_handler->send(data))
             return error;
 
         return ZenError_None;
     }
 
-    ZenError BleInterface::baudrate(int32_t&) const
-    {
-        // Not supported
-        return ZenError_UnknownProperty;
-    }
-
-    ZenError BleInterface::setBaudrate(unsigned int)
-    {
-        // Not supported
-        return ZenError_UnknownProperty;
-    }
-
-    ZenError BleInterface::supportedBaudrates(std::vector<int32_t>&) const
-    {
-        // Not supported
-        return ZenError_UnknownProperty;
-    }
-
-    const char* BleInterface::type() const
+    std::string_view BleInterface::type() const noexcept
     {
         return BleSystem::KEY;
     }
 
-    bool BleInterface::equals(const ZenSensorDesc& desc) const
+    bool BleInterface::equals(const ZenSensorDesc& desc) const noexcept
     {
         if (std::string_view(BleSystem::KEY) != desc.ioType)
             return false;
@@ -55,7 +37,7 @@ namespace zen
         while (!m_terminate)
         {
             while (auto data = m_handler->tryToGetReceivedData())
-                if (auto error = processReceivedData(data->data(), data->size()))
+                if (auto error = publishReceivedData(*data))
                     return error;
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));

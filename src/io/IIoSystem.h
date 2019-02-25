@@ -4,8 +4,10 @@
 #include <memory>
 #include <vector>
 
+#include <nonstd/expected.hpp>
+
 #include "ZenTypes.h"
-#include "io/interfaces/BaseIoInterface.h"
+#include "io/IIoInterface.h"
 
 namespace zen
 {
@@ -18,7 +20,7 @@ namespace zen
 
         virtual ZenError listDevices(std::vector<ZenSensorDesc>& outDevices) = 0;
 
-        virtual std::unique_ptr<BaseIoInterface> obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError) = 0;
+        virtual nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept = 0;
     };
 }
 

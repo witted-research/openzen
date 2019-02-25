@@ -43,32 +43,17 @@ namespace zen
         return ZenError_None;
     }
 
-    std::unique_ptr<BaseIoInterface> WindowsDeviceSystem::obtain(const ZenSensorDesc& desc, ZenSensorInitError& outError)
+    nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> WindowsDeviceSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
         HANDLE handle = ::CreateFileA(desc.name, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
         if (handle == INVALID_HANDLE_VALUE)
-        {
-            outError = ZenSensorInitError_InvalidAddress;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
 
-        auto format = modbus::ModbusFormat::LP;
-        auto factory = modbus::make_factory(format);
-        auto parser = modbus::make_parser(format);
-        if (!factory || !parser)
-        {
-            outError = ZenSensorInitError_UnsupportedDataFormat;
-            return nullptr;
-        }
-
-        auto ioInterface = std::make_unique<WindowsDeviceInterface>(handle, std::move(factory), std::move(parser));
+        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, handle);
 
         DCB config;
         if (!::GetCommState(handle, &config))
-        {
-            outError = ZenSensorInitError_IoFailed;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         config.fOutxCtsFlow = false;
         config.fOutxDsrFlow = false;
@@ -81,10 +66,7 @@ namespace zen
         config.StopBits = ONESTOPBIT;
 
         if (!::SetCommState(handle, &config))
-        {
-            outError = ZenSensorInitError_IoFailed;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         COMMTIMEOUTS timeoutConfig;
         timeoutConfig.ReadIntervalTimeout = 1;
@@ -94,10 +76,7 @@ namespace zen
         timeoutConfig.WriteTotalTimeoutConstant = 1;
 
         if (!::SetCommTimeouts(handle, &timeoutConfig))
-        {
-            outError = ZenSensorInitError_IoFailed;
-            return nullptr;
-        }
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         //if (outError = ioInterface->setBaudrate(DEFAULT_BAUDRATE))
         //    return nullptr;

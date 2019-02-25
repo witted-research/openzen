@@ -4,7 +4,7 @@
 
 namespace zen
 {
-    BluetoothDeviceHandler::BluetoothDeviceHandler(uint64_t address)
+    BluetoothDeviceHandler::BluetoothDeviceHandler(uint64_t address) noexcept
         : m_address(address)
         , m_connected(false)
         , m_initError(ZenSensorInitError_None)
@@ -16,7 +16,7 @@ namespace zen
         wait();
     }
 
-    ZenSensorInitError BluetoothDeviceHandler::initialize()
+    ZenSensorInitError BluetoothDeviceHandler::initialize() noexcept
     {
         start();
         if (m_fence.waitFor(std::chrono::milliseconds(5000)))
@@ -51,7 +51,7 @@ namespace zen
         exec();
     }
 
-    nonstd::expected<std::future<BluetoothDeviceHandler::async_read_value_t>, ZenAsyncStatus> BluetoothDeviceHandler::readAsync()
+    nonstd::expected<std::future<BluetoothDeviceHandler::async_read_value_t>, ZenAsyncStatus> BluetoothDeviceHandler::readAsync() noexcept
     {
         auto optPromise = m_promise.borrow();
         if (optPromise->has_value())
@@ -66,10 +66,10 @@ namespace zen
         else
             optPromise->emplace(std::move(promise));
 
-        return future;
+        return std::move(future);
     }
 
-    ZenError BluetoothDeviceHandler::send(const std::vector<unsigned char>& data)
+    ZenError BluetoothDeviceHandler::send(gsl::span<const std::byte> data) noexcept
     {
         auto it = reinterpret_cast<const char*>(data.data());
         auto end = reinterpret_cast<const char*>(data.data() + data.size());
@@ -85,7 +85,7 @@ namespace zen
         return ZenError_None;
     }
 
-    bool BluetoothDeviceHandler::equals(uint64_t handle) const
+    bool BluetoothDeviceHandler::equals(uint64_t handle) const noexcept
     {
         return m_address.toUInt64() == handle;
     }
@@ -134,7 +134,7 @@ namespace zen
 
         auto promise = m_promise.borrow();
         auto buffer = m_buffer.borrow();
-        buffer->insert(buffer->end(), data.begin(), data.end());
+        buffer->insert(buffer->end(), reinterpret_cast<std::byte*>(data.begin()), reinterpret_cast<std::byte*>(data.end()));
 
         if (promise->has_value())
         {
@@ -143,7 +143,7 @@ namespace zen
         }
     }
 
-    void BluetoothDeviceHandler::reset()
+    void BluetoothDeviceHandler::reset() noexcept
     {
         m_initError = ZenSensorInitError_None;
         m_fence.reset();
