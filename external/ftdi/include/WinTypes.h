@@ -43,7 +43,7 @@ typedef struct _OVERLAPPED {
         struct{
             DWORD Offset;
             DWORD OffsetHigh;
-        };
+        } CombinedOffset;
         PVOID  Pointer;
     };
     HANDLE hEvent;
