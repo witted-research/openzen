@@ -16,7 +16,6 @@ namespace zen
             case ZenSensorProperty_FirmwareInfo:
             case ZenSensorProperty_SerialNumber:
             case ZenSensorProperty_FirmwareVersion:
-            case ZenSensorProperty_SupportedSamplingRates:
                 return true;
 
             default:
@@ -34,7 +33,6 @@ namespace zen
             case ZenSensorProperty_FirmwareVersion:
             case ZenSensorProperty_DataMode:
             case ZenSensorProperty_TimeOffset:
-            case ZenSensorProperty_SamplingRate:
                 return false;
 
             default:
@@ -69,8 +67,6 @@ namespace zen
             case ZenSensorProperty_FirmwareVersion:
             case ZenSensorProperty_DataMode:
             case ZenSensorProperty_TimeOffset:
-            case ZenSensorProperty_SamplingRate:
-            case ZenSensorProperty_SupportedSamplingRates:
                 return ZenPropertyType_Int32;
 
             case ZenSensorProperty_DeviceName:

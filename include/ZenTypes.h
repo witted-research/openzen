@@ -287,9 +287,6 @@ typedef enum EZenSensorProperty : ZenProperty_t
     ZenSensorProperty_DataMode,                  // int (0: 32-bit float, 1: 16-bit fixed)
     ZenSensorProperty_TimeOffset,                // int
 
-    ZenSensorProperty_SamplingRate,              // int
-    ZenSensorProperty_SupportedSamplingRates,    // int[]
-
     // Sensors are free to expose private properties in this reserved region
     ZenSensorProperty_SensorSpecific_Start = 10000,
     ZenSensorProperty_SensorSpecific_End = 19999,
@@ -302,6 +299,9 @@ typedef enum EZenImuProperty : ZenProperty_t
     ZenImuProperty_Invalid = 0,
 
     ZenImuProperty_StreamData = 1000,           // bool
+    ZenImuProperty_SamplingRate,                // int
+    ZenImuProperty_SupportedSamplingRates,      // int[]
+
     ZenImuProperty_PollSensorData,               // void - Manually request sensor data (when not streaming)
     ZenImuProperty_CalibrateGyro,                // void - Start gyro calibration
     ZenImuProperty_ResetOrientationOffset,       // void - Resets the orientation's offset

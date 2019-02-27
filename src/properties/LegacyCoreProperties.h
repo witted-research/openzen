@@ -80,8 +80,6 @@ namespace zen
 
         SyncedModbusCommunicator& m_communicator;
         ISensorProperties& m_imu;
-
-        std::atomic_int32_t m_samplingRate;
     };
 }
 

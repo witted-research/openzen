@@ -102,7 +102,7 @@ extern "C" {
     void convertLpMatrixToArray(LpMatrix3x3f* src, float dest[9]);
     void convertLpVector3fToArray(LpVector3f* src, float dest[3]);
     void convertLpVector4fToArray(LpVector4f* src, float dest[4]);
-    void convertArrayToLpMatrix(float src[9], LpMatrix3x3f* dest);
+    void convertArrayToLpMatrix(const float src[9], LpMatrix3x3f* dest);
     void convertArrayToLpVector3f(float src[3], LpVector3f* dest);
     void convertArrayToLpVector4f(float src[4], LpVector4f* dest);
     void quaternionIdentity(LpVector4f* dest);

@@ -177,7 +177,11 @@ namespace zen
         if (m_rules.isArray(property) && !m_rules.isConstant(property) && m_rules.type(property) == type)
         {
             const details::PropertyData wrapper(property, buffer.data(), sizeOfPropertyType(type) * buffer.size());
-            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
+            if (auto error = m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data()))
+                return error;
+
+            notifyPropertyChange(property, buffer);
+            return ZenError_None;
         }
 
         return ZenError_UnknownProperty;
@@ -207,7 +211,11 @@ namespace zen
         if (!m_rules.isConstant(property) && m_rules.type(property) == ZenPropertyType_Matrix)
         {
             const details::PropertyData wrapper(property, value.data, 9 * sizeof(float));
-            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
+            if (auto error = m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data()))
+                return error;
+
+            notifyPropertyChange(property, gsl::make_span(reinterpret_cast<const std::byte*>(&value.data[0]), 9));
+            return ZenError_None;
         }
 
         return ZenError_UnknownProperty;
@@ -219,7 +227,11 @@ namespace zen
         if (!m_rules.isConstant(property) && m_rules.type(property) == ZenPropertyType_String)
         {
             const details::PropertyData wrapper(property, buffer);
-            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
+            if (auto error = m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data()))
+                return error;
+
+            notifyPropertyChange(property, gsl::make_span(reinterpret_cast<const std::byte*>(buffer.data()), buffer.size()));
+            return ZenError_None;
         }
 
         return ZenError_UnknownProperty;
@@ -238,7 +250,11 @@ namespace zen
         if (!m_rules.isConstant(property) && m_rules.type(property) == details::PropertyType<T>::type())
         {
             const details::PropertyData wrapper(property, value);
-            return m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data());
+            if (auto error = m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data()))
+                return error;
+
+            notifyPropertyChange(property, value);
+            return ZenError_None;
         }
 
         return ZenError_UnknownProperty;

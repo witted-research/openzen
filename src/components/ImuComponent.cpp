@@ -40,39 +40,74 @@ namespace zen
 
         if (m_version == 0)
             cache->samplingRate = 200;
-        else if (auto result = m_properties->getInt32(ZenSensorProperty_SamplingRate))
+        else if (auto result = m_properties->getInt32(ZenImuProperty_SamplingRate))
             cache->samplingRate = *result;
         else
             return ZenSensorInitError_InvalidConfig;
+
+        m_properties->subscribeToPropertyChanges(ZenImuProperty_SamplingRate, [=](SensorPropertyValue value) {
+            m_cache.borrow()->samplingRate = std::get<int32_t>(value);
+        });
 
         if (auto matrix = m_properties->getMatrix33(ZenImuProperty_AccAlignment))
             convertArrayToLpMatrix(matrix->data, &cache->accAlignMatrix);
         else
             return ZenSensorInitError_RetrieveFailed;
+        
+        m_properties->subscribeToPropertyChanges(ZenImuProperty_AccAlignment, [=](SensorPropertyValue value) {
+            const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
+            convertArrayToLpMatrix(data, &cache->accAlignMatrix);
+        });
 
         if (auto matrix = m_properties->getMatrix33(ZenImuProperty_GyrAlignment))
             convertArrayToLpMatrix(matrix->data, &cache->gyrAlignMatrix);
         else
             return ZenSensorInitError_RetrieveFailed;
+        
+        m_properties->subscribeToPropertyChanges(ZenImuProperty_GyrAlignment, [=](SensorPropertyValue value) {
+            const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
+            convertArrayToLpMatrix(data, &cache->gyrAlignMatrix);
+        });
 
         if (auto matrix = m_properties->getMatrix33(ZenImuProperty_MagSoftIronMatrix))
             convertArrayToLpMatrix(matrix->data, &cache->softIronMatrix);
         else
             return ZenSensorInitError_RetrieveFailed;
+        
+        m_properties->subscribeToPropertyChanges(ZenImuProperty_MagSoftIronMatrix, [=](SensorPropertyValue value) {
+            const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
+            convertArrayToLpMatrix(data, &cache->softIronMatrix);
+        });
+
         {
-            const auto[error, size] = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->accBias.data), 3 * sizeof(float)));
+            const auto[error, size] = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->accBias.data), 3));
             if (error)
                 return ZenSensorInitError_RetrieveFailed;
+            
+            m_properties->subscribeToPropertyChanges(ZenImuProperty_AccBias, [=](SensorPropertyValue value) {
+                const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
+                std::copy(data, data + 3, cache->accBias.data);
+            });
         }
         {
-            const auto[error, size] = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->gyrBias.data), 3 * sizeof(float)));
+            const auto[error, size] = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->gyrBias.data), 3));
             if (error)
                 return ZenSensorInitError_RetrieveFailed;
+            
+            m_properties->subscribeToPropertyChanges(ZenImuProperty_GyrBias, [=](SensorPropertyValue value) {
+                const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
+                std::copy(data, data + 3, cache->gyrBias.data);
+            });
         }
         {
-            const auto[error, size] = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->hardIronOffset.data), 3 * sizeof(float)));
+            const auto[error, size] = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->hardIronOffset.data), 3));
             if (error)
                 return ZenSensorInitError_RetrieveFailed;
+            
+            m_properties->subscribeToPropertyChanges(ZenImuProperty_MagHardIronOffset, [=](SensorPropertyValue value) {
+                const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
+                std::copy(data, data + 3, cache->hardIronOffset.data);
+            });
         }
         return ZenSensorInitError_None;
     }

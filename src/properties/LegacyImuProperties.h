@@ -1,6 +1,9 @@
 #ifndef ZEN_PROPERTIES_LEGACYIMUPROPERTIES_H_
 #define ZEN_PROPERTIES_LEGACYIMUPROPERTIES_H_
 
+#include <unordered_map>
+#include <vector>
+
 #include "communication/SyncedModbusCommunicator.h"
 #include "components/ImuComponent.h"
 
@@ -76,19 +79,11 @@ namespace zen
         void setOutputDataBitset(uint32_t bitset) noexcept { m_cache.outputDataBitset = bitset; }
 
     private:
-        bool getConfigDataFlag(unsigned int index) noexcept;
-
-        ZenError setOutputDataFlag(unsigned int index, bool value) noexcept;
         ZenError setPrecisionDataFlag(bool value) noexcept;
 
         struct IMUState
         {
-            std::atomic<LpMatrix3x3f> accAlignMatrix;
-            std::atomic<LpMatrix3x3f> gyrAlignMatrix;
-            std::atomic<LpMatrix3x3f> softIronMatrix;
-            std::atomic<LpVector3f> accBias;
-            std::atomic<LpVector3f> gyrBias;
-            std::atomic<LpVector3f> hardIronOffset;
+            std::atomic_uint32_t samplingRate;
             std::atomic_uint32_t outputDataBitset;
             std::atomic_bool gyrAutoCalibration;
             std::atomic_bool gyrUseThreshold;
