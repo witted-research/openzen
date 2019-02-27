@@ -41,6 +41,7 @@ namespace zen
     SensorManager::~SensorManager() noexcept
     {
         m_terminate = true;
+        m_discoveryCv.notify_all();
 
         if (m_sensorThread.joinable())
             m_sensorThread.join();
@@ -120,9 +121,11 @@ namespace zen
 
     void SensorManager::notifyEvent(const ZenEvent& event) noexcept
     {
+        std::lock_guard<std::mutex> lock(m_sensorsMutex);
         auto it = m_sensorSubscribers.find(event.sensor);
-        for (auto subscriber : it->second)
-            subscriber.get().notifyEvent(event);
+        if (it != m_sensorSubscribers.end())
+            for (auto subscriber : it->second)
+                subscriber.get().notifyEvent(event);
     }
 
     void SensorManager::sensorDiscoveryLoop() noexcept
@@ -181,11 +184,13 @@ namespace zen
         // Necessary for QBluetooth
         std::unique_ptr<QCoreApplication> app;
 
+        bool runningApp = false;
         if (QCoreApplication::instance() == nullptr)
         {
             int argv = 0;
             char* argc[]{ nullptr };
             app = std::make_unique<QCoreApplication>(argv, argc);
+            runningApp = true;
         }
 
         ComponentFactoryManager::get().initialize();
@@ -201,6 +206,12 @@ namespace zen
         }
 
         m_sensorDiscoveryThread.join();
-        m_sensorSubscribers.clear();
+        {
+            std::lock_guard<std::mutex> lock(m_sensorsMutex);
+            m_sensorSubscribers.clear();
+        }
+
+        if (runningApp)
+            app.release();
     }
 }
