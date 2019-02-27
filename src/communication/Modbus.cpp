@@ -294,6 +294,9 @@ namespace zen::modbus
 
             case ASCIIFrameParseState::Finished:
                 return FrameParseError_Finished;
+
+            default:
+                return FrameParseError_UnexpectedCharacter;
             }
 
             ++it;
@@ -416,6 +419,9 @@ namespace zen::modbus
 
             case LpFrameParseState::Finished:
                 return FrameParseError_Finished;
+
+            default:
+                return FrameParseError_UnexpectedCharacter;
             }
 
             ++it;
@@ -498,6 +504,9 @@ namespace zen::modbus
 
             case RTUFrameParseState::Finished:
                 return FrameParseError_Finished;
+
+            default:
+                return FrameParseError_UnexpectedCharacter;
             }
 
             ++it;

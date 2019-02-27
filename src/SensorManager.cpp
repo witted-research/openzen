@@ -14,18 +14,9 @@ namespace zen
 {
     namespace
     {
-        bool hasComponentOfType(const std::vector<std::unique_ptr<SensorComponent>>& components, std::string_view type)
-        {
-            for (const auto& component : components)
-                if (component->type() == type)
-                    return true;
-
-            return false;
-        }
-
         void notifyProgress(std::set<std::reference_wrapper<SensorClient>, SensorClientCmp>& subscribers, float progress)
         {
-            ZenEvent event{ 0 };
+            ZenEvent event{};
             event.eventType = ZenSensorEvent_SensorListingProgress;
             event.data.sensorListingProgress.progress = progress;
 
@@ -169,7 +160,7 @@ namespace zen
             lock.lock();
             for (auto& device : m_devices)
             {
-                ZenEvent event{ 0 };
+                ZenEvent event{};
                 event.eventType = ZenSensorEvent_SensorFound;
                 event.data.sensorFound = device;
 

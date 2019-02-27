@@ -130,6 +130,9 @@ namespace zen
             m_error = ZenSensorInitError_InvalidAddress;
             m_fence.terminate();
             break;
+
+        default:
+            break;
         }
     }
 

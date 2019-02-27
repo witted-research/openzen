@@ -384,6 +384,6 @@ typedef struct ZenMatrix3x3f
     float data[9];
 } ZenMatrix3x3f;
 
-static const char* g_zenSensorType_Imu = "imu";
+static const char g_zenSensorType_Imu[] = "imu";
 
 #endif

@@ -208,7 +208,7 @@ ZEN_API ZenError ZenSensorComponents(ZenClientHandle_t clientHandle, ZenSensorHa
     }
 }
 
-ZEN_API const char* const ZenSensorIoType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
+ZEN_API const char* ZenSensorIoType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
 {
     if (auto client = getClient(clientHandle))
     {
@@ -657,7 +657,7 @@ ZEN_API ZenPropertyType ZenSensorPropertyType(ZenClientHandle_t clientHandle, Ze
     }
 }
 
-ZEN_API const char* const ZenSensorComponentType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle)
+ZEN_API const char* ZenSensorComponentType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle)
 {
     if (auto client = getClient(clientHandle))
     {

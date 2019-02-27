@@ -5,10 +5,12 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstring>
 #include <optional>
 #include <string_view>
 #include <thread>
 #include <utility>
+#include <vector>
 
 namespace details
 {
@@ -85,7 +87,7 @@ namespace zen
         std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length)
         {
             auto result = std::make_pair(ZenError_None, length);
-            result.first = ZenSensorComponentGetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type(), array, &result.second);
+            result.first = ZenSensorComponentGetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type::value, array, &result.second);
             return result;
         }
 
@@ -126,7 +128,7 @@ namespace zen
 
         std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property)
         {
-            auto result = std::make_pair(ZenError_None, 0ull);
+            auto result = std::make_pair(ZenError_None, uint64_t(0));
             result.first = ZenSensorComponentGetUInt64Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, &result.second);
             return result;
         }
@@ -134,7 +136,7 @@ namespace zen
         template <typename T>
         ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length)
         {
-            return ZenSensorComponentSetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type(), array, length);
+            return ZenSensorComponentSetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type::value, array, length);
         }
 
         ZenError setBoolProperty(ZenProperty_t property, bool value)
@@ -223,7 +225,7 @@ namespace zen
         std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length)
         {
             auto result = std::make_pair(ZenError_None, length);
-            result.first = ZenSensorGetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type(), array, &result.second);
+            result.first = ZenSensorGetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type::value, array, &result.second);
             return result;
         }
 
@@ -264,7 +266,7 @@ namespace zen
 
         std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property)
         {
-            auto result = std::make_pair(ZenError_None, 0ull);
+            auto result = std::make_pair(ZenError_None, uint64_t(0));
             result.first = ZenSensorGetUInt64Property(m_clientHandle, m_sensorHandle, property, &result.second);
             return result;
         }
@@ -272,7 +274,7 @@ namespace zen
         template <typename T>
         ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length)
         {
-            return ZenSensorSetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type(), array, length);
+            return ZenSensorSetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type::value, array, length);
         }
 
         ZenError setBoolProperty(ZenProperty_t property, bool value)

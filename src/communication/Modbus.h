@@ -1,6 +1,7 @@
 #ifndef ZEN_COMMUNICATION_MODBUS_H_
 #define ZEN_COMMUNICATION_MODBUS_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>

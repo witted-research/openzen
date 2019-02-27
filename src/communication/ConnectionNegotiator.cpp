@@ -22,10 +22,10 @@ namespace zen
 
         for (uint32_t baudrate : baudrates)
         {
-            if (auto error = communicator.setBaudRate(baudrate))
+            if (ZenError_None != communicator.setBaudRate(baudrate))
                 return nonstd::make_unexpected(ZenSensorInitError_IncompatibleBaudRates);
 
-            if (auto error = communicator.send(0, ZenProtocolFunction_Negotiate, gsl::make_span(reinterpret_cast<const std::byte*>(&baudrate), sizeof(baudrate))))
+            if (ZenError_None != communicator.send(0, ZenProtocolFunction_Negotiate, gsl::make_span(reinterpret_cast<const std::byte*>(&baudrate), sizeof(baudrate))))
                 return nonstd::make_unexpected(ZenSensorInitError_SendFailed);
 
             std::unique_lock<std::mutex> lock;

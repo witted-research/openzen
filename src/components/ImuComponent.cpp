@@ -80,8 +80,8 @@ namespace zen
         });
 
         {
-            const auto[error, size] = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->accBias.data), 3));
-            if (error)
+            const auto result = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->accBias.data), 3));
+            if (result.first)
                 return ZenSensorInitError_RetrieveFailed;
             
             m_properties->subscribeToPropertyChanges(ZenImuProperty_AccBias, [=](SensorPropertyValue value) {
@@ -90,8 +90,8 @@ namespace zen
             });
         }
         {
-            const auto[error, size] = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->gyrBias.data), 3));
-            if (error)
+            const auto result = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->gyrBias.data), 3));
+            if (result.first)
                 return ZenSensorInitError_RetrieveFailed;
             
             m_properties->subscribeToPropertyChanges(ZenImuProperty_GyrBias, [=](SensorPropertyValue value) {
@@ -100,8 +100,8 @@ namespace zen
             });
         }
         {
-            const auto[error, size] = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->hardIronOffset.data), 3));
-            if (error)
+            const auto result = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->hardIronOffset.data), 3));
+            if (result.first)
                 return ZenSensorInitError_RetrieveFailed;
             
             m_properties->subscribeToPropertyChanges(ZenImuProperty_MagHardIronOffset, [=](SensorPropertyValue value) {
@@ -309,7 +309,7 @@ namespace zen
                         return ZenError_Io_MsgCorrupt;
 
                     for (unsigned idx = 0; idx < 3; ++idx)
-                        imuData.r[idx] = (180.f / float(M_PI)) * *lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
+                        imuData.r[idx] = (180.f / float(M_PI)) * (*lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data));
                 }
             }
             else

@@ -1,5 +1,7 @@
 #include "SensorProperties.h"
 
+#include <cstring>
+
 #include "ZenProtocol.h"
 
 #include "properties/CorePropertyRulesV1.h"
@@ -143,9 +145,9 @@ namespace zen
         {
             ZenMatrix3x3f matrix;
             const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
-            const auto[error, size] = m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, gsl::make_span(matrix.data, 9));
-            if (error)
-                return nonstd::make_unexpected(error);
+            const auto result = m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, gsl::make_span(matrix.data, 9));
+            if (result.first)
+                return nonstd::make_unexpected(result.first);
 
             return matrix;
         }
@@ -247,7 +249,7 @@ namespace zen
     template <typename T>
     ZenError SensorProperties<PropertyRules>::setAndAck(ZenProperty_t property, T value) noexcept
     {
-        if (!m_rules.isConstant(property) && m_rules.type(property) == details::PropertyType<T>::type())
+        if (!m_rules.isConstant(property) && m_rules.type(property) == details::PropertyType<T>::type::value)
         {
             const details::PropertyData wrapper(property, value);
             if (auto error = m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data()))
@@ -264,7 +266,7 @@ namespace zen
     template <typename T>
     nonstd::expected<T, ZenError> SensorProperties<PropertyRules>::getResult(ZenProperty_t property) noexcept
     {
-        if (m_rules.type(property) == details::PropertyType<T>::type())
+        if (m_rules.type(property) == details::PropertyType<T>::type::value)
         {
             const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
             return m_communicator.sendAndWaitForResult<T>(m_id, ZenProtocolFunction_Get, property, span);
@@ -273,8 +275,8 @@ namespace zen
         return nonstd::make_unexpected(ZenError_UnknownProperty);
     }
 
-    template SensorProperties<CorePropertyRulesV1>;
-    template SensorProperties<ImuPropertyRulesV1>;
+    template class SensorProperties<CorePropertyRulesV1>;
+    template class SensorProperties<ImuPropertyRulesV1>;
 
     namespace properties
     {

@@ -23,7 +23,7 @@ namespace zen
     {
         DWORD nBytesWritten;
         // Need to cast do a non-const because the FT_Write interface expects a void pointer
-        if (auto error = FtdiUsbSystem::fnTable.write(m_handle, const_cast<std::byte*>(data.data()), static_cast<DWORD>(data.size()), &nBytesWritten))
+        if (!FT_SUCCESS(FtdiUsbSystem::fnTable.write(m_handle, const_cast<std::byte*>(data.data()), static_cast<DWORD>(data.size()), &nBytesWritten)))
             return ZenError_Io_SendFailed;
 
         if (nBytesWritten != data.size())
@@ -43,7 +43,7 @@ namespace zen
         if (rate == m_baudrate)
             return ZenError_None;
 
-        if (auto error = FtdiUsbSystem::fnTable.setBaudrate(m_handle, rate))
+        if (!FT_SUCCESS(FtdiUsbSystem::fnTable.setBaudrate(m_handle, rate)))
             return ZenError_Io_SetFailed;
 
         m_baudrate = rate;
@@ -87,7 +87,7 @@ namespace zen
         DWORD id;
         char serialNumber[64];
         char description[64];
-        if (auto error = FtdiUsbSystem::fnTable.getDeviceInfo(m_handle, &device, &id, serialNumber, description, nullptr))
+        if (!FT_SUCCESS(FtdiUsbSystem::fnTable.getDeviceInfo(m_handle, &device, &id, serialNumber, description, nullptr)))
             return false;
 
         return std::string_view(desc.serialNumber) == serialNumber;
@@ -98,7 +98,7 @@ namespace zen
         while (!m_terminate)
         {
             DWORD temp, nReceivedBytes;
-            if (auto error = FtdiUsbSystem::fnTable.getStatus(m_handle, &nReceivedBytes, &temp, &temp))
+            if (!FT_SUCCESS(FtdiUsbSystem::fnTable.getStatus(m_handle, &nReceivedBytes, &temp, &temp)))
                 return ZenError_Io_GetFailed;
 
             m_buffer.resize(nReceivedBytes);

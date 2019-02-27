@@ -77,7 +77,7 @@ namespace zen
         template <ZenProperty_t property>
         constexpr bool getOutputDataFlag(std::atomic_uint32_t& outputDataBitset) noexcept
         {
-            return (outputDataBitset & (1 << OutputDataFlag<property>::index())) != 0;
+            return (outputDataBitset & (1 << OutputDataFlag<property>::index::value)) != 0;
         }
 
         template <ZenProperty_t property>
@@ -94,9 +94,9 @@ namespace zen
 
             uint32_t newBitset;
             if (value)
-                newBitset = outputDataBitset | (1 << OutputDataFlag<property>::index());
+                newBitset = outputDataBitset | (1 << OutputDataFlag<property>::index::value);
             else
-                newBitset = outputDataBitset & ~(1 << OutputDataFlag<property>::index());
+                newBitset = outputDataBitset & ~(1 << OutputDataFlag<property>::index::value);
 
             if (auto error = communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(EDevicePropertyV0::SetTransmitData), static_cast<ZenProperty_t>(EDevicePropertyV0::SetTransmitData), gsl::make_span(reinterpret_cast<const std::byte*>(&newBitset), sizeof(newBitset))))
                 return error;
@@ -362,9 +362,9 @@ namespace zen
                 });
 
                 ZenMatrix3x3f matrix;
-                const auto[error, size] = m_communicator.sendAndWaitForArray<float>(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, gsl::make_span(matrix.data, 9));
-                if (error)
-                    return nonstd::make_unexpected(error);
+                const auto result = m_communicator.sendAndWaitForArray<float>(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, gsl::make_span(matrix.data, 9));
+                if (result.first)
+                    return nonstd::make_unexpected(result.first);
                 
                 return matrix;
             }

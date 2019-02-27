@@ -60,7 +60,7 @@ namespace zen
 
         ZenEvent make_event(ZenEvent_t type, uintptr_t sensorHandle, uintptr_t componentHandle) noexcept
         {
-            ZenEvent event{0};
+            ZenEvent event{};
             event.eventType = type;
             event.sensor.handle = sensorHandle;
             event.component.handle = componentHandle;
@@ -324,7 +324,7 @@ namespace zen
         auto& outError = m_updatingFirmware ? m_updateFirmwareError : m_updateIAPError;
         auto& updated = m_updatingFirmware ? m_updatedFirmware : m_updatedIAP;
         const DeviceProperty_t property = static_cast<DeviceProperty_t>(m_updatingFirmware ? EDevicePropertyInternal::UpdateFirmware : EDevicePropertyInternal::UpdateIAP);
-        const uint8_t function = m_config.version == 0 ? static_cast<uint8_t>(property) : ZenProtocolFunction_Set;
+        const uint8_t function = m_config.version == 0 ? static_cast<uint8_t>(property) : static_cast<uint8_t>(ZenProtocolFunction_Set);
 
         auto guard = finally([&updated]() {
             updated = true;

@@ -1,9 +1,10 @@
 #ifndef ZEN_API_OPENZENCAPI_H_
 #define ZEN_API_OPENZENCAPI_H_
 
-#include "ZenTypes.h"
+#include <stdbool.h>
+#include <stddef.h>
 
-#include "stdbool.h"
+#include "ZenTypes.h"
 
 ZEN_API ZenError ZenInit(ZenClientHandle_t* outHandle);
 
@@ -34,7 +35,7 @@ ZEN_API bool ZenWaitForNextEvent(ZenClientHandle_t handle, ZenEvent* const outEv
 ZEN_API ZenError ZenSensorComponents(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const char* const type, ZenComponentHandle_t** outComponentHandles, size_t* const outLength);
 
 /** Returns the sensor's IO type */
-ZEN_API const char* const ZenSensorIoType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle);
+ZEN_API const char* ZenSensorIoType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle);
 
 /** Returns whether the sensor is equal to the sensor description */
 ZEN_API bool ZenSensorEquals(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const ZenSensorDesc* const desc);
@@ -118,7 +119,7 @@ ZEN_API ZenPropertyType ZenSensorPropertyType(ZenClientHandle_t clientHandle, Ze
 
 
 /** Returns the type of the sensor component */
-ZEN_API const char* const ZenSensorComponentType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle);
+ZEN_API const char* ZenSensorComponentType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle);
 
 /** If successful executes the property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorComponentExecuteProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property);

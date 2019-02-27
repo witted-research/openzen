@@ -1,5 +1,7 @@
 #include "LegacyCoreProperties.h"
 
+#include <cstring>
+
 #include "properties/BaseSensorPropertiesV0.h"
 #include "utility/Finally.h"
 

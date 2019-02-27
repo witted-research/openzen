@@ -35,7 +35,7 @@ namespace zen
         while (length > 0)
         {
             const size_t nParsedBytes = data.size() - length;
-            if (auto error = m_parser->parse(data.data() + nParsedBytes, length))
+            if (modbus::FrameParseError_None != m_parser->parse(data.data() + nParsedBytes, length))
             {
                 std::cout << "Received corrupt message: ";
                 for (auto c : gsl::make_span(data.data() + nParsedBytes, length))

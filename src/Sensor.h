@@ -92,17 +92,17 @@ namespace zen
 
         bool operator()(const std::shared_ptr<Sensor>& lhs, const std::shared_ptr<Sensor>& rhs) const noexcept
         {
-            return std::less()(lhs->token(), rhs->token());
+            return std::less<uintptr_t>()(lhs->token(), rhs->token());
         }
 
         bool operator()(const std::shared_ptr<Sensor>& lhs, const ZenSensorHandle_t& rhs) const noexcept
         {
-            return std::less()(lhs->token(), rhs.handle);
+            return std::less<uintptr_t>()(lhs->token(), rhs.handle);
         }
 
         bool operator()(const ZenSensorHandle& lhs, const std::shared_ptr<Sensor>& rhs) const noexcept
         {
-            return std::less()(lhs.handle, rhs->token());
+            return std::less<uintptr_t>()(lhs.handle, rhs->token());
         }
     };
 }

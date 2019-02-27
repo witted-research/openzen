@@ -105,16 +105,13 @@ namespace zen
                 m_connected = false;
             }, Qt::DirectConnection);
 
-            connect(m_socket.get(), QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error), this, [this](QBluetoothSocket::SocketError error) {
+            connect(m_socket.get(), QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error), this, [this](QBluetoothSocket::SocketError) {
                 if (m_connected)
                 {
                     m_connected = false;
-                    if (error == QBluetoothSocket::SocketError::RemoteHostClosedError)
-                    {
-                        auto optPromise = m_promise.borrow();
-                        if (optPromise->has_value())
-                            optPromise->value().set_value(nonstd::make_unexpected(ZenError_Io_NotInitialized));
-                    }
+                    auto optPromise = m_promise.borrow();
+                    if (optPromise->has_value())
+                        optPromise->value().set_value(nonstd::make_unexpected(ZenError_Io_NotInitialized));
                 }
                 else
                 {

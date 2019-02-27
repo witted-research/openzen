@@ -53,7 +53,7 @@ namespace zen
 
         bool operator()(const type& lhs, const type& rhs) const noexcept
         {
-            return std::less()(&lhs.get(), &rhs.get());
+            return std::less<SensorClient*>()(&lhs.get(), &rhs.get());
         }
     };
 }
