@@ -1,11 +1,37 @@
 #include "OpenZenCAPI.h"
 
+#include <memory>
+#include <mutex>
 #include <numeric>
+#include <unordered_map>
 
-#include "SensorManager.h"
+#include "SensorClient.h"
 
 namespace
 {
+    std::unordered_map<uintptr_t, std::shared_ptr<zen::SensorClient>> g_clients;
+    std::mutex g_clientsMutex;
+    uintptr_t g_nextClientToken = 1;
+
+    std::shared_ptr<zen::SensorClient> getClient(ZenClientHandle_t handle) noexcept
+    {
+        std::lock_guard<std::mutex> lock(g_clientsMutex);
+        auto it = g_clients.find(handle.handle);
+        if (it == g_clients.end())
+            return nullptr;
+
+        return it->second;
+    }
+
+    zen::SensorComponent* getComponent(std::shared_ptr<zen::Sensor>& sensor, ZenComponentHandle_t handle) noexcept
+    {
+        const size_t idx = handle.handle - 1;
+        const auto& components = sensor->components();
+        if (idx >= components.size())
+            return nullptr;
+
+        return components[idx].get();
+    }
     size_t countComponentsOfType(const std::vector<std::unique_ptr<zen::SensorComponent>>& components, std::string_view type)
     {
         return std::accumulate(components.cbegin(), components.cend(), static_cast<size_t>(0), [=](size_t count, const auto& component) {
@@ -19,52 +45,34 @@ ZEN_API ZenError ZenInit(ZenClientHandle_t* outHandle)
     if (outHandle == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (auto error = manager.init())
-    {
-        outHandle->handle = 0;
-        return error;
-    }
+    std::lock_guard<std::mutex> lock(g_clientsMutex);
+    const auto token = g_nextClientToken++;
+    g_clients.emplace(token, std::make_shared<zen::SensorClient>(token));
+    outHandle->handle = token;
 
-    // [TODO] Create an actual client system
-    outHandle->handle = reinterpret_cast<uintptr_t>(&manager);
     return ZenError_None;
 }
 ZEN_API ZenError ZenShutdown(ZenClientHandle_t handle)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(handle.handle) != &manager)
+    std::lock_guard<std::mutex> lock(g_clientsMutex);
+    auto it = g_clients.find(handle.handle);
+    if (it == g_clients.end())
         return ZenError_InvalidClientHandle;
 
-    return manager.deinit();
+    g_clients.erase(it);
+    return ZenError_None;
 }
 
-ZEN_API ZenAsyncStatus ZenListSensorsAsync(ZenClientHandle_t handle, const char* const typeFilter, ZenSensorDesc** outDesc, size_t* const outLength)
+ZEN_API ZenError ZenListSensorsAsync(ZenClientHandle_t handle)
 {
-    if (outLength == nullptr)
-        return ZenAsync_InvalidArgument;
-
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(handle.handle) != &manager)
-        return ZenAsync_InvalidArgument;
-
-    const auto filter = typeFilter ? std::make_optional<std::string>(typeFilter) : std::nullopt;
-    if (auto descriptions = manager.listSensorsAsync(filter))
+    if (auto client = getClient(handle))
     {
-        if (!descriptions->empty())
-        {
-            ZenSensorDesc* list = new ZenSensorDesc[descriptions->size()];
-            std::copy(descriptions->cbegin(), descriptions->cend(), list);
-
-            *outDesc = list;
-        }
-
-        *outLength = descriptions->size();
-        return ZenAsync_Finished;
+        client->listSensorsAsync();
+        return ZenError_None;
     }
     else
     {
-        return descriptions.error();
+        return ZenError_InvalidClientHandle;
     }
 }
 
@@ -76,28 +84,37 @@ ZEN_API ZenSensorInitError ZenObtainSensor(ZenClientHandle_t clientHandle, const
     if (outSensorHandle == nullptr)
         return ZenSensorInitError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenSensorInitError_InvalidHandle;
-
-    auto sensor = manager.obtain(*desc);
-    if (!sensor)
+    if (auto client = getClient(clientHandle))
     {
-        outSensorHandle->handle = 0;
-        return sensor.error();
+        if (auto sensor = client->obtain(*desc))
+        {
+            outSensorHandle->handle = sensor.value()->token();
+            return ZenSensorInitError_None;
+        }
+        else
+        {
+            return sensor.error();
+        }
     }
-
-    *reinterpret_cast<uintptr_t*>(outSensorHandle) = sensor->first;
-    return ZenSensorInitError_None;
+    else
+    {
+        return ZenSensorInitError_InvalidHandle;
+    }
 }
 
 ZEN_API ZenError ZenReleaseSensor(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return client->release(sensor);
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
-
-    return manager.release(sensorHandle.handle);
+    }
 }
 
 ZEN_API bool ZenPollNextEvent(ZenClientHandle_t handle, ZenEvent* const outEvent)
@@ -105,17 +122,22 @@ ZEN_API bool ZenPollNextEvent(ZenClientHandle_t handle, ZenEvent* const outEvent
     if (outEvent == nullptr)
         return false;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(handle.handle) != &manager)
-        return false;
-
-    if (auto optEvent = manager.pollNextEvent())
+    if (auto client = getClient(handle))
     {
-        *outEvent = std::move(*optEvent);
-        return true;
+        if (auto event = client->pollNextEvent())
+        {
+            *outEvent = std::move(*event);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
-
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
 ZEN_API bool ZenWaitForNextEvent(ZenClientHandle_t handle, ZenEvent* const outEvent)
@@ -123,17 +145,27 @@ ZEN_API bool ZenWaitForNextEvent(ZenClientHandle_t handle, ZenEvent* const outEv
     if (outEvent == nullptr)
         return false;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(handle.handle) != &manager)
-        return false;
-
-    if (auto optEvent = manager.waitForNextEvent())
+    if (auto client = getClient(handle))
     {
-        *outEvent = std::move(*optEvent);
-        return true;
-    }
+        // Prevent the thread from holding on to the client resource.
+        // The SensorClient destructor guarantees that waiting threads are released before the resource is destroyed
+        auto& clientRef = *client.get();
+        client.reset();
 
-    return false;
+        if (auto event = clientRef.waitForNextEvent())
+        {
+            *outEvent = std::move(*event);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponents(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const char* const type, ZenComponentHandle_t** outComponentHandles, size_t* const outLength)
@@ -141,45 +173,54 @@ ZEN_API ZenError ZenSensorComponents(ZenClientHandle_t clientHandle, ZenSensorHa
     if (outLength == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    auto sensor = manager.getSensorByToken(sensorHandle.handle);
-    if (!sensor)
-        return ZenError_InvalidSensorHandle;
-
-    const auto& components = sensor.value()->components();
-    const size_t length = !type ? components.size() : countComponentsOfType(components, type);
-
-    *outLength = length;
-    if (!components.empty())
+    if (auto client = getClient(clientHandle))
     {
-        if (outComponentHandles == nullptr)
-            return ZenError_IsNull;
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            const auto& components = sensor->components();
+            const size_t length = !type ? components.size() : countComponentsOfType(components, type);
 
-        ZenComponentHandle_t* componentHandles = new ZenComponentHandle_t[length];
-        size_t idx = 0;
-        for (size_t componentIdx = 0; componentIdx < components.size(); ++componentIdx)
-            if (!type || components[componentIdx]->type() == std::string_view(type))
-                componentHandles[idx++].handle = componentIdx + 1;
+            *outLength = length;
+            if (!components.empty())
+            {
+                if (outComponentHandles == nullptr)
+                    return ZenError_IsNull;
 
-        *outComponentHandles = componentHandles;
+                ZenComponentHandle_t* componentHandles = new ZenComponentHandle_t[length];
+                size_t idx = 0;
+                for (size_t componentIdx = 0; componentIdx < components.size(); ++componentIdx)
+                    if (!type || components[componentIdx]->type() == std::string_view(type))
+                        componentHandles[idx++].handle = componentIdx + 1;
+
+                *outComponentHandles = componentHandles;
+            }
+
+            return ZenError_None;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_None;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API const char* const ZenSensorIoType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->ioType().data();
+        else
+            return nullptr;
+    }
+    else
+    {
         return nullptr;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->ioType().data();
-
-    return nullptr;
+    }
 }
 
 ZEN_API bool ZenSensorEquals(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const ZenSensorDesc* const desc)
@@ -187,51 +228,62 @@ ZEN_API bool ZenSensorEquals(ZenClientHandle_t clientHandle, ZenSensorHandle_t s
     if (desc == nullptr)
         return false;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->equals(*desc);
+        else
+            return false;
+    }
+    else
+    {
         return false;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->equals(*desc);
-
-    return false;
-
+    }
 }
 
 ZEN_API ZenAsyncStatus ZenSensorUpdateFirmwareAsync(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const unsigned char* const buffer, size_t bufferSize)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->updateFirmwareAsync(gsl::make_span(reinterpret_cast<const std::byte*>(buffer), bufferSize));
+        else
+            return ZenAsync_InvalidArgument;
+    }
+    else
+    {
         return ZenAsync_InvalidArgument;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->updateFirmwareAsync(gsl::make_span(reinterpret_cast<const std::byte*>(buffer), bufferSize));
-
-    return ZenAsync_InvalidArgument;
+    }
 }
 
 ZEN_API ZenAsyncStatus ZenSensorUpdateIAPAsync(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const unsigned char* const buffer, size_t bufferSize)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->updateIAPAsync(gsl::make_span(reinterpret_cast<const std::byte*>(buffer), bufferSize));
+        else
+            return ZenAsync_InvalidArgument;
+    }
+    else
+    {
         return ZenAsync_InvalidArgument;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->updateIAPAsync(gsl::make_span(reinterpret_cast<const std::byte*>(buffer), bufferSize));
-
-    return ZenAsync_InvalidArgument;
+    }
 }
 
 ZEN_API ZenError ZenSensorExecuteProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->execute(property);
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->execute(property);
-
-    return ZenError_InvalidSensorHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorGetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t* bufferSize)
@@ -239,18 +291,23 @@ ZEN_API ZenError ZenSensorGetArrayProperty(ZenClientHandle_t clientHandle, ZenSe
     if (bufferSize == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const auto[error, size] = sensor.value()->properties()->getArray(property, type, gsl::make_span(reinterpret_cast<std::byte*>(buffer), *bufferSize));
-        *bufferSize = size;
-        return error;
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            const auto[error, size] = sensor->properties()->getArray(property, type, gsl::make_span(reinterpret_cast<std::byte*>(buffer), *bufferSize));
+            *bufferSize = size;
+            return error;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorGetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, bool* const outValue)
@@ -258,24 +315,29 @@ ZEN_API ZenError ZenSensorGetBoolProperty(ZenClientHandle_t clientHandle, ZenSen
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        if (auto result = sensor.value()->properties()->getBool(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto result = sensor->properties()->getBool(property))
+            {
+                *outValue = *result;
+                return ZenError_None;
+            }
+            else
+            {
+                return result.error();
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
-    }   
-
-    return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorGetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, float* const outValue)
@@ -283,24 +345,29 @@ ZEN_API ZenError ZenSensorGetFloatProperty(ZenClientHandle_t clientHandle, ZenSe
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        if (auto result = sensor.value()->properties()->getFloat(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto result = sensor->properties()->getFloat(property))
+            {
+                *outValue = *result;
+                return ZenError_None;
+            }
+            else
+            {
+                return result.error();
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, int32_t* const outValue)
@@ -308,24 +375,29 @@ ZEN_API ZenError ZenSensorGetInt32Property(ZenClientHandle_t clientHandle, ZenSe
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        if (auto result = sensor.value()->properties()->getInt32(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto result = sensor->properties()->getInt32(property))
+            {
+                *outValue = *result;
+                return ZenError_None;
+            }
+            else
+            {
+                return result.error();
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorGetMatrix33Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, ZenMatrix3x3f* const outValue)
@@ -333,24 +405,29 @@ ZEN_API ZenError ZenSensorGetMatrix33Property(ZenClientHandle_t clientHandle, Ze
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        if (auto result = sensor.value()->properties()->getMatrix33(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto result = sensor->properties()->getMatrix33(property))
+            {
+                *outValue = *result;
+                return ZenError_None;
+            }
+            else
+            {
+                return result.error();
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorGetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, char* const buffer, size_t* const bufferSize)
@@ -358,18 +435,23 @@ ZEN_API ZenError ZenSensorGetStringProperty(ZenClientHandle_t clientHandle, ZenS
     if (bufferSize == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const auto[error, size] = sensor.value()->properties()->getString(property, gsl::make_span(buffer, *bufferSize));
-        *bufferSize = size;
-        return error;
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            const auto[error, size] = sensor->properties()->getString(property, gsl::make_span(buffer, *bufferSize));
+            *bufferSize = size;
+            return error;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, uint64_t* const outValue)
@@ -377,24 +459,29 @@ ZEN_API ZenError ZenSensorGetUInt64Property(ZenClientHandle_t clientHandle, ZenS
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        if (auto result = sensor.value()->properties()->getUInt64(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto result = sensor->properties()->getUInt64(property))
+            {
+                *outValue = *result;
+                return ZenError_None;
+            }
+            else
+            {
+                return result.error();
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorSetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, ZenPropertyType type, const void* buffer, size_t bufferSize)
@@ -402,50 +489,61 @@ ZEN_API ZenError ZenSensorSetArrayProperty(ZenClientHandle_t clientHandle, ZenSe
     if (buffer == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->setArray(property, type, gsl::make_span(reinterpret_cast<const std::byte*>(buffer), bufferSize));
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->setArray(property, type, gsl::make_span(reinterpret_cast<const std::byte*>(buffer), bufferSize));
-
-    return ZenError_InvalidSensorHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorSetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, bool value)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->setBool(property, value);
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->setBool(property, value);
-
-    return ZenError_InvalidSensorHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorSetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, float value)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->setFloat(property, value);
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->setFloat(property, value);
-
-    return ZenError_InvalidSensorHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, int32_t value)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->setInt32(property, value);
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    {
         return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->setInt32(property, value);
-
-    return ZenError_InvalidSensorHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorSetMatrix33Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, const ZenMatrix3x3f* const value)
@@ -453,14 +551,17 @@ ZEN_API ZenError ZenSensorSetMatrix33Property(ZenClientHandle_t clientHandle, Ze
     if (value == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->setMatrix33(property, *value);
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->setMatrix33(property, *value);
-
-    return ZenError_InvalidSensorHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorSetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, const char* buffer, size_t bufferSize)
@@ -468,112 +569,136 @@ ZEN_API ZenError ZenSensorSetStringProperty(ZenClientHandle_t clientHandle, ZenS
     if (buffer == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->setString(property, gsl::make_span(buffer, bufferSize));
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->setString(property, gsl::make_span(buffer, bufferSize));
-
-    return ZenError_InvalidSensorHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorSetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, uint64_t value)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->setUInt64(property, value);
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->setUInt64(property, value);
-
-    return ZenError_InvalidSensorHandle;
+    }
 }
 
 ZEN_API bool ZenSensorIsArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->isArray(property);
+        else
+            return false;
+    }
+    else
+    {
         return false;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->isArray(property);
-
-    return false;
+    }
 }
 
 ZEN_API bool ZenSensorIsConstantProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->isConstant(property);
+        else
+            return false;
+    }
+    else
+    {
         return false;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->isConstant(property);
-
-    return false;
+    }
 }
 
 ZEN_API bool ZenSensorIsExecutableProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->isExecutable(property);
+        else
+            return false;
+    }
+    else
+    {
         return false;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->isExecutable(property);
-
-    return false;
+    }
 }
 
 ZEN_API ZenPropertyType ZenSensorPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return sensor->properties()->type(property);
+        else
+            return ZenPropertyType_Invalid;
+    }
+    else
+    {
         return ZenPropertyType_Invalid;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-        return sensor.value()->properties()->type(property);
-
-    return ZenPropertyType_Invalid;
+    }
 }
 
 ZEN_API const char* const ZenSensorComponentType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return nullptr;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->type().data();
+            else
+                return nullptr;
+        }
+        else
+        {
             return nullptr;
-
-        return components[idx]->type().data();
+        }
     }
-
-    return nullptr;
+    else
+    {
+        return nullptr;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentExecuteProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        return components[idx]->properties()->execute(property);
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->execute(property);
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentGetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t* bufferSize)
@@ -581,23 +706,30 @@ ZEN_API ZenError ZenSensorComponentGetArrayProperty(ZenClientHandle_t clientHand
     if (bufferSize == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        const auto[error, size] = components[idx]->properties()->getArray(property, type, gsl::make_span(reinterpret_cast<std::byte*>(buffer), *bufferSize));
-        *bufferSize = size;
-        return error;
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+            {
+                const auto[error, size] = component->properties()->getArray(property, type, gsl::make_span(reinterpret_cast<std::byte*>(buffer), *bufferSize));
+                *bufferSize = size;
+                return error;
+            }
+            else
+            {
+                return ZenError_InvalidComponentHandle;
+            }
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 /** If successful fills the value with the property's boolean value, otherwise returns an error. */
@@ -606,29 +738,36 @@ ZEN_API ZenError ZenSensorComponentGetBoolProperty(ZenClientHandle_t clientHandl
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        if (auto result = components[idx]->properties()->getBool(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto component = getComponent(sensor, componentHandle))
+            {
+                if (auto result = component->properties()->getBool(property))
+                {
+                    *outValue = *result;
+                    return ZenError_None;
+                }
+                else
+                {
+                    return result.error();
+                }
+            }
+            else
+            {
+                return ZenError_InvalidComponentHandle;
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentGetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, float* const outValue)
@@ -636,29 +775,36 @@ ZEN_API ZenError ZenSensorComponentGetFloatProperty(ZenClientHandle_t clientHand
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        if (auto result = components[idx]->properties()->getFloat(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto component = getComponent(sensor, componentHandle))
+            {
+                if (auto result = component->properties()->getFloat(property))
+                {
+                    *outValue = *result;
+                    return ZenError_None;
+                }
+                else
+                {
+                    return result.error();
+                }
+            }
+            else
+            {
+                return ZenError_InvalidComponentHandle;
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, int32_t* const outValue)
@@ -666,29 +812,36 @@ ZEN_API ZenError ZenSensorComponentGetInt32Property(ZenClientHandle_t clientHand
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        if (auto result = components[idx]->properties()->getInt32(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto component = getComponent(sensor, componentHandle))
+            {
+                if (auto result = component->properties()->getInt32(property))
+                {
+                    *outValue = *result;
+                    return ZenError_None;
+                }
+                else
+                {
+                    return result.error();
+                }
+            }
+            else
+            {
+                return ZenError_InvalidComponentHandle;
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentGetMatrix33Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, ZenMatrix3x3f* const outValue)
@@ -696,29 +849,36 @@ ZEN_API ZenError ZenSensorComponentGetMatrix33Property(ZenClientHandle_t clientH
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        if (auto result = components[idx]->properties()->getMatrix33(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto component = getComponent(sensor, componentHandle))
+            {
+                if (auto result = component->properties()->getMatrix33(property))
+                {
+                    *outValue = *result;
+                    return ZenError_None;
+                }
+                else
+                {
+                    return result.error();
+                }
+            }
+            else
+            {
+                return ZenError_InvalidComponentHandle;
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentGetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, char* const buffer, size_t* const bufferSize)
@@ -726,23 +886,30 @@ ZEN_API ZenError ZenSensorComponentGetStringProperty(ZenClientHandle_t clientHan
     if (bufferSize == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        const auto[error, size] = components[idx]->properties()->getString(property, gsl::make_span(buffer, *bufferSize));
-        *bufferSize = size;
-        return error;
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+            {
+                const auto[error, size] = component->properties()->getString(property, gsl::make_span(buffer, *bufferSize));
+                *bufferSize = size;
+                return error;
+            }
+            else
+            {
+                return ZenError_InvalidComponentHandle;
+            }
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, uint64_t* const outValue)
@@ -750,29 +917,36 @@ ZEN_API ZenError ZenSensorComponentGetUInt64Property(ZenClientHandle_t clientHan
     if (outValue == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        if (auto result = components[idx]->properties()->getUInt64(property))
+        if (auto sensor = client->findSensor(sensorHandle))
         {
-            *outValue = *result;
-            return ZenError_None;
+            if (auto component = getComponent(sensor, componentHandle))
+            {
+                if (auto result = component->properties()->getUInt64(property))
+                {
+                    *outValue = *result;
+                    return ZenError_None;
+                }
+                else
+                {
+                    return result.error();
+                }
+            }
+            else
+            {
+                return ZenError_InvalidComponentHandle;
+            }
         }
         else
         {
-            return result.error();
+            return ZenError_InvalidSensorHandle;
         }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentSetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, ZenPropertyType type, const void* buffer, size_t bufferSize)
@@ -780,78 +954,90 @@ ZEN_API ZenError ZenSensorComponentSetArrayProperty(ZenClientHandle_t clientHand
     if (buffer == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        return components[idx]->properties()->setArray(property, type, gsl::make_span(reinterpret_cast<const std::byte*>(buffer), bufferSize));
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->setArray(property, type, gsl::make_span(reinterpret_cast<const std::byte*>(buffer), bufferSize));
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentSetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, bool value)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        return components[idx]->properties()->setBool(property, value);
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->setBool(property, value);
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentSetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, float value)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        return components[idx]->properties()->setFloat(property, value);
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->setFloat(property, value);
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, int32_t value)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        return components[idx]->properties()->setInt32(property, value);
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->setInt32(property, value);
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentSetMatrix33Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, const ZenMatrix3x3f* const value)
@@ -859,21 +1045,25 @@ ZEN_API ZenError ZenSensorComponentSetMatrix33Property(ZenClientHandle_t clientH
     if (value == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->setMatrix33(property, *value);
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
+    }
+    else
+    {
         return ZenError_InvalidClientHandle;
 
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
-    {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        return components[idx]->properties()->setMatrix33(property, *value);
     }
-
-    return ZenError_InvalidSensorHandle;
 }
 
 ZEN_API ZenError ZenSensorComponentSetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, const char* buffer, size_t bufferSize)
@@ -881,114 +1071,132 @@ ZEN_API ZenError ZenSensorComponentSetStringProperty(ZenClientHandle_t clientHan
     if (buffer == nullptr)
         return ZenError_IsNull;
 
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        return components[idx]->properties()->setString(property, gsl::make_span(buffer, bufferSize));
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->setString(property, gsl::make_span(buffer, bufferSize));
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API ZenError ZenSensorComponentSetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, uint64_t value)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenError_InvalidClientHandle;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
-            return ZenError_InvalidComponentHandle;
-
-        return components[idx]->properties()->setUInt64(property, value);
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->setUInt64(property, value);
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
     }
-
-    return ZenError_InvalidSensorHandle;
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
 }
 
 ZEN_API bool ZenSensorComponentIsArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return false;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->isArray(property);
+            else
+                return false;
+        }
+        else
+        {
             return false;
-
-        return components[idx]->properties()->isArray(property);
+        }
     }
-
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
 ZEN_API bool ZenSensorComponentIsConstantProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return false;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->isConstant(property);
+            else
+                return false;
+        }
+        else
+        {
             return false;
-
-        return components[idx]->properties()->isConstant(property);
+        }
     }
-
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
 ZEN_API bool ZenSensorComponentIsExecutableProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return false;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->isExecutable(property);
+            else
+                return false;
+        }
+        else
+        {
             return false;
-
-        return components[idx]->properties()->isExecutable(property);
+        }
     }
-
-    return false;
+    else
+    {
+        return false;
+    }
 }
 
 ZEN_API ZenPropertyType ZenSensorComponentPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property)
 {
-    auto& manager = zen::SensorManager::get();
-    if (reinterpret_cast<zen::SensorManager*>(clientHandle.handle) != &manager)
-        return ZenPropertyType_Invalid;
-
-    if (auto sensor = manager.getSensorByToken(sensorHandle.handle))
+    if (auto client = getClient(clientHandle))
     {
-        const size_t idx = componentHandle.handle - 1;
-        const auto& components = sensor.value()->components();
-        if (idx >= components.size())
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+                return component->properties()->type(property);
+            else
+                return ZenPropertyType_Invalid;
+        }
+        else
+        {
             return ZenPropertyType_Invalid;
-
-        return components[idx]->properties()->type(property);
+        }
     }
-
-    return ZenPropertyType_Invalid;
+    else
+    {
+        return ZenPropertyType_Invalid;
+    }
 }

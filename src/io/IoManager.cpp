@@ -49,33 +49,30 @@ namespace zen
             (&g_singleton)->~IoManager();
     }
 
-    IoManager& IoManager::get()
+    IoManager& IoManager::get() noexcept
     {
         return g_singleton;
     }
 
-    void IoManager::initialize()
+    void IoManager::initialize() noexcept
     {
         for (auto it = head; it != nullptr; it = it->next())
             it->initialize();
     }
 
-    void IoManager::deinitialize()
-    {
-        m_ioSystems.clear();
-    }
-
-    bool IoManager::registerIoSystem(std::string_view key, std::unique_ptr<IIoSystem> system)
+    bool IoManager::registerIoSystem(std::string_view key, std::unique_ptr<IIoSystem> system) noexcept
     {
         if (!system->available())
             return false;
 
+        std::lock_guard<std::mutex> lock(m_mutex);
         auto result = m_ioSystems.emplace(key, std::move(system));
         return result.second;
     }
 
     std::optional<std::reference_wrapper<IIoSystem>> IoManager::getIoSystem(std::string_view key) const noexcept
     {
+        std::lock_guard<std::mutex> lock(m_mutex);
         auto it = m_ioSystems.find(key);
         if (it == m_ioSystems.end())
             return std::nullopt;
@@ -83,21 +80,16 @@ namespace zen
         return *it->second.get();
     }
 
-    ZenError IoManager::listDevices(std::vector<ZenSensorDesc>& outDevices)
+    std::vector<std::reference_wrapper<IIoSystem>> IoManager::getIoSystems() const noexcept
     {
-        for (auto& pair : m_ioSystems)
-        {
-            try
-            {
-                if (auto error = pair.second->listDevices(outDevices))
-                    return error;
-            }
-            catch (...)
-            {
-                return ZenError_Unknown;
-            }
-        }
+        std::vector<std::reference_wrapper<IIoSystem>> ioSystems;
 
-        return ZenError_None;
+        std::lock_guard<std::mutex> lock(m_mutex);
+        ioSystems.reserve(m_ioSystems.size());
+
+        for (const auto& pair : m_ioSystems)
+            ioSystems.emplace_back(*pair.second.get());
+
+        return std::move(ioSystems);
     }
 }

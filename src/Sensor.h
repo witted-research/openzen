@@ -57,6 +57,8 @@ namespace zen
         /** Returns whether the sensor is equal to the sensor description */
         bool equals(const ZenSensorDesc& desc) const;
 
+        uintptr_t token() const noexcept { return m_token; }
+
     private:
         ZenError processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept override;
 
@@ -68,7 +70,7 @@ namespace zen
         std::unique_ptr<ISensorProperties> m_properties;
         SyncedModbusCommunicator m_communicator;
 
-        uintptr_t m_token;
+        const uintptr_t m_token;
 
         std::atomic_bool m_updatingFirmware;
         std::atomic_bool m_updatedFirmware;
@@ -82,6 +84,26 @@ namespace zen
 
         // [LEGACY]
         std::atomic_bool m_initialized;
+    };
+
+    struct SensorCmp
+    {
+        using is_transparent = std::true_type;
+
+        bool operator()(const std::shared_ptr<Sensor>& lhs, const std::shared_ptr<Sensor>& rhs) const noexcept
+        {
+            return std::less()(lhs->token(), rhs->token());
+        }
+
+        bool operator()(const std::shared_ptr<Sensor>& lhs, const ZenSensorHandle_t& rhs) const noexcept
+        {
+            return std::less()(lhs->token(), rhs.handle);
+        }
+
+        bool operator()(const ZenSensorHandle& lhs, const std::shared_ptr<Sensor>& rhs) const noexcept
+        {
+            return std::less()(lhs.handle, rhs->token());
+        }
     };
 }
 

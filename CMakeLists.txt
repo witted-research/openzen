@@ -29,6 +29,8 @@ set(zen_sources
     src/OpenZen.cpp
     src/Sensor.cpp
     src/Sensor.h
+    src/SensorClient.cpp
+    src/SensorClient.h
     src/SensorConfig.h
     src/SensorComponent.h
     src/SensorManager.cpp

@@ -352,43 +352,29 @@ namespace zen
         ZenClientHandle_t m_handle;
 
     public:
-        ZenClient(ZenClientHandle_t handle)
+        ZenClient(ZenClientHandle_t handle) noexcept
             : m_handle(handle)
         {}
 
-        ZenClient(ZenClient&& other)
+        ZenClient(ZenClient&& other) noexcept
             : m_handle(other.m_handle)
         {
             other.m_handle.handle = 0;
         }
 
-        ~ZenClient()
+        ~ZenClient() noexcept
         {
             close();
         }
 
-        ZenError close()
+        ZenError close() noexcept
         {
             return ZenShutdown(m_handle);
         }
 
-        std::optional<std::vector<ZenSensorDesc>> listSensors(std::optional<std::string_view> typeFilter)
+        ZenError listSensorsAsync() noexcept
         {
-            const char* const filter = typeFilter ? typeFilter->data() : nullptr;
-
-            ZenSensorDesc* list = nullptr;
-            size_t nSensors;
-            while (auto status = ZenListSensorsAsync(m_handle, filter, &list, &nSensors))
-            {
-                if (status != ZenAsync_Updating)
-                    return std::nullopt;
-
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            }
-
-            std::vector<ZenSensorDesc> descriptions(list, list + nSensors);
-            delete list;
-            return std::move(descriptions);
+            return ZenListSensorsAsync(m_handle);
         }
 
         std::pair<ZenSensorInitError, ZenSensor> obtainSensor(const ZenSensorDesc& desc) noexcept
@@ -426,7 +412,7 @@ namespace zen
         }
     };
 
-    inline std::pair<ZenError, ZenClient> make_client()
+    inline std::pair<ZenError, ZenClient> make_client() noexcept
     {
         ZenClientHandle_t handle;
         const auto error = ZenInit(&handle);

@@ -5,7 +5,6 @@
 
 #include "Modbus.h"
 #include "io/IIoInterface.h"
-#include "io/IIoSystem.h"
 
 namespace zen
 {

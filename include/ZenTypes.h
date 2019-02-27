@@ -201,9 +201,30 @@ typedef struct ZenImuData
 
 typedef ZenImuData ZenEventData_Imu;
 
+typedef struct ZenSensorDesc
+{
+    char name[256];
+    char serialNumber[64];
+    char ioType[64];
+    union
+    {
+        uint32_t handle32;
+        uint64_t handle64;
+    };
+} ZenSensorDesc;
+
+typedef ZenSensorDesc ZenEventData_SensorFound;
+
+typedef struct ZenEventData_SensorListingProgress
+{
+    float progress;
+} ZenEventData_SensorListingProgress;
+
 typedef union
 {
     ZenEventData_Imu imuData;
+    ZenEventData_SensorFound sensorFound;
+    ZenEventData_SensorListingProgress sensorListingProgress;
 } ZenEventData;
 
 typedef uint32_t ZenEvent_t;
@@ -220,12 +241,15 @@ typedef enum ZenSensorEvent : ZenEvent_t
 {
     ZenSensorEvent_None = 0,
 
+    ZenSensorEvent_SensorFound = 1,
+    ZenSensorEvent_SensorListingProgress = 2,
+
     // Sensors are free to expose private events in this reserved region
     ZenSensorEvent_SensorSpecific_Start = 10000,
     ZenSensorEvent_SensorSpecific_End = 19999,
 
     ZenSensorEvent_Max
-} ZenSensorEventType;
+} ZenSensorEvent;
 
 typedef enum ZenImuEvent : ZenEvent_t
 {
@@ -238,7 +262,7 @@ typedef enum ZenImuEvent : ZenEvent_t
     ZenImuEvent_ComponentSpecific_End = 19999,
 
     ZenImuEvent_Max
-} ZenImuEventType;
+} ZenImuEvent;
 
 typedef uint32_t ZenProperty_t;
 
@@ -354,18 +378,6 @@ typedef enum ZenPropertyType
 
     ZenPropertyType_Max
 } ZenPropertyType;
-
-typedef struct ZenSensorDesc
-{
-    char name[256];
-    char serialNumber[64];
-    char ioType[64];
-    union
-    {
-        uint32_t handle32;
-        uint64_t handle64;
-    };
-} ZenSensorDesc;
 
 typedef struct ZenMatrix3x3f
 {

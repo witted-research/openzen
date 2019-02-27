@@ -9,12 +9,11 @@ ZEN_API ZenError ZenInit(ZenClientHandle_t* outHandle);
 
 ZEN_API ZenError ZenShutdown(ZenClientHandle_t handle);
 
-/** Lists and returns
- * Returns ZenAsync_Updating while busy listing available sensors.
- * Returns ZenAsync_Finished once available sensors have been successfully listed, otherwise will return an error.
- * Returns ZenAsync_Failed if an error occurred while listing sensors.
+/** Opts in to an asynchronous process that lists available sensors.
+ * ZenEventData_SensorListingProgress events will be queued to indicate progress.
+ * ZenEventData_SensorFound events will be queued to signal sensor descriptions.
  */
-ZEN_API ZenAsyncStatus ZenListSensorsAsync(ZenClientHandle_t handle, const char* const typeFilter, ZenSensorDesc** outDesc, size_t* const outLength);
+ZEN_API ZenError ZenListSensorsAsync(ZenClientHandle_t handle);
 
 /** Obtain a sensor from the client */
 ZEN_API ZenSensorInitError ZenObtainSensor(ZenClientHandle_t clientHandle, const ZenSensorDesc* const desc, ZenSensorHandle_t* outSensorHandle);

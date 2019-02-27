@@ -22,6 +22,16 @@ namespace zen
 
             return false;
         }
+
+        void notifyProgress(std::set<std::reference_wrapper<SensorClient>, SensorClientCmp>& subscribers, float progress)
+        {
+            ZenEvent event{ 0 };
+            event.eventType = ZenSensorEvent_SensorListingProgress;
+            event.data.sensorListingProgress.progress = progress;
+
+            for (auto& subscriber : subscribers)
+                subscriber.get().notifyEvent(event);
+        }
     }
 
     SensorManager& SensorManager::get()
@@ -31,69 +41,31 @@ namespace zen
     }
 
     SensorManager::SensorManager() noexcept
-        : m_initialized(false) 
-        , m_startedListing(false)
-        , m_listing(false)
-        , m_finished(false)
-        , m_terminate(false)
-        , m_destructing(false)
+        : m_sensorThread(&SensorManager::sensorLoop, this)
         , m_nextToken(1)
+        , m_discovering(false)
+        , m_terminate(false)
     {}
 
     SensorManager::~SensorManager() noexcept
     {
-        m_destructing = true;
         m_terminate = true;
 
         if (m_sensorThread.joinable())
             m_sensorThread.join();
 
-        if (m_listSensorThread.joinable())
-            m_listSensorThread.join();
+        if (m_sensorDiscoveryThread.joinable())
+            m_sensorDiscoveryThread.join();
     }
 
-    ZenError SensorManager::init() noexcept
+    nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> SensorManager::obtain(const ZenSensorDesc& desc) noexcept
     {
-        if (m_initialized)
-            return ZenError_AlreadyInitialized;
+        std::unique_lock<std::mutex> lock(m_sensorsMutex);
+        for (auto& pair : m_sensorSubscribers)
+            if (pair.first->equals(desc))
+                return pair.first;
 
-        m_startedListing = false;
-        m_listing = false;
-        m_finished = false;
-
-        m_terminate = false;
-        m_sensorThread = std::thread(&SensorManager::sensorLoop, this);
-
-        m_initialized = true;
-        return ZenError_None;
-    }
-
-    ZenError SensorManager::deinit() noexcept
-    {
-        if (!m_initialized)
-            return ZenError_NotInitialized;
-
-        m_terminate = true;
-        m_sensorThread.join();
-        m_eventQueue.clear();
-
-        m_initialized = false;
-        return ZenError_None;
-    }
-
-    std::optional<std::shared_ptr<Sensor>> SensorManager::getSensorByToken(uintptr_t token) const noexcept
-    {
-        auto it = m_sensors.find(token);
-        if (it == m_sensors.cend())
-            return std::nullopt;
-
-        return it->second;
-    }
-
-    nonstd::expected<SensorManager::key_value_t, ZenSensorInitError> SensorManager::obtain(const ZenSensorDesc& desc) noexcept
-    {
-        if (auto sensor = findSensor(desc))
-            return std::move(*sensor);
+        lock.unlock();
 
         auto ioSystem = IoManager::get().getIoSystem(desc.ioType);
         if (!ioSystem)
@@ -111,120 +83,105 @@ namespace zen
         if (!agreement)
             return nonstd::make_unexpected(agreement.error());
 
-        std::lock_guard<std::mutex> lock(m_mutex);
+        lock.lock();
         const auto token = m_nextToken++;
         auto sensor = make_sensor(std::move(*agreement), std::move(communicator), token);
         if (!sensor)
             return nonstd::make_unexpected(sensor.error());
 
-        auto it = m_sensors.emplace(token, std::move(*sensor));
-        return *it.first;
+        return std::move(*sensor);
     }
 
-    ZenError SensorManager::release(uintptr_t token) noexcept
+    void SensorManager::subscribeToSensor(std::shared_ptr<Sensor> sensor, SensorClient& client) noexcept
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-
-        auto it = m_sensors.find(token);
-        if (it != m_sensors.end())
-            m_sensors.erase(it);
-
-        return ZenError_None;
-    }
-
-    nonstd::expected<std::vector<ZenSensorDesc>, ZenAsyncStatus> SensorManager::listSensorsAsync(std::optional<std::string_view> typeFilter) noexcept
-    {
-        if (m_startedListing.exchange(true))
+        std::lock_guard<std::mutex> lock(m_sensorsMutex);
+        auto it = m_sensorSubscribers.find(sensor);
+        if (it != m_sensorSubscribers.end())
         {
-            if (m_finished.exchange(false))
-            {
-                const auto expected = m_listingError
-                    ? nonstd::make_unexpected(ZenAsync_Failed)
-                    : nonstd::expected<std::vector<ZenSensorDesc>, ZenAsyncStatus>(std::move(m_devices));
-
-                m_listing = false;
-                m_startedListing = false;
-                return std::move(expected);
-            }
-
-            return nonstd::make_unexpected(ZenAsync_Updating);
+            it->second.insert(client);
         }
+        else
+        {
+            std::set<std::reference_wrapper<SensorClient>, SensorClientCmp> clients;
+            clients.insert(client);
 
-        m_listingTypeFilter = typeFilter;
-        m_listing = true;
-        return nonstd::make_unexpected(ZenAsync_Updating);
+            m_sensorSubscribers.emplace(std::move(sensor), std::move(clients));
+        }
     }
 
-    std::optional<ZenEvent> SensorManager::pollNextEvent() noexcept
+    void SensorManager::unsubscribeFromSensor(SensorClient& client, std::shared_ptr<Sensor> sensor) noexcept
     {
-        return m_eventQueue.tryToPop();
+        std::lock_guard<std::mutex> lock(m_sensorsMutex);
+        auto it = m_sensorSubscribers.find(sensor);
+        it->second.erase(client);
+
+        if (it->second.empty())
+            m_sensorSubscribers.erase(it);
     }
 
-    std::optional<ZenEvent> SensorManager::waitForNextEvent() noexcept
+    void SensorManager::subscribeToSensorDiscovery(SensorClient& client) noexcept
     {
-        return m_eventQueue.waitToPop();
+        std::lock_guard<std::mutex> lock(m_discoveryMutex);
+        m_discoverySubscribers.insert(client);
+        m_discovering = true;
+        m_discoveryCv.notify_one();
     }
 
-    void SensorManager::notifyEvent(ZenEvent&& event) noexcept
+    void SensorManager::notifyEvent(const ZenEvent& event) noexcept
     {
-        m_eventQueue.push(std::move(event));
+        auto it = m_sensorSubscribers.find(event.sensor);
+        for (auto subscriber : it->second)
+            subscriber.get().notifyEvent(event);
     }
 
-    std::optional<SensorManager::key_value_t> SensorManager::findSensor(const ZenSensorDesc& sensorDesc) noexcept
-    {
-        for (const auto& sensor : m_sensors)
-            if (sensor.second->equals(sensorDesc))
-                return sensor;
-
-        return std::nullopt;
-    }
-
-    void SensorManager::listSensorLoop()
+    void SensorManager::sensorDiscoveryLoop() noexcept
     {
         while (!m_terminate)
         {
-            if (m_listing && !m_finished)
+            std::unique_lock<std::mutex> lock(m_discoveryMutex);
+            m_discoveryCv.wait(lock, [this]() { return m_discovering || m_terminate; });
+
+            lock.unlock();
+
+            const auto ioSystems = IoManager::get().getIoSystems();
+            const auto nIoSystems = ioSystems.size();
+            for (size_t idx = 0; idx < nIoSystems; ++idx)
             {
-                if (auto error = IoManager::get().listDevices(m_devices))
+                if (m_terminate)
+                    return;
+
+                lock.lock();
+                notifyProgress(m_discoverySubscribers, (idx + 0.5f) / nIoSystems);
+                lock.unlock();
+
+                try
                 {
-                    m_listingError = error;
+                    ioSystems[idx].get().listDevices(m_devices);
                 }
-                else if (m_listingTypeFilter)
+                catch (...)
                 {
-                    const auto requiredComponents = util::split(*m_listingTypeFilter, ",");
-                    for (auto it = m_devices.cbegin(); it != m_devices.cend();)
-                    {
-                        auto sensor = obtain(*it);
-                        if (!sensor)
-                        {
-                            it = m_devices.erase(it);
-                            continue;
-                        }
-
-                        const auto& components = sensor->second->components();
-
-                        bool valid = true;
-                        for (const std::string_view& type : requiredComponents)
-                        {
-                            if (!hasComponentOfType(components, type))
-                            {
-                                it = m_devices.erase(it);
-                                valid = false;
-                                break;
-                            }
-                        }
-
-                        if (valid)
-                            ++it;
-
-                        release(sensor->first);
-                    }
+                    // [TODO] Make listDevices noexcept and move try-catch block into crashing ioSystem
+                    continue;
                 }
-
-                m_finished = true;
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+            lock.lock();
+            for (auto& device : m_devices)
+            {
+                ZenEvent event{ 0 };
+                event.eventType = ZenSensorEvent_SensorFound;
+                event.data.sensorFound = device;
+
+                for (auto& subscriber : m_discoverySubscribers)
+                    subscriber.get().notifyEvent(event);
+            }
+
+            notifyProgress(m_discoverySubscribers, 1.0f);
+            
+            m_devices.clear();
+            m_discovering = false;
+            m_discoverySubscribers.clear();
         }
     }
 
@@ -244,7 +201,7 @@ namespace zen
         IoManager::get().initialize();
 
         // To guarantee initialization of IoManager
-        m_listSensorThread = std::thread(&SensorManager::listSensorLoop, this);
+        m_sensorDiscoveryThread = std::thread(&SensorManager::sensorDiscoveryLoop, this);
 
         while (!m_terminate)
         {
@@ -252,13 +209,7 @@ namespace zen
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
-        m_listSensorThread.join();
-        m_sensors.clear();
-
-        IoManager::get().deinitialize();
-
-        // We cannot destruct the QCoreApplication if the main thread no longer exists, which is the case upon static deinitialization
-        if (m_destructing)
-            app.release();
+        m_sensorDiscoveryThread.join();
+        m_sensorSubscribers.clear();
     }
 }
