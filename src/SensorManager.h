@@ -9,6 +9,8 @@
 #include <thread>
 #include <type_traits>
 
+#include <QCoreApplication>
+
 #include "nonstd/expected.hpp"
 
 #include "Sensor.h"
@@ -44,9 +46,6 @@ namespace zen
 
         std::vector<ZenSensorDesc> m_devices;
 
-        std::thread m_sensorThread;
-        std::thread m_sensorDiscoveryThread;
-
         std::condition_variable m_discoveryCv;
 
         std::mutex m_sensorsMutex;
@@ -54,8 +53,13 @@ namespace zen
 
         uintptr_t m_nextToken;
         bool m_discovering;
-        
+
         std::atomic_bool m_terminate;
+
+        std::thread m_sensorThread;
+        std::thread m_sensorDiscoveryThread;
+
+        std::unique_ptr<QCoreApplication> m_app;
     };
 }
 

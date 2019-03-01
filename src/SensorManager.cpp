@@ -1,8 +1,5 @@
 #include "SensorManager.h"
 
-#include <optional>
-#include <QCoreApplication>
-
 #include "Sensor.h"
 #include "communication/ConnectionNegotiator.h"
 #include "components/ComponentFactoryManager.h"
@@ -32,22 +29,34 @@ namespace zen
     }
 
     SensorManager::SensorManager() noexcept
-        : m_sensorThread(&SensorManager::sensorLoop, this)
-        , m_nextToken(1)
+        : m_nextToken(1)
         , m_discovering(false)
         , m_terminate(false)
-    {}
+        , m_sensorThread(&SensorManager::sensorLoop, this)
+        , m_sensorDiscoveryThread(&SensorManager::sensorDiscoveryLoop, this)   
+    {
+        // Necessary for QBluetooth
+        if (QCoreApplication::instance() == nullptr)
+        {
+            int argv = 0;
+            char* argc[]{ nullptr };
+            m_app.reset(new QCoreApplication(argv, argc));
+        }
+
+        ComponentFactoryManager::get().initialize();
+        IoManager::get().initialize();
+    }
 
     SensorManager::~SensorManager() noexcept
     {
         m_terminate = true;
         m_discoveryCv.notify_all();
 
-        if (m_sensorThread.joinable())
-            m_sensorThread.join();
-
         if (m_sensorDiscoveryThread.joinable())
             m_sensorDiscoveryThread.join();
+
+        if (m_sensorThread.joinable())
+            m_sensorThread.join();
     }
 
     nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> SensorManager::obtain(const ZenSensorDesc& desc) noexcept
@@ -183,37 +192,10 @@ namespace zen
 
     void SensorManager::sensorLoop()
     {
-        // Necessary for QBluetooth
-        std::unique_ptr<QCoreApplication> app;
-
-        bool runningApp = false;
-        if (QCoreApplication::instance() == nullptr)
-        {
-            int argv = 0;
-            char* argc[]{ nullptr };
-            app = std::make_unique<QCoreApplication>(argv, argc);
-            runningApp = true;
-        }
-
-        ComponentFactoryManager::get().initialize();
-        IoManager::get().initialize();
-
-        // To guarantee initialization of IoManager
-        m_sensorDiscoveryThread = std::thread(&SensorManager::sensorDiscoveryLoop, this);
-
         while (!m_terminate)
         {
             CanManager::get().poll();
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
-
-        m_sensorDiscoveryThread.join();
-        {
-            std::lock_guard<std::mutex> lock(m_sensorsMutex);
-            m_sensorSubscribers.clear();
-        }
-
-        if (runningApp)
-            app.release();
     }
 }
