@@ -46,9 +46,6 @@ namespace zen
         /** If successful fills the value with the property's signed integer value, otherwise returns an error. */
         virtual nonstd::expected<int32_t, ZenError> getInt32(ZenProperty_t property) noexcept = 0;
 
-        /** If successful fills the value with the property's matrix value, otherwise returns an error. */
-        virtual nonstd::expected<ZenMatrix3x3f, ZenError> getMatrix33(ZenProperty_t property) noexcept = 0;
-
         /** If successful fills the buffer with the property's string value and sets the buffer's string size.
          * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
          */
@@ -68,9 +65,6 @@ namespace zen
 
         /** If successful sets the integer property, otherwise returns an error. */
         virtual ZenError setInt32(ZenProperty_t property, int32_t value) noexcept = 0;
-
-        /** If successful sets the matrix property, otherwise returns an error. */
-        virtual ZenError setMatrix33(ZenProperty_t property, const ZenMatrix3x3f& value) noexcept = 0;
 
         /** If successful sets the string property, otherwise returns an error. */
         virtual ZenError setString(ZenProperty_t property, gsl::span<const char> buffer) noexcept = 0;

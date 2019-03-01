@@ -117,8 +117,7 @@ namespace zen
 
     ZenError LegacyImuProperties::execute(ZenProperty_t command) noexcept
     {
-        const auto commandV0 = imu::v0::mapCommand(command);
-        if (imu::v0::supportsExecutingDeviceCommand(commandV0))
+        if (isExecutable(command))
         {
             if (auto streaming = getBool(ZenImuProperty_StreamData))
             {
@@ -131,7 +130,8 @@ namespace zen
                         setBool(ZenImuProperty_StreamData, true);
                 });
 
-                return m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(commandV0), 0, {});
+                const auto function = static_cast<DeviceProperty_t>(imu::v0::mapCommand(command));
+                return m_communicator.sendAndWaitForAck(0, function, function, {});
             }
             else
             {
@@ -142,60 +142,48 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    std::pair<ZenError, size_t> LegacyImuProperties::getArray(ZenProperty_t property, ZenPropertyType type, gsl::span<std::byte> buffer) noexcept
+    std::pair<ZenError, size_t> LegacyImuProperties::getArray(ZenProperty_t property, ZenPropertyType propertyType, gsl::span<std::byte> buffer) noexcept
     {
-        const auto propertyV0 = imu::v0::map(property, true);
-        ZenPropertyType expectedType = imu::v0::supportsGettingArrayDeviceProperty(propertyV0);
-        if (property == ZenImuProperty_SupportedSamplingRates ||
-            property == ZenImuProperty_AccSupportedRanges ||
-            property == ZenImuProperty_GyrSupportedRanges ||
-            property == ZenImuProperty_MagSupportedRanges)
-            expectedType = ZenPropertyType_Int32;
-
-        const DeviceProperty_t function = static_cast<DeviceProperty_t>(propertyV0);
-        if (expectedType)
+        if (isArray(property))
         {
-            if (type != expectedType)
+            if (propertyType != type(property))
                 return std::make_pair(ZenError_WrongDataType, buffer.size());
 
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
-                        return std::make_pair(error, buffer.size());
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                });
-
-                switch (type)
-                {
-                case ZenPropertyType_Bool:
-                    return m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(reinterpret_cast<bool*>(buffer.data()), buffer.size()));
-
-                case ZenPropertyType_Float:
-                    return m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(reinterpret_cast<float*>(buffer.data()), buffer.size()));
-
-                case ZenPropertyType_Int32:
-                    if (property == ZenImuProperty_SupportedSamplingRates)
-                        return imu::v0::supportedSamplingRates(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
-                    else if (property == ZenImuProperty_AccSupportedRanges)
-                        return imu::v0::supportedAccRanges(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
-                    else if (property == ZenImuProperty_GyrSupportedRanges)
-                        return imu::v0::supportedGyrRanges(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
-                    else if (property == ZenImuProperty_MagSupportedRanges)
-                        return imu::v0::supportedMagRanges(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
-                    else
-                        return m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
-
-                default:
-                    return std::make_pair(ZenError_WrongDataType, buffer.size());
-                }
-            }
+            if (property == ZenImuProperty_SupportedSamplingRates)
+                return imu::v0::supportedSamplingRates(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
+            else if (property == ZenImuProperty_AccSupportedRanges)
+                return imu::v0::supportedAccRanges(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
+            else if (property == ZenImuProperty_GyrSupportedRanges)
+                return imu::v0::supportedGyrRanges(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
+            else if (property == ZenImuProperty_MagSupportedRanges)
+                return imu::v0::supportedMagRanges(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
             else
             {
-                return std::make_pair(streaming.error(), buffer.size());
+                if (auto streaming = getBool(ZenImuProperty_StreamData))
+                {
+                    if (*streaming)
+                        if (auto error = setBool(ZenImuProperty_StreamData, false))
+                            return std::make_pair(error, buffer.size());
+
+                    auto guard = finally([&]() {
+                        if (*streaming)
+                            setBool(ZenImuProperty_StreamData, true);
+                    });
+
+                    const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, true));
+                    switch (propertyType)
+                    {
+                    case ZenPropertyType_Float:
+                        return m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(reinterpret_cast<float*>(buffer.data()), buffer.size()));
+
+                    default:
+                        return std::make_pair(ZenError_WrongDataType, buffer.size());
+                    }
+                }
+                else
+                {
+                    return std::make_pair(streaming.error(), buffer.size());
+                }
             }
         }
 
@@ -204,12 +192,12 @@ namespace zen
 
     nonstd::expected<bool, ZenError> LegacyImuProperties::getBool(ZenProperty_t property) noexcept
     {
-        if (property == ZenImuProperty_GyrUseAutoCalibration)
+        if (property == ZenImuProperty_StreamData)
+            return m_streaming;
+        else if (property == ZenImuProperty_GyrUseAutoCalibration)
             return m_cache.gyrAutoCalibration;
         else if (property == ZenImuProperty_GyrUseThreshold)
             return m_cache.gyrUseThreshold;
-        else if (property == ZenImuProperty_StreamData)
-            return m_streaming;
         else if (property == ZenImuProperty_OutputLowPrecision)
             return getOutputDataFlag<ZenImuProperty_OutputLowPrecision>(m_cache.outputDataBitset);
         else if (property == ZenImuProperty_OutputLinearAcc)
@@ -241,82 +229,9 @@ namespace zen
 
     nonstd::expected<float, ZenError> LegacyImuProperties::getFloat(ZenProperty_t property) noexcept
     {
-        const auto propertyV0 = imu::v0::map(property, true);
-        if (propertyV0 == EDevicePropertyV0::GetCentricCompensationRate)
+        if (!isArray(property) && type(property) == ZenPropertyType_Float)
         {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
-                        return nonstd::make_unexpected(error);
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                });
-
-                if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}))
-                    return *result > 0 ? 1.f : 0.f;
-                else
-                    return nonstd::make_unexpected(result.error());
-            }
-            else
-            {
-                return nonstd::make_unexpected(streaming.error());
-            }
-        }
-        else if (propertyV0 == EDevicePropertyV0::GetLinearCompensationRate)
-        {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
-                        return nonstd::make_unexpected(error);
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                });
-
-                if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}))
-                    return static_cast<float>(*result);
-                else
-                    return nonstd::make_unexpected(result.error());
-            }
-            else
-            {
-                return nonstd::make_unexpected(streaming.error());
-            }
-
-        }
-        else if (imu::v0::supportsGettingFloatDeviceProperty(propertyV0))
-        {
-            const bool streaming = m_streaming;
-            if (streaming)
-                if (auto error = setBool(ZenImuProperty_StreamData, false))
-                    return nonstd::make_unexpected(error);
-
-            auto guard = finally([=]() {
-                if (streaming)
-                    setBool(ZenImuProperty_StreamData, true);
-            });
-
-            return m_communicator.sendAndWaitForResult<float>(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {});
-        }
-
-        return nonstd::make_unexpected(ZenError_UnknownProperty);
-    }
-
-    nonstd::expected<int32_t, ZenError> LegacyImuProperties::getInt32(ZenProperty_t property) noexcept
-    {
-        if (property == ZenImuProperty_SamplingRate)
-        {
-            return m_cache.samplingRate;
-        }
-        else
-        {
-            const auto propertyV0 = imu::v0::map(property, true);
-            if (imu::v0::supportsGettingInt32DeviceProperty(propertyV0))
+            if (property == ZenImuProperty_CentricCompensationRate)
             {
                 if (auto streaming = getBool(ZenImuProperty_StreamData))
                 {
@@ -327,10 +242,87 @@ namespace zen
                     auto guard = finally([&]() {
                         if (*streaming)
                             setBool(ZenImuProperty_StreamData, true);
-                        });
+                    });
+
+                    const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::GetCentricCompensationRate);
+                    if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
+                        return *result > 0 ? 1.f : 0.f;
+                    else
+                        return nonstd::make_unexpected(result.error());
+                }
+                else
+                {
+                    return nonstd::make_unexpected(streaming.error());
+                }
+            }
+            else if (property == ZenImuProperty_LinearCompensationRate)
+            {
+                if (auto streaming = getBool(ZenImuProperty_StreamData))
+                {
+                    if (*streaming)
+                        if (auto error = setBool(ZenImuProperty_StreamData, false))
+                            return nonstd::make_unexpected(error);
+
+                    auto guard = finally([&]() {
+                        if (*streaming)
+                            setBool(ZenImuProperty_StreamData, true);
+                    });
+
+                    const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::GetLinearCompensationRate);
+                    if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
+                        return static_cast<float>(*result);
+                    else
+                        return nonstd::make_unexpected(result.error());
+                }
+                else
+                {
+                    return nonstd::make_unexpected(streaming.error());
+                }
+            }
+            else
+            {
+                const bool streaming = m_streaming;
+                if (streaming)
+                    if (auto error = setBool(ZenImuProperty_StreamData, false))
+                        return nonstd::make_unexpected(error);
+
+                auto guard = finally([=]() {
+                    if (streaming)
+                        setBool(ZenImuProperty_StreamData, true);
+                });
+
+                const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, true));
+                return m_communicator.sendAndWaitForResult<float>(0, function, function, {});
+            }
+        }
+
+        return nonstd::make_unexpected(ZenError_UnknownProperty);
+    }
+
+    nonstd::expected<int32_t, ZenError> LegacyImuProperties::getInt32(ZenProperty_t property) noexcept
+    {
+        if (!isArray(property) && type(property) == ZenPropertyType_Int32)
+        {
+            if (property == ZenImuProperty_SamplingRate)
+            {
+                return m_cache.samplingRate;
+            }
+            else
+            {
+                if (auto streaming = getBool(ZenImuProperty_StreamData))
+                {
+                    if (*streaming)
+                        if (auto error = setBool(ZenImuProperty_StreamData, false))
+                            return nonstd::make_unexpected(error);
+
+                    auto guard = finally([&]() {
+                        if (*streaming)
+                            setBool(ZenImuProperty_StreamData, true);
+                    });
 
                     // Communication protocol only supports uint32_t
-                    if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}))
+                    const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, true));
+                    if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
                         return static_cast<int32_t>(*result);
                     else
                         return result.error();
@@ -345,38 +337,6 @@ namespace zen
         return nonstd::make_unexpected(ZenError_UnknownProperty);
     }
 
-    nonstd::expected<ZenMatrix3x3f, ZenError> LegacyImuProperties::getMatrix33(ZenProperty_t property) noexcept
-    {
-        const auto propertyV0 = imu::v0::map(property, true);
-        if (imu::v0::supportsGettingMatrix33DeviceProperty(propertyV0))
-        {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
-                        return nonstd::make_unexpected(error);
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                });
-
-                ZenMatrix3x3f matrix;
-                const auto result = m_communicator.sendAndWaitForArray<float>(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, gsl::make_span(matrix.data, 9));
-                if (result.first)
-                    return nonstd::make_unexpected(result.first);
-                
-                return matrix;
-            }
-            else
-            {
-                return nonstd::make_unexpected(streaming.error());
-            }
-        }
-
-        return nonstd::make_unexpected(ZenError_UnknownProperty);
-    }
-
     std::pair<ZenError, size_t> LegacyImuProperties::getString(ZenProperty_t property, gsl::span<char> buffer) noexcept
     {
         if (property == ZenImuProperty_SupportedFilterModes)
@@ -385,15 +345,11 @@ namespace zen
         return std::make_pair(ZenError_UnknownProperty, buffer.size());
     }
 
-    ZenError LegacyImuProperties::setArray(ZenProperty_t property, ZenPropertyType type, gsl::span<const std::byte> buffer) noexcept
+    ZenError LegacyImuProperties::setArray(ZenProperty_t property, ZenPropertyType propertyType, gsl::span<const std::byte> buffer) noexcept
     {
-        const auto propertyV0 = imu::v0::map(property, false);
-        const ZenPropertyType expectedType = imu::v0::supportsSettingArrayDeviceProperty(propertyV0);
-        const DeviceProperty_t deviceProperty = static_cast<DeviceProperty_t>(propertyV0);
-
-        if (expectedType)
+        if (!isConstant(property) && isArray(property))
         {
-            if (type != expectedType)
+            if (type(property) != propertyType)
                 return ZenError_WrongDataType;
 
             if (auto streaming = getBool(ZenImuProperty_StreamData))
@@ -407,8 +363,8 @@ namespace zen
                         setBool(ZenImuProperty_StreamData, true);
                 });
 
-                const size_t typeSize = sizeOfPropertyType(type);
-                if (auto error = m_communicator.sendAndWaitForAck(0, deviceProperty, deviceProperty, gsl::make_span(buffer.data(), typeSize * buffer.size())))
+                const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, false));
+                if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(buffer.data(), sizeOfPropertyType(propertyType) * buffer.size())))
                     return error;
 
                 notifyPropertyChange(property, buffer);
@@ -439,6 +395,60 @@ namespace zen
             }
             return ZenError_None;
         }
+        else if (property == ZenImuProperty_GyrUseAutoCalibration)
+        {
+            if (auto streaming = getBool(ZenImuProperty_StreamData))
+            {
+                if (*streaming)
+                    if (auto error = setBool(ZenImuProperty_StreamData, false))
+                        return error;
+
+                auto guard = finally([&]() {
+                    if (*streaming)
+                        setBool(ZenImuProperty_StreamData, true);
+                    });
+
+                uint32_t iValue = value ? 1 : 0;
+                const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetGyrUseAutoCalibration);
+                if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
+                    return error;
+
+                m_cache.gyrAutoCalibration = value;
+                notifyPropertyChange(property, value);
+                return ZenError_None;
+            }
+            else
+            {
+                return streaming.error();
+            }
+        }
+        else if (property == ZenImuProperty_GyrUseThreshold)
+        {
+            if (auto streaming = getBool(ZenImuProperty_StreamData))
+            {
+                if (*streaming)
+                    if (auto error = setBool(ZenImuProperty_StreamData, false))
+                        return error;
+
+                auto guard = finally([&]() {
+                    if (*streaming)
+                        setBool(ZenImuProperty_StreamData, true);
+                    });
+
+                uint32_t iValue = value ? 1 : 0;
+                const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetGyrUseThreshold);
+                if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
+                    return error;
+
+                m_cache.gyrUseThreshold = value;
+                notifyPropertyChange(property, value);
+                return ZenError_None;
+            }
+            else
+            {
+                return streaming.error();
+            }
+        }
         else if (property == ZenImuProperty_OutputLowPrecision)
             return setPrecisionDataFlag(value);
         else if (property == ZenImuProperty_OutputLinearAcc)
@@ -463,142 +473,91 @@ namespace zen
             return setOutputDataFlag<ZenImuProperty_OutputRawMag>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputPressure)
             return setOutputDataFlag<ZenImuProperty_OutputPressure>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
-        else
-        {
-            const auto propertyV0 = imu::v0::map(property, false);
-            if (propertyV0 == EDevicePropertyV0::SetGyrUseAutoCalibration)
-            {
-                if (auto streaming = getBool(ZenImuProperty_StreamData))
-                {
-                    if (*streaming)
-                        if (auto error = setBool(ZenImuProperty_StreamData, false))
-                            return error;
-
-                    auto guard = finally([&]() {
-                        if (*streaming)
-                            setBool(ZenImuProperty_StreamData, true);
-                    });
-
-                    uint32_t iValue = value ? 1 : 0;
-                    if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
-                        return error;
-
-                    m_cache.gyrAutoCalibration = value;
-                    notifyPropertyChange(property, value);
-                    return ZenError_None;
-                }
-                else
-                {
-                    return streaming.error();
-                }
-            }
-            else if (propertyV0 == EDevicePropertyV0::SetGyrUseThreshold)
-            {
-                if (auto streaming = getBool(ZenImuProperty_StreamData))
-                {
-                    if (*streaming)
-                        if (auto error = setBool(ZenImuProperty_StreamData, false))
-                            return error;
-
-                    auto guard = finally([&]() {
-                        if (*streaming)
-                            setBool(ZenImuProperty_StreamData, true);
-                    });
-
-                    uint32_t iValue = value ? 1 : 0;
-                    if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
-                        return error;
-
-                    m_cache.gyrUseThreshold = value;
-                    notifyPropertyChange(property, value);
-                    return ZenError_None;
-                }
-                else
-                {
-                    return streaming.error();
-                }
-            }
-        }
 
         return ZenError_UnknownProperty;
     }
 
     ZenError LegacyImuProperties::setFloat(ZenProperty_t property, float value) noexcept
     {
-        const auto propertyV0 = imu::v0::map(property, false);
-        if (propertyV0 == EDevicePropertyV0::SetCentricCompensationRate)
+        if (!isConstant(property) && !isArray(property) && type(property) == ZenPropertyType_Float)
         {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
+            if (property == ZenImuProperty_CentricCompensationRate)
             {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
+                if (auto streaming = getBool(ZenImuProperty_StreamData))
+                {
+                    if (*streaming)
+                        if (auto error = setBool(ZenImuProperty_StreamData, false))
+                            return error;
+
+                    auto guard = finally([&]() {
+                        if (*streaming)
+                            setBool(ZenImuProperty_StreamData, true);
+                    });
+
+                    constexpr float eps = std::numeric_limits<float>::epsilon();
+                    const uint32_t iValue = (-eps <= value && value <= eps) ? 0 : 1; // Account for imprecision of float
+                    const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetCentricCompensationRate);
+                    if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
                         return error;
 
-                auto guard = finally([&]() {
+                    notifyPropertyChange(property, value);
+                    return ZenError_None;
+                }
+                else
+                {
+                    return streaming.error();
+                }
+            }
+            else if (property == ZenImuProperty_LinearCompensationRate)
+            {
+                if (auto streaming = getBool(ZenImuProperty_StreamData))
+                {
                     if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                });
+                        if (auto error = setBool(ZenImuProperty_StreamData, false))
+                            return error;
 
-                constexpr float eps = std::numeric_limits<float>::epsilon();
-                uint32_t iValue = (-eps <= value && value <= eps) ? 0 : 1; // Account for imprecision of float
-                if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
-                    return error;
+                    auto guard = finally([&]() {
+                        if (*streaming)
+                            setBool(ZenImuProperty_StreamData, true);
+                    });
 
-                notifyPropertyChange(property, value);
-                return ZenError_None;
+                    uint32_t iValue = lroundf(value);
+                    const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetLinearCompensationRate);
+                    if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
+                        return error;
+
+                    notifyPropertyChange(property, value);
+                    return ZenError_None;
+                }
+                else
+                {
+                    return streaming.error();
+                }
             }
             else
             {
-                return streaming.error();
-            }
-        }
-        else if (propertyV0 == EDevicePropertyV0::SetLinearCompensationRate)
-        {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
+                if (auto streaming = getBool(ZenImuProperty_StreamData))
+                {
+                    if (*streaming)
+                        if (auto error = setBool(ZenImuProperty_StreamData, false))
+                            return error;
+
+                    auto guard = finally([&]() {
+                        if (*streaming)
+                            setBool(ZenImuProperty_StreamData, true);
+                    });
+
+                    const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, false));
+                    if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&value), sizeof(value))))
                         return error;
 
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                });
-
-                uint32_t iValue = lroundf(value);
-                if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
-                    return error;
-
-                notifyPropertyChange(property, value);
-                return ZenError_None;
-            }
-            else
-            {
-                return streaming.error();
-            }
-        }
-        else if (imu::v0::supportsSettingFloatDeviceProperty(propertyV0))
-        {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
-                        return error;
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                });
-
-                if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<const std::byte*>(&value), sizeof(value))))
-                    return error;
-
-                notifyPropertyChange(property, value);
-                return ZenError_None;
-            }
-            else
-            {
-                return streaming.error();
+                    notifyPropertyChange(property, value);
+                    return ZenError_None;
+                }
+                else
+                {
+                    return streaming.error();
+                }
             }
         }
 
@@ -607,8 +566,7 @@ namespace zen
 
     ZenError LegacyImuProperties::setInt32(ZenProperty_t property, int32_t value) noexcept
     {
-        const auto propertyV0 = imu::v0::map(property, false);
-        if (imu::v0::supportsSettingInt32DeviceProperty(propertyV0))
+        if (!isConstant(property) && !isArray(property) && type(property) == ZenPropertyType_Int32)
         {
             if (auto streaming = getBool(ZenImuProperty_StreamData))
             {
@@ -634,7 +592,8 @@ namespace zen
                 else
                     uiValue = static_cast<uint32_t>(value);
 
-                if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<const std::byte*>(&uiValue), sizeof(uiValue))))
+                const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, false));
+                if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&uiValue), sizeof(uiValue))))
                     return error;
 
                 if (property == ZenImuProperty_SamplingRate)
@@ -652,51 +611,24 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    ZenError LegacyImuProperties::setMatrix33(ZenProperty_t property, const ZenMatrix3x3f& value) noexcept
-    {
-        const auto propertyV0 = imu::v0::map(property, false);
-        if (imu::v0::supportsSettingMatrix33DeviceProperty(propertyV0))
-        {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
-                        return error;
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                });
-
-                if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), gsl::make_span(reinterpret_cast<const std::byte*>(value.data), 9 * sizeof(float))))
-                    return error;
-
-                notifyPropertyChange(property, gsl::make_span(reinterpret_cast<const std::byte*>(&value.data[0]), 9));
-                return ZenError_None;
-            }
-            else
-            {
-                return streaming.error();
-            }
-        }
-
-        return ZenError_UnknownProperty;
-    }
-
     bool LegacyImuProperties::isArray(ZenProperty_t property) const noexcept
     {
         switch (property)
         {
         case ZenImuProperty_SupportedSamplingRates:
         case ZenImuProperty_SupportedFilterModes:
+        case ZenImuProperty_AccAlignment:
         case ZenImuProperty_AccBias:
         case ZenImuProperty_AccSupportedRanges:
+        case ZenImuProperty_GyrAlignment:
         case ZenImuProperty_GyrBias:
         case ZenImuProperty_GyrSupportedRanges:
+        case ZenImuProperty_MagAlignment:
         case ZenImuProperty_MagBias:
         case ZenImuProperty_MagSupportedRanges:
         case ZenImuProperty_MagReference:
         case ZenImuProperty_MagHardIronOffset:
+        case ZenImuProperty_MagSoftIronMatrix:
             return true;
 
         default:
@@ -758,11 +690,15 @@ namespace zen
         case ZenImuProperty_CentricCompensationRate:
         case ZenImuProperty_LinearCompensationRate:
         case ZenImuProperty_FieldRadius:
+        case ZenImuProperty_AccAlignment:
         case ZenImuProperty_AccBias:
+        case ZenImuProperty_GyrAlignment:
         case ZenImuProperty_GyrBias:
+        case ZenImuProperty_MagAlignment:
         case ZenImuProperty_MagBias:
         case ZenImuProperty_MagReference:
         case ZenImuProperty_MagHardIronOffset:
+        case ZenImuProperty_MagSoftIronMatrix:
             return ZenPropertyType_Float;
 
         case ZenImuProperty_SamplingRate:
@@ -777,12 +713,6 @@ namespace zen
         case ZenImuProperty_MagRange:
         case ZenImuProperty_MagSupportedRanges:
             return ZenPropertyType_Int32;
-
-        case ZenImuProperty_AccAlignment:
-        case ZenImuProperty_GyrAlignment:
-        case ZenImuProperty_MagAlignment:
-        case ZenImuProperty_MagSoftIronMatrix:
-            return ZenPropertyType_Matrix;
 
         case ZenImuProperty_SupportedFilterModes:
             return ZenPropertyType_String;

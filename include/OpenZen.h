@@ -112,13 +112,6 @@ namespace zen
             return result;
         }
 
-        std::pair<ZenError, ZenMatrix3x3f> getMatrix33Property(ZenProperty_t property)
-        {
-            auto result = std::make_pair(ZenError_None, ZenMatrix3x3f{});
-            result.first = ZenSensorComponentGetMatrix33Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, &result.second);
-            return result;
-        }
-
         std::pair<ZenError, size_t> getStringProperty(ZenProperty_t property, char* const buffer, size_t length)
         {
             auto result = std::make_pair(ZenError_None, length);
@@ -152,11 +145,6 @@ namespace zen
         ZenError setInt32Property(ZenProperty_t property, int32_t value)
         {
             return ZenSensorComponentSetInt32Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
-        }
-
-        ZenError setMatrix33Property(ZenProperty_t property, const ZenMatrix3x3f& value)
-        {
-            return ZenSensorComponentSetMatrix33Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, &value);
         }
 
         ZenError setStringProperty(ZenProperty_t property, std::string_view value)
@@ -250,13 +238,6 @@ namespace zen
             return result;
         }
 
-        std::pair<ZenError, ZenMatrix3x3f> getMatrix33Property(ZenProperty_t property)
-        {
-            auto result = std::make_pair(ZenError_None, ZenMatrix3x3f{});
-            result.first = ZenSensorGetMatrix33Property(m_clientHandle, m_sensorHandle, property, &result.second);
-            return result;
-        }
-
         std::pair<ZenError, size_t> getStringProperty(ZenProperty_t property, char* const buffer, size_t length)
         {
             auto result = std::make_pair(ZenError_None, length);
@@ -290,11 +271,6 @@ namespace zen
         ZenError setInt32Property(ZenProperty_t property, int32_t value)
         {
             return ZenSensorSetInt32Property(m_clientHandle, m_sensorHandle, property, value);
-        }
-
-        ZenError setMatrix33Property(ZenProperty_t property, const ZenMatrix3x3f& value)
-        {
-            return ZenSensorSetMatrix33Property(m_clientHandle, m_sensorHandle, property, &value);
         }
 
         ZenError setStringProperty(ZenProperty_t property, std::string_view value)

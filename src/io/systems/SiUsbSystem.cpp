@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include "OpenZen.h"
 #include "SensorManager.h"
 #include "io/interfaces/SiUsbInterface.h"
 #include "utility/IPlatformDll.h"

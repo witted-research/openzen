@@ -13,14 +13,18 @@ namespace zen
             switch (property)
             {
             case ZenImuProperty_SupportedFilterModes:
+            case ZenImuProperty_AccAlignment:
             case ZenImuProperty_AccBias:
             case ZenImuProperty_AccSupportedRanges:
+            case ZenImuProperty_GyrAlignment:
             case ZenImuProperty_GyrBias:
             case ZenImuProperty_GyrSupportedRanges:
+            case ZenImuProperty_MagAlignment:
             case ZenImuProperty_MagBias:
             case ZenImuProperty_MagSupportedRanges:
             case ZenImuProperty_MagReference:
             case ZenImuProperty_MagHardIronOffset:
+            case ZenImuProperty_MagSoftIronMatrix:
                 return true;
 
             default:
@@ -82,11 +86,15 @@ namespace zen
             case ZenImuProperty_CentricCompensationRate:
             case ZenImuProperty_LinearCompensationRate:
             case ZenImuProperty_FieldRadius:
+            case ZenImuProperty_AccAlignment:
             case ZenImuProperty_AccBias:
+            case ZenImuProperty_GyrAlignment:
             case ZenImuProperty_GyrBias:
+            case ZenImuProperty_MagAlignment:
             case ZenImuProperty_MagBias:
             case ZenImuProperty_MagReference:
             case ZenImuProperty_MagHardIronOffset:
+            case ZenImuProperty_MagSoftIronMatrix:
                 return ZenPropertyType_Float;
 
             case ZenImuProperty_FilterMode:
@@ -99,12 +107,6 @@ namespace zen
             case ZenImuProperty_MagRange:
             case ZenImuProperty_MagSupportedRanges:
                 return ZenPropertyType_Int32;
-
-            case ZenImuProperty_AccAlignment:
-            case ZenImuProperty_GyrAlignment:
-            case ZenImuProperty_MagAlignment:
-            case ZenImuProperty_MagSoftIronMatrix:
-                return ZenPropertyType_Matrix;
 
             case ZenImuProperty_SupportedFilterModes:
                 return ZenPropertyType_String;

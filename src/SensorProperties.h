@@ -30,9 +30,6 @@ namespace zen
         /** If successful fills the value with the property's integer value, otherwise returns an error. */
         nonstd::expected<int32_t, ZenError> getInt32(ZenProperty_t property) noexcept override;
 
-        /** If successful fills the value with the property's matrix value, otherwise returns an error. */
-        nonstd::expected<ZenMatrix3x3f, ZenError> getMatrix33(ZenProperty_t) noexcept override;
-
         /** If successful fills the buffer with the property's string value and sets the buffer's string size.
          * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
          */
@@ -52,9 +49,6 @@ namespace zen
 
         /** If successful sets the integer property, otherwise returns an error. */
         ZenError setInt32(ZenProperty_t property, int32_t value) noexcept override;
-
-        /** If successful sets the matrix property, otherwise returns an error. */
-        ZenError setMatrix33(ZenProperty_t property, const ZenMatrix3x3f& value) noexcept override;
 
         /** If successful sets the string property, otherwise returns an error. */
         ZenError setString(ZenProperty_t property, gsl::span<const char> buffer) noexcept override;
@@ -108,9 +102,6 @@ namespace zen
 
         case ZenPropertyType_UInt64:
             return sizeof(uint64_t);
-
-        case ZenPropertyType_Matrix:
-            return 9 * sizeof(float);
 
         case ZenPropertyType_String:
             return sizeof(char);

@@ -73,9 +73,6 @@ ZEN_API ZenError ZenSensorGetFloatProperty(ZenClientHandle_t clientHandle, ZenSe
 /** If successful fills the value with the property's signed integer value, otherwise returns an error. */
 ZEN_API ZenError ZenSensorGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, int32_t* const outValue);
 
-/** If successful fills the value with the property's matrix value, otherwise returns an error. */
-ZEN_API ZenError ZenSensorGetMatrix33Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, ZenMatrix3x3f* const outValue);
-
 /** If successful fills the buffer with the property's string value and sets the buffer's string size.
  * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
  */
@@ -95,9 +92,6 @@ ZEN_API ZenError ZenSensorSetFloatProperty(ZenClientHandle_t clientHandle, ZenSe
 
 /** If successful sets the integer property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, int32_t value);
-
-/** If successful sets the matrix property, otherwise returns an error. */
-ZEN_API ZenError ZenSensorSetMatrix33Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, const ZenMatrix3x3f* const value);
 
 /** If successful sets the string property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorSetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, const char* buffer, size_t bufferSize);
@@ -138,9 +132,6 @@ ZEN_API ZenError ZenSensorComponentGetFloatProperty(ZenClientHandle_t clientHand
 /** If successful fills the value with the property's signed integer value, otherwise returns an error. */
 ZEN_API ZenError ZenSensorComponentGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, int32_t* const outValue);
 
-/** If successful fills the value with the property's matrix value, otherwise returns an error. */
-ZEN_API ZenError ZenSensorComponentGetMatrix33Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, ZenMatrix3x3f* const outValue);
-
 /** If successful fills the buffer with the property's string value and sets the buffer's string size.
  * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
  */
@@ -160,9 +151,6 @@ ZEN_API ZenError ZenSensorComponentSetFloatProperty(ZenClientHandle_t clientHand
 
 /** If successful sets the integer property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorComponentSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, int32_t value);
-
-/** If successful sets the matrix property, otherwise returns an error. */
-ZEN_API ZenError ZenSensorComponentSetMatrix33Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, const ZenMatrix3x3f* const value);
 
 /** If successful sets the string property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorComponentSetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, const char* buffer, size_t bufferSize);

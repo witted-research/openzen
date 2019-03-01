@@ -270,11 +270,11 @@ typedef enum EZenSensorProperty : ZenProperty_t
 {
     ZenSensorProperty_Invalid = 0,
 
-    ZenSensorProperty_DeviceName = 1000,         // char[16]
-    ZenSensorProperty_FirmwareInfo,              // char[16]
+    ZenSensorProperty_DeviceName = 1000,         // string (char[16])
+    ZenSensorProperty_FirmwareInfo,              // string (char[16))
     ZenSensorProperty_FirmwareVersion,           // int[3]
+    ZenSensorProperty_SerialNumber,              // string (char[24])
     ZenSensorProperty_RestoreFactorySettings,    // void
-    ZenSensorProperty_SerialNumber,              // char[24]
     ZenSensorProperty_StoreSettingsInFlash,      // void
 
     ZenSensorProperty_BatteryCharging,           // bool
@@ -311,30 +311,30 @@ typedef enum EZenImuProperty : ZenProperty_t
 
     ZenImuProperty_FieldRadius,                  // float
     ZenImuProperty_FilterMode,                   // int
-    ZenImuProperty_SupportedFilterModes,         // char[]
+    ZenImuProperty_SupportedFilterModes,         // string
     ZenImuProperty_FilterPreset,                 // int (future: float acc_covar, mag_covar)
 
     ZenImuProperty_OrientationOffsetMode,        // int
 
-    ZenImuProperty_AccAlignment,                 // matrix
+    ZenImuProperty_AccAlignment,                 // float[9]
     ZenImuProperty_AccBias,                      // float[3]
     ZenImuProperty_AccRange,                     // int
     ZenImuProperty_AccSupportedRanges,           // int[]
 
-    ZenImuProperty_GyrAlignment,                 // matrix
+    ZenImuProperty_GyrAlignment,                 // float[9]
     ZenImuProperty_GyrBias,                      // float[3]
     ZenImuProperty_GyrRange,                     // int
     ZenImuProperty_GyrSupportedRanges,           // int[]
     ZenImuProperty_GyrUseAutoCalibration,        // bool
     ZenImuProperty_GyrUseThreshold,              // bool
 
-    ZenImuProperty_MagAlignment,                 // matrix
+    ZenImuProperty_MagAlignment,                 // float[9]
     ZenImuProperty_MagBias,                      // float[3]
     ZenImuProperty_MagRange,                     // int
     ZenImuProperty_MagSupportedRanges,           // int[]
     ZenImuProperty_MagReference,                 // float[3]
     ZenImuProperty_MagHardIronOffset,            // float[3]
-    ZenImuProperty_MagSoftIronMatrix,            // matrix
+    ZenImuProperty_MagSoftIronMatrix,            // float[9]
 
     ZenImuProperty_OutputLowPrecision,           // bool
     ZenImuProperty_OutputRawAcc,                 // bool
@@ -371,18 +371,11 @@ typedef enum ZenPropertyType
     ZenPropertyType_UInt64 = 4,
     ZenPropertyType_String = 5,
 
-    ZenPropertyType_Matrix = 10,
-
     ZenPropertyType_Json = 40,
 
 
     ZenPropertyType_Max
 } ZenPropertyType;
-
-typedef struct ZenMatrix3x3f
-{
-    float data[9];
-} ZenMatrix3x3f;
 
 static const char g_zenSensorType_Imu[] = "imu";
 
