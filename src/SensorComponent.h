@@ -17,6 +17,8 @@ namespace zen
             : m_properties(std::move(properties))
         {}
 
+        virtual ~SensorComponent() noexcept = default;
+
         /** Tries to initialize settings of the sensor's component that can fail.
          * After succesfully completing init, m_properties should be set.
          */
