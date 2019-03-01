@@ -65,6 +65,9 @@ namespace zen
         {
             switch (property)
             {
+            case ZenImuProperty_SupportedFilterModes:
+                return ZenPropertyType_Byte;
+
             case ZenImuProperty_StreamData:
             case ZenImuProperty_GyrUseAutoCalibration:
             case ZenImuProperty_GyrUseThreshold:
@@ -107,9 +110,6 @@ namespace zen
             case ZenImuProperty_MagRange:
             case ZenImuProperty_MagSupportedRanges:
                 return ZenPropertyType_Int32;
-
-            case ZenImuProperty_SupportedFilterModes:
-                return ZenPropertyType_String;
 
             default:
                 return ZenPropertyType_Invalid;

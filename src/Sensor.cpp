@@ -277,7 +277,7 @@ namespace zen
                 case EDevicePropertyV0::GetSerialNumber:
                 case EDevicePropertyV0::GetDeviceName:
                 case EDevicePropertyV0::GetFirmwareInfo:
-                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const char*>(data.data()), data.size()));
+                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
 
                 case EDevicePropertyV0::GetFirmwareVersion:
                     if (data.size() != sizeof(uint32_t) * 3)

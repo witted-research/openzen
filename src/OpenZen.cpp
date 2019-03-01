@@ -400,30 +400,6 @@ ZEN_API ZenError ZenSensorGetInt32Property(ZenClientHandle_t clientHandle, ZenSe
     }
 }
 
-ZEN_API ZenError ZenSensorGetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, char* const buffer, size_t* const bufferSize)
-{
-    if (bufferSize == nullptr)
-        return ZenError_IsNull;
-
-    if (auto client = getClient(clientHandle))
-    {
-        if (auto sensor = client->findSensor(sensorHandle))
-        {
-            const auto[error, size] = sensor->properties()->getString(property, gsl::make_span(buffer, *bufferSize));
-            *bufferSize = size;
-            return error;
-        }
-        else
-        {
-            return ZenError_InvalidSensorHandle;
-        }
-    }
-    else
-    {
-        return ZenError_InvalidClientHandle;
-    }
-}
-
 ZEN_API ZenError ZenSensorGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, uint64_t* const outValue)
 {
     if (outValue == nullptr)
@@ -511,24 +487,6 @@ ZEN_API ZenError ZenSensorSetInt32Property(ZenClientHandle_t clientHandle, ZenSe
         else
             return ZenError_InvalidSensorHandle;
     }
-    {
-        return ZenError_InvalidClientHandle;
-    }
-}
-
-ZEN_API ZenError ZenSensorSetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, const char* buffer, size_t bufferSize)
-{
-    if (buffer == nullptr)
-        return ZenError_IsNull;
-
-    if (auto client = getClient(clientHandle))
-    {
-        if (auto sensor = client->findSensor(sensorHandle))
-            return sensor->properties()->setString(property, gsl::make_span(buffer, bufferSize));
-        else
-            return ZenError_InvalidSensorHandle;
-    }
-    else
     {
         return ZenError_InvalidClientHandle;
     }
@@ -796,37 +754,6 @@ ZEN_API ZenError ZenSensorComponentGetInt32Property(ZenClientHandle_t clientHand
     }
 }
 
-ZEN_API ZenError ZenSensorComponentGetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, char* const buffer, size_t* const bufferSize)
-{
-    if (bufferSize == nullptr)
-        return ZenError_IsNull;
-
-    if (auto client = getClient(clientHandle))
-    {
-        if (auto sensor = client->findSensor(sensorHandle))
-        {
-            if (auto component = getComponent(sensor, componentHandle))
-            {
-                const auto[error, size] = component->properties()->getString(property, gsl::make_span(buffer, *bufferSize));
-                *bufferSize = size;
-                return error;
-            }
-            else
-            {
-                return ZenError_InvalidComponentHandle;
-            }
-        }
-        else
-        {
-            return ZenError_InvalidSensorHandle;
-        }
-    }
-    else
-    {
-        return ZenError_InvalidClientHandle;
-    }
-}
-
 ZEN_API ZenError ZenSensorComponentGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, uint64_t* const outValue)
 {
     if (outValue == nullptr)
@@ -941,31 +868,6 @@ ZEN_API ZenError ZenSensorComponentSetInt32Property(ZenClientHandle_t clientHand
         {
             if (auto component = getComponent(sensor, componentHandle))
                 return component->properties()->setInt32(property, value);
-            else
-                return ZenError_InvalidComponentHandle;
-        }
-        else
-        {
-            return ZenError_InvalidSensorHandle;
-        }
-    }
-    else
-    {
-        return ZenError_InvalidClientHandle;
-    }
-}
-
-ZEN_API ZenError ZenSensorComponentSetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, const char* buffer, size_t bufferSize)
-{
-    if (buffer == nullptr)
-        return ZenError_IsNull;
-
-    if (auto client = getClient(clientHandle))
-    {
-        if (auto sensor = client->findSensor(sensorHandle))
-        {
-            if (auto component = getComponent(sensor, componentHandle))
-                return component->properties()->setString(property, gsl::make_span(buffer, bufferSize));
             else
                 return ZenError_InvalidComponentHandle;
         }

@@ -46,11 +46,6 @@ namespace zen
         /** If successful fills the value with the property's signed integer value, otherwise returns an error. */
         virtual nonstd::expected<int32_t, ZenError> getInt32(ZenProperty_t property) noexcept = 0;
 
-        /** If successful fills the buffer with the property's string value and sets the buffer's string size.
-         * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
-         */
-        virtual std::pair<ZenError, size_t> getString(ZenProperty_t property, gsl::span<char> buffer) noexcept = 0;
-
         /** If successful fills the value with the property's unsigned integer value, otherwise returns an error. */
         virtual nonstd::expected<uint64_t, ZenError> getUInt64(ZenProperty_t property) noexcept = 0;
 
@@ -65,9 +60,6 @@ namespace zen
 
         /** If successful sets the integer property, otherwise returns an error. */
         virtual ZenError setInt32(ZenProperty_t property, int32_t value) noexcept = 0;
-
-        /** If successful sets the string property, otherwise returns an error. */
-        virtual ZenError setString(ZenProperty_t property, gsl::span<const char> buffer) noexcept = 0;
 
         /** If successful sets the unsigned integer property, otherwise returns an error. */
         virtual ZenError setUInt64(ZenProperty_t property, uint64_t value) noexcept = 0;

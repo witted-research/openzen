@@ -218,7 +218,7 @@ namespace zen
             return std::make_pair(ZenError_None, supported.size());
         }
 
-        constexpr std::pair<ZenError, size_t> supportedFilterModes(gsl::span<char> buffer)
+        constexpr std::pair<ZenError, size_t> supportedFilterModes(gsl::span<std::byte> buffer)
         {
             const char json[]{
                 "{\n"

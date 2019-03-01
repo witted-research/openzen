@@ -73,11 +73,6 @@ ZEN_API ZenError ZenSensorGetFloatProperty(ZenClientHandle_t clientHandle, ZenSe
 /** If successful fills the value with the property's signed integer value, otherwise returns an error. */
 ZEN_API ZenError ZenSensorGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, int32_t* const outValue);
 
-/** If successful fills the buffer with the property's string value and sets the buffer's string size.
- * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
- */
-ZEN_API ZenError ZenSensorGetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, char* const buffer, size_t* const bufferSize);
-
 /** If successful fills the value with the property's unsigned integer value, otherwise returns an error. */
 ZEN_API ZenError ZenSensorGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, uint64_t* const outValue);
 
@@ -92,9 +87,6 @@ ZEN_API ZenError ZenSensorSetFloatProperty(ZenClientHandle_t clientHandle, ZenSe
 
 /** If successful sets the integer property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, int32_t value);
-
-/** If successful sets the string property, otherwise returns an error. */
-ZEN_API ZenError ZenSensorSetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, const char* buffer, size_t bufferSize);
 
 /** If successful sets the unsigned integer property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorSetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, uint64_t value);
@@ -132,11 +124,6 @@ ZEN_API ZenError ZenSensorComponentGetFloatProperty(ZenClientHandle_t clientHand
 /** If successful fills the value with the property's signed integer value, otherwise returns an error. */
 ZEN_API ZenError ZenSensorComponentGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, int32_t* const outValue);
 
-/** If successful fills the buffer with the property's string value and sets the buffer's string size.
- * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
- */
-ZEN_API ZenError ZenSensorComponentGetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, char* const buffer, size_t* const bufferSize);
-
 /** If successful fills the value with the property's unsigned integer value, otherwise returns an error. */
 ZEN_API ZenError ZenSensorComponentGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, uint64_t* const outValue);
 
@@ -151,9 +138,6 @@ ZEN_API ZenError ZenSensorComponentSetFloatProperty(ZenClientHandle_t clientHand
 
 /** If successful sets the integer property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorComponentSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, int32_t value);
-
-/** If successful sets the string property, otherwise returns an error. */
-ZEN_API ZenError ZenSensorComponentSetStringProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, const char* buffer, size_t bufferSize);
 
 /** If successful sets the unsigned integer property, otherwise returns an error. */
 ZEN_API ZenError ZenSensorComponentSetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property, uint64_t value);

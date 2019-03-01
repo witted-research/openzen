@@ -196,33 +196,6 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
-    std::pair<ZenError, size_t> LegacyCoreProperties::getString(ZenProperty_t property, gsl::span<char> buffer) noexcept
-    {
-        if (type(property) == ZenPropertyType_String)
-        {
-            if (auto streaming = m_imu.getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = m_imu.setBool(ZenImuProperty_StreamData, false))
-                        return std::make_pair(error, buffer.size());
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        m_imu.setBool(ZenImuProperty_StreamData, true);
-                });
-
-                const auto propertyV0 = base::v0::map(property, true);
-                return m_communicator.sendAndWaitForArray(0, static_cast<DeviceProperty_t>(propertyV0), static_cast<ZenProperty_t>(propertyV0), {}, buffer);
-            }
-            else
-            {
-                return std::make_pair(streaming.error(), buffer.size());
-            }
-        }
-
-        return std::make_pair(ZenError_UnknownProperty, buffer.size());
-    }
-
     ZenError LegacyCoreProperties::setInt32(ZenProperty_t property, int32_t value) noexcept
     {
         if (!isConstant(property) && !isArray(property) && type(property) == ZenPropertyType_Int32)
@@ -266,7 +239,10 @@ namespace zen
     {
         switch (property)
         {
+        case ZenSensorProperty_DeviceName:
+        case ZenSensorProperty_FirmwareInfo:
         case ZenSensorProperty_FirmwareVersion:
+        case ZenSensorProperty_SerialNumber:
         case ZenSensorProperty_SupportedBaudRates:
             return true;
 
@@ -279,10 +255,10 @@ namespace zen
     {
         switch (property)
         {
-        case ZenSensorProperty_SerialNumber:
         case ZenSensorProperty_DeviceName:
         case ZenSensorProperty_FirmwareInfo:
         case ZenSensorProperty_FirmwareVersion:
+        case ZenSensorProperty_SerialNumber:
         case ZenSensorProperty_SupportedBaudRates:
         case ZenSensorProperty_BatteryLevel:
         case ZenSensorProperty_BatteryVoltage:
@@ -310,6 +286,11 @@ namespace zen
     {
         switch (property)
         {
+        case ZenSensorProperty_DeviceName:
+        case ZenSensorProperty_FirmwareInfo:
+        case ZenSensorProperty_SerialNumber:
+            return ZenPropertyType_Byte;
+
         case ZenSensorProperty_BatteryCharging:
             return ZenPropertyType_Bool;
 
@@ -323,11 +304,6 @@ namespace zen
         case ZenSensorProperty_DataMode:
         case ZenSensorProperty_TimeOffset:
             return ZenPropertyType_Int32;
-
-        case ZenSensorProperty_DeviceName:
-        case ZenSensorProperty_FirmwareInfo:
-        case ZenSensorProperty_SerialNumber:
-            return ZenPropertyType_String;
 
         default:
             return ZenPropertyType_Invalid;

@@ -14,8 +14,8 @@ namespace zen
             {
             case ZenSensorProperty_DeviceName:
             case ZenSensorProperty_FirmwareInfo:
-            case ZenSensorProperty_SerialNumber:
             case ZenSensorProperty_FirmwareVersion:
+            case ZenSensorProperty_SerialNumber:
                 return true;
 
             default:
@@ -27,10 +27,10 @@ namespace zen
         {
             switch (property)
             {
-            case ZenSensorProperty_SerialNumber:
             case ZenSensorProperty_DeviceName:
             case ZenSensorProperty_FirmwareInfo:
             case ZenSensorProperty_FirmwareVersion:
+            case ZenSensorProperty_SerialNumber:
             case ZenSensorProperty_DataMode:
             case ZenSensorProperty_TimeOffset:
                 return false;
@@ -57,6 +57,11 @@ namespace zen
         {
             switch (property)
             {
+            case ZenSensorProperty_DeviceName:
+            case ZenSensorProperty_FirmwareInfo:
+            case ZenSensorProperty_SerialNumber:
+                return ZenPropertyType_Byte;
+
             case ZenSensorProperty_BatteryCharging:
                 return ZenPropertyType_Bool;
 
@@ -68,11 +73,6 @@ namespace zen
             case ZenSensorProperty_DataMode:
             case ZenSensorProperty_TimeOffset:
                 return ZenPropertyType_Int32;
-
-            case ZenSensorProperty_DeviceName:
-            case ZenSensorProperty_FirmwareInfo:
-            case ZenSensorProperty_SerialNumber:
-                return ZenPropertyType_String;
 
             default:
                 return ZenPropertyType_Invalid;

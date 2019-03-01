@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <cstring>
 #include <optional>
 #include <string_view>
@@ -17,6 +18,11 @@ namespace details
     template <typename T>
     struct PropertyType
     {};
+
+    template <> struct PropertyType<std::byte>
+    {
+        using type = std::integral_constant<ZenPropertyType, ZenPropertyType_Byte>;
+    };
 
     template <> struct PropertyType<bool>
     {
@@ -112,13 +118,6 @@ namespace zen
             return result;
         }
 
-        std::pair<ZenError, size_t> getStringProperty(ZenProperty_t property, char* const buffer, size_t length)
-        {
-            auto result = std::make_pair(ZenError_None, length);
-            result.first = ZenSensorComponentGetStringProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, buffer, &result.second);
-            return result;
-        }
-
         std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property)
         {
             auto result = std::make_pair(ZenError_None, uint64_t(0));
@@ -145,11 +144,6 @@ namespace zen
         ZenError setInt32Property(ZenProperty_t property, int32_t value)
         {
             return ZenSensorComponentSetInt32Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
-        }
-
-        ZenError setStringProperty(ZenProperty_t property, std::string_view value)
-        {
-            return ZenSensorComponentSetStringProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, value.data(), value.size());
         }
 
         ZenError setUInt64Property(ZenProperty_t property, uint64_t value)
@@ -238,13 +232,6 @@ namespace zen
             return result;
         }
 
-        std::pair<ZenError, size_t> getStringProperty(ZenProperty_t property, char* const buffer, size_t length)
-        {
-            auto result = std::make_pair(ZenError_None, length);
-            result.first = ZenSensorGetStringProperty(m_clientHandle, m_sensorHandle, property, buffer, &result.second);
-            return result;
-        }
-
         std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property)
         {
             auto result = std::make_pair(ZenError_None, uint64_t(0));
@@ -273,11 +260,6 @@ namespace zen
             return ZenSensorSetInt32Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
-        ZenError setStringProperty(ZenProperty_t property, std::string_view value)
-        {
-            return ZenSensorSetStringProperty(m_clientHandle, m_sensorHandle, property, value.data(), value.size());
-        }
-
         ZenError setUInt64Property(ZenProperty_t property, uint64_t value)
         {
             return ZenSensorSetUInt64Property(m_clientHandle, m_sensorHandle, property, value);
@@ -301,13 +283,13 @@ namespace zen
         {
             ZenSensorDesc desc;
 
-            auto [nameError, nameLength] = getStringProperty(ZenSensorProperty_DeviceName, desc.name, sizeof(ZenSensorDesc::name));
+            auto [nameError, nameLength] = getArrayProperty(ZenSensorProperty_DeviceName, reinterpret_cast<std::byte*>(desc.name), sizeof(ZenSensorDesc::name));
             if (nameError)
                 return std::make_pair(nameError, ZenSensorDesc{}); // [TODO] Specific error Sensor_NameTooLong
 
             desc.name[nameLength] = '\0';
 
-            auto [serialError, serialLength] = getStringProperty(ZenSensorProperty_SerialNumber, desc.serialNumber, sizeof(ZenSensorDesc::serialNumber));
+            auto [serialError, serialLength] = getArrayProperty(ZenSensorProperty_SerialNumber, reinterpret_cast<std::byte*>(desc.serialNumber), sizeof(ZenSensorDesc::serialNumber));
             if (serialError)
                 return std::make_pair(serialError, ZenSensorDesc{}); // [TODO] Specific error Sensor_SerialNumberTooLong
 

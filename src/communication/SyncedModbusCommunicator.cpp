@@ -123,7 +123,7 @@ namespace zen
     }
 
     template <typename T>
-    ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t property, ZenError error, const T& result) noexcept
+    ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t property, ZenError error, T result) noexcept
     {
         if (!prepareForPublishing())
             return ZenError_None;
@@ -207,27 +207,23 @@ namespace zen
         return false;
     }
 
+    template ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t, ZenError, gsl::span<const std::byte>) noexcept;
     template ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t, ZenError, gsl::span<const bool>) noexcept;
-    template ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t, ZenError, gsl::span<const char>) noexcept;
-    template ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t, ZenError, gsl::span<const unsigned char>) noexcept;
     template ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t, ZenError, gsl::span<const float>) noexcept;
     template ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t, ZenError, gsl::span<const int32_t>) noexcept;
     template ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t, ZenError, gsl::span<const uint64_t>) noexcept;
     // [TODO] Remove after we have removed backwards compatability with version 0
     template ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t, ZenError, gsl::span<const uint32_t>) noexcept;
 
-    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, const char&) noexcept;
-    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, const unsigned char&) noexcept;
-    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, const bool&) noexcept;
-    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, const float&) noexcept;
-    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, const int32_t&) noexcept;
-    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, const uint64_t&) noexcept;
+    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, bool) noexcept;
+    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, float) noexcept;
+    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, int32_t) noexcept;
+    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, uint64_t) noexcept;
     // [TODO] Remove after we have removed backwards compatability with version 0
-    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, const uint32_t&) noexcept;
+    template ZenError SyncedModbusCommunicator::publishResult(ZenProperty_t, ZenError, uint32_t) noexcept;
 
+    template std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>, gsl::span<std::byte>) noexcept;
     template std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>, gsl::span<bool>) noexcept;
-    template std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>, gsl::span<char>) noexcept;
-    template std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>, gsl::span<unsigned char>) noexcept;
     template std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>, gsl::span<float>) noexcept;
     template std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>, gsl::span<int32_t>) noexcept;
     template std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>, gsl::span<uint64_t>) noexcept;
@@ -235,8 +231,6 @@ namespace zen
     template std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>, gsl::span<uint32_t>) noexcept;
 
     template nonstd::expected<bool, ZenError> SyncedModbusCommunicator::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>) noexcept;
-    template nonstd::expected<char, ZenError> SyncedModbusCommunicator::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>) noexcept;
-    template nonstd::expected<unsigned char, ZenError> SyncedModbusCommunicator::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>) noexcept;
     template nonstd::expected<float, ZenError> SyncedModbusCommunicator::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>) noexcept;
     template nonstd::expected<int32_t, ZenError> SyncedModbusCommunicator::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>) noexcept;
     template nonstd::expected<uint64_t, ZenError> SyncedModbusCommunicator::sendAndWaitForResult(uint8_t, uint8_t, ZenProperty_t, gsl::span<const std::byte>) noexcept;

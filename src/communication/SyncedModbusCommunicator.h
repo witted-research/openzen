@@ -47,7 +47,7 @@ namespace zen
         ZenError publishArray(ZenProperty_t property, ZenError error, gsl::span<const T> array) noexcept;
 
         template <typename T>
-        ZenError publishResult(ZenProperty_t property, ZenError error, const T& result) noexcept;
+        ZenError publishResult(ZenProperty_t property, ZenError error, T result) noexcept;
 
     private:
         ZenError terminateWaitOnPublishOrTimeout() noexcept;

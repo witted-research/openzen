@@ -151,6 +151,8 @@ namespace zen
 
             if (property == ZenImuProperty_SupportedSamplingRates)
                 return imu::v0::supportedSamplingRates(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
+            else if (property == ZenImuProperty_SupportedFilterModes)
+                return imu::v0::supportedFilterModes(buffer);
             else if (property == ZenImuProperty_AccSupportedRanges)
                 return imu::v0::supportedAccRanges(gsl::make_span(reinterpret_cast<int32_t* const>(buffer.data()), buffer.size()));
             else if (property == ZenImuProperty_GyrSupportedRanges)
@@ -335,14 +337,6 @@ namespace zen
         }
 
         return nonstd::make_unexpected(ZenError_UnknownProperty);
-    }
-
-    std::pair<ZenError, size_t> LegacyImuProperties::getString(ZenProperty_t property, gsl::span<char> buffer) noexcept
-    {
-        if (property == ZenImuProperty_SupportedFilterModes)
-            return imu::v0::supportedFilterModes(buffer);
-
-        return std::make_pair(ZenError_UnknownProperty, buffer.size());
     }
 
     ZenError LegacyImuProperties::setArray(ZenProperty_t property, ZenPropertyType propertyType, gsl::span<const std::byte> buffer) noexcept
@@ -670,6 +664,9 @@ namespace zen
     {
         switch (property)
         {
+        case ZenImuProperty_SupportedFilterModes:
+            return ZenPropertyType_Byte;
+
         case ZenImuProperty_StreamData:
         case ZenImuProperty_GyrUseAutoCalibration:
         case ZenImuProperty_GyrUseThreshold:
@@ -713,9 +710,6 @@ namespace zen
         case ZenImuProperty_MagRange:
         case ZenImuProperty_MagSupportedRanges:
             return ZenPropertyType_Int32;
-
-        case ZenImuProperty_SupportedFilterModes:
-            return ZenPropertyType_String;
 
         default:
             return ZenPropertyType_Invalid;

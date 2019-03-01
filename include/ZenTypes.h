@@ -270,10 +270,10 @@ typedef enum EZenSensorProperty : ZenProperty_t
 {
     ZenSensorProperty_Invalid = 0,
 
-    ZenSensorProperty_DeviceName = 1000,         // string (char[16])
-    ZenSensorProperty_FirmwareInfo,              // string (char[16))
+    ZenSensorProperty_DeviceName = 1000,         // byte[16]
+    ZenSensorProperty_FirmwareInfo,              // byte[16]
     ZenSensorProperty_FirmwareVersion,           // int[3]
-    ZenSensorProperty_SerialNumber,              // string (char[24])
+    ZenSensorProperty_SerialNumber,              // byte[24]
     ZenSensorProperty_RestoreFactorySettings,    // void
     ZenSensorProperty_StoreSettingsInFlash,      // void
 
@@ -311,7 +311,7 @@ typedef enum EZenImuProperty : ZenProperty_t
 
     ZenImuProperty_FieldRadius,                  // float
     ZenImuProperty_FilterMode,                   // int
-    ZenImuProperty_SupportedFilterModes,         // string
+    ZenImuProperty_SupportedFilterModes,         // byte[]
     ZenImuProperty_FilterPreset,                 // int (future: float acc_covar, mag_covar)
 
     ZenImuProperty_OrientationOffsetMode,        // int
@@ -364,15 +364,12 @@ typedef enum ZenOrientationOffsetMode
 typedef enum ZenPropertyType
 {
     ZenPropertyType_Invalid = 0,
-
-    ZenPropertyType_Bool = 1,
-    ZenPropertyType_Float = 2,
-    ZenPropertyType_Int32 = 3,
-    ZenPropertyType_UInt64 = 4,
-    ZenPropertyType_String = 5,
-
-    ZenPropertyType_Json = 40,
-
+    
+    ZenPropertyType_Byte = 1,
+    ZenPropertyType_Bool = 2,
+    ZenPropertyType_Float = 3,
+    ZenPropertyType_Int32 = 4,
+    ZenPropertyType_UInt64 = 5,
 
     ZenPropertyType_Max
 } ZenPropertyType;

@@ -88,6 +88,12 @@ namespace zen
         {
             switch (type)
             {
+            case ZenPropertyType_Byte:
+            {
+                const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
+                return m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, buffer);
+            }
+
             case ZenPropertyType_Bool:
             {
                 const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
@@ -139,18 +145,6 @@ namespace zen
     }
 
     template <typename PropertyRules>
-    std::pair<ZenError, size_t> SensorProperties<PropertyRules>::getString(ZenProperty_t property, gsl::span<char> buffer) noexcept
-    {
-        if (m_rules.type(property) == ZenPropertyType_String)
-        {
-            const auto span = gsl::make_span(reinterpret_cast<const std::byte*>(&property), sizeof(property));
-            return m_communicator.sendAndWaitForArray(m_id, ZenProtocolFunction_Get, property, span, buffer);
-        }
-
-        return std::make_pair(ZenError_UnknownProperty, buffer.size());
-    }
-
-    template <typename PropertyRules>
     nonstd::expected<uint64_t, ZenError> SensorProperties<PropertyRules>::getUInt64(ZenProperty_t property) noexcept
     {
         return getResult<uint64_t>(property);
@@ -188,22 +182,6 @@ namespace zen
     ZenError SensorProperties<PropertyRules>::setInt32(ZenProperty_t property, int32_t value) noexcept
     {
         return setAndAck<int32_t>(property, value);
-    }
-
-    template <typename PropertyRules>
-    ZenError SensorProperties<PropertyRules>::setString(ZenProperty_t property, gsl::span<const char> buffer) noexcept
-    {
-        if (!m_rules.isConstant(property) && m_rules.type(property) == ZenPropertyType_String)
-        {
-            const details::PropertyData wrapper(property, buffer);
-            if (auto error = m_communicator.sendAndWaitForAck(m_id, ZenProtocolFunction_Set, property, wrapper.data()))
-                return error;
-
-            notifyPropertyChange(property, gsl::make_span(reinterpret_cast<const std::byte*>(buffer.data()), buffer.size()));
-            return ZenError_None;
-        }
-
-        return ZenError_UnknownProperty;
     }
 
     template <typename PropertyRules>
@@ -263,6 +241,9 @@ namespace zen
                 {
                     switch (type)
                     {
+                    case ZenPropertyType_Byte:
+                        return communicator.publishArray(property, error, data);
+
                     case ZenPropertyType_Bool:
                         return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const bool*>(data.data()), data.size() / sizeof(bool)));
 
@@ -274,9 +255,6 @@ namespace zen
 
                     case ZenPropertyType_UInt64:
                         return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const uint64_t*>(data.data()), data.size() / sizeof(uint64_t)));
-
-                    case ZenPropertyType_String:
-                        return communicator.publishArray(property, error, gsl::make_span(reinterpret_cast<const char*>(data.data()), data.size() / sizeof(char)));
 
                     default:
                         return ZenError_InvalidArgument;

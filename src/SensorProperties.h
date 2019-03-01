@@ -30,11 +30,6 @@ namespace zen
         /** If successful fills the value with the property's integer value, otherwise returns an error. */
         nonstd::expected<int32_t, ZenError> getInt32(ZenProperty_t property) noexcept override;
 
-        /** If successful fills the buffer with the property's string value and sets the buffer's string size.
-         * Otherwise, returns an error and potentially sets the desired buffer size - if it is too small.
-         */
-        std::pair<ZenError, size_t> getString(ZenProperty_t property, gsl::span<char> buffer) noexcept override;
-
         /** If successful fills the value with the property's unsigned integer value, otherwise returns an error. */
         nonstd::expected<uint64_t, ZenError> getUInt64(ZenProperty_t) noexcept override;
 
@@ -49,9 +44,6 @@ namespace zen
 
         /** If successful sets the integer property, otherwise returns an error. */
         ZenError setInt32(ZenProperty_t property, int32_t value) noexcept override;
-
-        /** If successful sets the string property, otherwise returns an error. */
-        ZenError setString(ZenProperty_t property, gsl::span<const char> buffer) noexcept override;
 
         /** If successful sets the unsigned integer property, otherwise returns an error. */
         ZenError setUInt64(ZenProperty_t property, uint64_t value) noexcept override;
@@ -91,6 +83,9 @@ namespace zen
     {
         switch (type)
         {
+        case ZenPropertyType_Byte:
+            return sizeof(std::byte);
+
         case ZenPropertyType_Bool:
             return sizeof(bool);
 
@@ -102,9 +97,6 @@ namespace zen
 
         case ZenPropertyType_UInt64:
             return sizeof(uint64_t);
-
-        case ZenPropertyType_String:
-            return sizeof(char);
 
         default:
             return 0;
