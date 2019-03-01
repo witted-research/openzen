@@ -31,19 +31,20 @@ namespace zen
 
     ZenError ModbusCommunicator::processData(gsl::span<const std::byte> data) noexcept
     {
-        size_t length = data.size();
-        while (length > 0)
+        while (!data.empty())
         {
-            const size_t nParsedBytes = data.size() - length;
-            if (modbus::FrameParseError_None != m_parser->parse(data.data() + nParsedBytes, length))
+            if (modbus::FrameParseError_None != m_parser->parse(data))
             {
                 std::cout << "Received corrupt message: ";
-                for (auto c : gsl::make_span(data.data() + nParsedBytes, length))
+                for (auto c : data)
                     std::cout << std::to_integer<unsigned>(c) << ",";
                 std::cout << std::endl;
 
-                m_parser->reset();
-                length -= 1;
+                do
+                {
+                    m_parser->reset();
+                    data = data.subspan(1);
+                } while (!data.empty() && modbus::FrameParseError_None != m_parser->parse(data));
                 continue;
             }
 

@@ -204,92 +204,90 @@ namespace zen::modbus
         m_state = ASCIIFrameParseState::Start;
     }
 
-    FrameParseError ASCIIFrameParser::parse(const std::byte* data, size_t& length)
+    FrameParseError ASCIIFrameParser::parse(gsl::span<const std::byte>& data)
     {
-        auto it = data;
-        const auto end = data + length;
-        while (it != end)
+        while (!data.empty())
         {
             // Separate error checking of hexadecimal values for cleanliness
             if (m_state > ASCIIFrameParseState::Start && m_state < ASCIIFrameParseState::End1)
-                if (!isHex(*it))
+                if (!isHex(data[0]))
                     return FrameParseError_UnexpectedCharacter;
 
             switch (m_state)
             {
             case ASCIIFrameParseState::Start:
-                if (*it != std::byte(0x3a))
+                if (data[0] != std::byte(0x3a))
                     return FrameParseError_ExpectedStart;
 
                 m_state = ASCIIFrameParseState::Address1;
                 break;
 
             case ASCIIFrameParseState::Address1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = ASCIIFrameParseState::Address2;
                 break;
 
             case ASCIIFrameParseState::Address2:
-                m_frame.address = std::to_integer<uint8_t>(hexToByte(fromASCII(m_buffer), fromASCII(*it)));
+                m_frame.address = std::to_integer<uint8_t>(hexToByte(fromASCII(m_buffer), fromASCII(data[0])));
                 m_state = ASCIIFrameParseState::Function1;
                 break;
 
             case ASCIIFrameParseState::Function1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = ASCIIFrameParseState::Function2;
                 break;
 
             case ASCIIFrameParseState::Function2:
-                m_frame.function = std::to_integer<uint8_t>(hexToByte(fromASCII(m_buffer), fromASCII(*it)));
+                m_frame.function = std::to_integer<uint8_t>(hexToByte(fromASCII(m_buffer), fromASCII(data[0])));
                 m_state = ASCIIFrameParseState::Length1;
                 break;
 
             case ASCIIFrameParseState::Length1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = ASCIIFrameParseState::Length2;
                 break;
 
             case ASCIIFrameParseState::Length2:
-                m_length = std::to_integer<uint8_t>(hexToByte(fromASCII(m_buffer), fromASCII(*it)));
+                m_length = std::to_integer<uint8_t>(hexToByte(fromASCII(m_buffer), fromASCII(data[0])));
                 m_frame.data.reserve(m_length);
                 m_state = m_length != 0 ? ASCIIFrameParseState::Data1 : ASCIIFrameParseState::Check1;
                 break;
 
             case ASCIIFrameParseState::Data1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = ASCIIFrameParseState::Data2;
                 break;
 
             case ASCIIFrameParseState::Data2:
-                m_frame.data.emplace_back(hexToByte(fromASCII(m_buffer), fromASCII(*it)));
+                m_frame.data.emplace_back(hexToByte(fromASCII(m_buffer), fromASCII(data[0])));
                 m_state = m_frame.data.size() == m_length ? ASCIIFrameParseState::Check1 : ASCIIFrameParseState::Data1;
                 break;
 
             case ASCIIFrameParseState::Check1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = ASCIIFrameParseState::Check2;
                 break;
 
             case ASCIIFrameParseState::Check2:
-                if (hexToByte(fromASCII(m_buffer), fromASCII(*it)) != std::byte(lrc(m_frame.address, m_frame.function, m_frame.data.data(), m_length)))
+                if (hexToByte(fromASCII(m_buffer), fromASCII(data[0])) != std::byte(lrc(m_frame.address, m_frame.function, m_frame.data.data(), m_length)))
                     return FrameParseError_ChecksumInvalid;
 
                 m_state = ASCIIFrameParseState::End1;
                 break;
                 
             case ASCIIFrameParseState::End1:
-                if (*it != std::byte(0x0d))
+                if (data[0] != std::byte(0x0d))
                     return FrameParseError_ExpectedEnd;
 
                 m_state = ASCIIFrameParseState::End2;
                 break;
 
             case ASCIIFrameParseState::End2:
-                if (*it != std::byte(0x0a))
+                if (data[0] != std::byte(0x0a))
                     return FrameParseError_ExpectedEnd;
 
                 m_state = ASCIIFrameParseState::Finished;
-                length -= it - data + 1;
+                data = data.subspan(1);
                 return FrameParseError_None;
 
             case ASCIIFrameParseState::Finished:
@@ -299,10 +297,9 @@ namespace zen::modbus
                 return FrameParseError_UnexpectedCharacter;
             }
 
-            ++it;
+            data = data.subspan(1);
         }
 
-        length = 0;
         return FrameParseError_None;
     }
 
@@ -339,23 +336,21 @@ namespace zen::modbus
         m_state = LpFrameParseState::Start;
     }
 
-    FrameParseError LpFrameParser::parse(const std::byte* data, size_t& length)
+    FrameParseError LpFrameParser::parse(gsl::span<const std::byte>& data)
     {
-        auto it = data;
-        const auto end = data + length;
-        while (it != end)
+        while (!data.empty())
         {
             switch (m_state)
             {
             case LpFrameParseState::Start:
-                if (*it != std::byte(0x3a))
+                if (data[0] != std::byte(0x3a))
                     return FrameParseError_ExpectedStart;
 
                 m_state = LpFrameParseState::Address1;
                 break;
 
             case LpFrameParseState::Address1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = LpFrameParseState::Address2;
                 break;
 
@@ -365,7 +360,7 @@ namespace zen::modbus
                 break;
 
             case LpFrameParseState::Function1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = LpFrameParseState::Function2;
                 break;
 
@@ -375,46 +370,46 @@ namespace zen::modbus
                 break;
 
             case LpFrameParseState::Length1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = LpFrameParseState::Length2;
                 break;
 
             case LpFrameParseState::Length2:
-                m_length = static_cast<uint8_t>(combine(std::to_integer<uint8_t>(m_buffer), std::to_integer<uint8_t>(*it)));
+                m_length = static_cast<uint8_t>(combine(std::to_integer<uint8_t>(m_buffer), std::to_integer<uint8_t>(data[0])));
                 m_frame.data.reserve(m_length);
                 m_state = m_length != 0 ? LpFrameParseState::Data : LpFrameParseState::Check1;
                 break;
 
             case LpFrameParseState::Data:
-                m_frame.data.emplace_back(*it);
+                m_frame.data.emplace_back(data[0]);
                 m_state = m_frame.data.size() == m_length ? LpFrameParseState::Check1 : LpFrameParseState::Data;
                 break;
 
             case LpFrameParseState::Check1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = LpFrameParseState::Check2;
                 break;
 
             case LpFrameParseState::Check2:
-                if (combine(std::to_integer<uint8_t>(m_buffer), std::to_integer<uint8_t>(*it)) != lrcLp(m_frame.address, m_frame.function, m_frame.data.data(), m_length))
+                if (combine(std::to_integer<uint8_t>(m_buffer), std::to_integer<uint8_t>(data[0])) != lrcLp(m_frame.address, m_frame.function, m_frame.data.data(), m_length))
                     return FrameParseError_ChecksumInvalid;
 
                 m_state = LpFrameParseState::End1;
                 break;
 
             case LpFrameParseState::End1:
-                if (*it != std::byte(0x0d))
+                if (data[0] != std::byte(0x0d))
                     return FrameParseError_ExpectedEnd;
 
                 m_state = LpFrameParseState::End2;
                 break;
 
             case LpFrameParseState::End2:
-                if (*it != std::byte(0x0a))
+                if (data[0] != std::byte(0x0a))
                     return FrameParseError_ExpectedEnd;
 
                 m_state = LpFrameParseState::Finished;
-                length -= it - data + 1;
+                data = data.subspan(1);
                 return FrameParseError_None;
 
             case LpFrameParseState::Finished:
@@ -424,10 +419,9 @@ namespace zen::modbus
                 return FrameParseError_UnexpectedCharacter;
             }
 
-            ++it;
+            data = data.subspan(1);
         }
 
-        length = 0;
         return FrameParseError_None;
     }
 
@@ -459,47 +453,44 @@ namespace zen::modbus
         m_state = RTUFrameParseState::Address;
     }
 
-    FrameParseError RTUFrameParser::parse(const std::byte* data, size_t& length)
+    FrameParseError RTUFrameParser::parse(gsl::span<const std::byte>& data)
     {
-        auto it = data;
-        const auto end = data + length;
-
-        while (it != end)
+        while (!data.empty())
         {
             switch (m_state)
             {
             case RTUFrameParseState::Address:
-                m_frame.address = std::to_integer<uint8_t>(*it);
+                m_frame.address = std::to_integer<uint8_t>(data[0]);
                 m_state = RTUFrameParseState::Function;
                 break;
 
             case RTUFrameParseState::Function:
-                m_frame.function = std::to_integer<uint8_t>(*it);
+                m_frame.function = std::to_integer<uint8_t>(data[0]);
                 m_state = RTUFrameParseState::Length;
                 break;
 
             case RTUFrameParseState::Length:
-                m_length = std::to_integer<uint8_t>(*it);
+                m_length = std::to_integer<uint8_t>(data[0]);
                 m_frame.data.reserve(m_length);
                 m_state = m_length != 0 ? RTUFrameParseState::Data : RTUFrameParseState::Check1;
                 break;
 
             case RTUFrameParseState::Data:
-                m_frame.data.emplace_back(*it);
+                m_frame.data.emplace_back(data[0]);
                 m_state = m_frame.data.size() == m_length ? RTUFrameParseState::Check1 : RTUFrameParseState::Data;
                 break;
 
             case RTUFrameParseState::Check1:
-                m_buffer = *it;
+                m_buffer = data[0];
                 m_state = RTUFrameParseState::Check2;
                 break;
 
             case RTUFrameParseState::Check2:
-                if (combine(std::to_integer<uint8_t>(m_buffer), std::to_integer<uint8_t>(*it)) != crc16(0xffff, m_frame.address, m_frame.function, m_frame.data.data(), m_length))
+                if (combine(std::to_integer<uint8_t>(m_buffer), std::to_integer<uint8_t>(data[0])) != crc16(0xffff, m_frame.address, m_frame.function, m_frame.data.data(), m_length))
                     return FrameParseError_ChecksumInvalid;
 
                 m_state = RTUFrameParseState::Finished;
-                length -= it - data + 1;
+                data = data.subspan(1);
                 return FrameParseError_None;
 
             case RTUFrameParseState::Finished:
@@ -509,10 +500,9 @@ namespace zen::modbus
                 return FrameParseError_UnexpectedCharacter;
             }
 
-            ++it;
+            data = data.subspan(1);
         }
 
-        length = 0;
         return FrameParseError_None;
     }
 }

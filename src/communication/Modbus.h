@@ -6,6 +6,8 @@
 #include <memory>
 #include <vector>
 
+#include <gsl/span>
+
 namespace zen::modbus
 {
     struct Frame
@@ -42,7 +44,7 @@ namespace zen::modbus
         virtual ~IFrameParser() = default;
 
     public:
-        virtual FrameParseError parse(const std::byte* data, size_t& length) = 0;
+        virtual FrameParseError parse(gsl::span<const std::byte>& data) = 0;
         virtual void reset();
 
         virtual bool finished() const = 0;
@@ -89,7 +91,7 @@ namespace zen::modbus
     public:
         ASCIIFrameParser();
 
-        FrameParseError parse(const std::byte* data, size_t& length) override;
+        FrameParseError parse(gsl::span<const std::byte>& data) override;
         void reset() override;
 
         bool finished() const override { return m_state == ASCIIFrameParseState::Finished; }
@@ -128,7 +130,7 @@ namespace zen::modbus
     public:
         RTUFrameParser();
 
-        FrameParseError parse(const std::byte* data, size_t& length) override;
+        FrameParseError parse(gsl::span<const std::byte>& data) override;
         void reset() override;
 
         bool finished() const override { return m_state == RTUFrameParseState::Finished; }
@@ -168,7 +170,7 @@ namespace zen::modbus
     public:
         LpFrameParser();
 
-        FrameParseError parse(const std::byte* data, size_t& length) override;
+        FrameParseError parse(gsl::span<const std::byte>& data) override;
         void reset() override;
 
         bool finished() const override { return m_state == LpFrameParseState::Finished; }
