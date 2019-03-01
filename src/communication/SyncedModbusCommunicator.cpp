@@ -8,8 +8,8 @@ namespace zen
 {
     SyncedModbusCommunicator::SyncedModbusCommunicator(std::unique_ptr<ModbusCommunicator> communicator) noexcept
         : m_communicator(std::move(communicator))
-        , m_waiting{ 0 }
-        , m_publishing{ 0 }
+        , m_waiting ATOMIC_FLAG_INIT
+        , m_publishing ATOMIC_FLAG_INIT
         , m_resultError(ZenError_None)
     {}
 
