@@ -109,6 +109,14 @@ namespace zen
                 std::copy(data, data + 3, cache->hardIronOffset.data);
             });
         }
+
+        if (m_version == 0)
+        {
+            // Once setup is done, reset to streaming
+            if (ZenError_None != m_properties->setBool(ZenImuProperty_StreamData, true))
+                return ZenSensorInitError_RetrieveFailed;
+        }
+
         return ZenSensorInitError_None;
     }
 

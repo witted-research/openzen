@@ -33,7 +33,7 @@ namespace zen
         {
             auto properties = std::make_unique<LegacyImuProperties>(communicator);
 
-            // Initialize to non-streaming
+            // Initialize to non-streaming to retrieve the config bitset
             if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false))
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
 
