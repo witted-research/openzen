@@ -77,6 +77,8 @@ namespace zen
 
         lock.lock();
         const auto token = m_nextToken++;
+        lock.unlock();
+
         auto sensor = make_sensor(std::move(*agreement), std::move(communicator), token);
         if (!sensor)
             return nonstd::make_unexpected(sensor.error());
