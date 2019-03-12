@@ -17,6 +17,7 @@ namespace zen
     public:
         ConnectionNegotiator() noexcept;
 
+        /** Try to determine the appropriate baudrate, and when done negotiate the configuration of the sensor. */
         nonstd::expected<SensorConfig, ZenSensorInitError> negotiate(ModbusCommunicator& communicator) const noexcept;
 
     private:

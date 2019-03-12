@@ -26,12 +26,16 @@ namespace zen
         SensorManager() noexcept;
         ~SensorManager() noexcept;
 
+        /** Try to obtain a sensor based on a sensor description. */
         nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> obtain(const ZenSensorDesc& desc) noexcept;
 
+        /** Subscribe a client to a sensor */
         void subscribeToSensor(std::shared_ptr<Sensor> sensor, SensorClient& client) noexcept;
 
+        /** Subscribe a client to sensor discovery */
         void subscribeToSensorDiscovery(SensorClient& client) noexcept;
 
+        /** Unsubscribe a client from a sensor */
         void unsubscribeFromSensor(SensorClient& client, std::shared_ptr<Sensor> sensor) noexcept;
 
         /** Pushes an event to subscribed clients */

@@ -13,6 +13,7 @@
 
 namespace zen
 {
+    /** The synchronised communication pipeline */
     class SyncedModbusCommunicator
     {
     public:
@@ -33,29 +34,39 @@ namespace zen
         /** Returns whether the IO interface equals the sensor description */
         bool equals(const ZenSensorDesc& desc) const noexcept { return m_communicator->equals(desc); }
 
+        /** Sends data to the IO interface, and waits for an acknowledgment */
         ZenError sendAndWaitForAck(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const std::byte> data) noexcept;
 
+        /** Sends data to the IO interface, and waits for a result array */
         template <typename T>
         std::pair<ZenError, size_t> sendAndWaitForArray(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const std::byte> data, gsl::span<T> outArray) noexcept;
 
+        /** Sends data to the IO interface, and waits for a result value */
         template <typename T>
         nonstd::expected<T, ZenError> sendAndWaitForResult(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const std::byte> data) noexcept;
 
+        /** Publish an acknowledgement from the IO interface */
         ZenError publishAck(ZenProperty_t property, ZenError error) noexcept;
 
+        /** Publish a result array from the IO interface */
         template <typename T>
         ZenError publishArray(ZenProperty_t property, ZenError error, gsl::span<const T> array) noexcept;
 
+        /** Publish a result value from the IO interface */
         template <typename T>
         ZenError publishResult(ZenProperty_t property, ZenError error, T result) noexcept;
 
     private:
+        /** Wait until a response has been published from the IO interface, or timeout. */
         ZenError terminateWaitOnPublishOrTimeout() noexcept;
 
+        /** Try to obtain access to the IO interface. If successful, the caller gains unique access, otherwise returns an error. */
         ZenError tryToWait(ZenProperty_t property, bool forAck) noexcept;
 
+        /** Signal that you are going to publish a response. */
         bool prepareForPublishing() noexcept;
 
+        /** Check whether the response is corrupt. */
         bool corruptMessage(ZenProperty_t property, bool isAck) noexcept;
 
         std::unique_ptr<ModbusCommunicator> m_communicator;

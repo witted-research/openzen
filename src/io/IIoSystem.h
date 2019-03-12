@@ -16,10 +16,13 @@ namespace zen
     public:
         virtual ~IIoSystem() = default;
 
+        /** Checks whether the IO system is supported on this platform. */
         virtual bool available() = 0;
 
+        /** If successful, lists descriptions of the sensors with active IO interfaces. */
         virtual ZenError listDevices(std::vector<ZenSensorDesc>& outDevices) = 0;
 
+        /** If succesful, obtains the IO interface for the provided sensor description. Otherwise, returns an error. */
         virtual nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept = 0;
     };
 }

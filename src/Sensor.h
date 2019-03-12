@@ -44,6 +44,7 @@ namespace zen
          */
         ZenAsyncStatus updateIAPAsync(gsl::span<const std::byte> buffer) noexcept;
 
+        /** Returns an interface for the sensor's properties */
         ISensorProperties* properties() { return m_properties.get(); }
 
         /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength, otherwise, returns an error.
@@ -57,6 +58,7 @@ namespace zen
         /** Returns whether the sensor is equal to the sensor description */
         bool equals(const ZenSensorDesc& desc) const;
 
+        /** Returns the sensor's unique token */
         uintptr_t token() const noexcept { return m_token; }
 
     private:
