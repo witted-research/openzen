@@ -1,6 +1,6 @@
 #include "ImuComponentFactory.h"
 
-#include "components/IMUComponent.h"
+#include "components/ImuComponent.h"
 
 #include "InternalTypes.h"
 #include "SensorProperties.h"
