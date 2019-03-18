@@ -33,11 +33,14 @@ else()
     )
 endif()
 
-add_custom_command(TARGET OpenZenExample POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:Qt5::Bluetooth>
-        $<TARGET_FILE_DIR:OpenZenExample>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_FILE:Qt5::Core>
-        $<TARGET_FILE_DIR:OpenZenExample>
-)
+# only copy Qt libraries if bluetooth support is enabled
+if(ZEN_BLUETOOTH)
+    add_custom_command(TARGET OpenZenExample POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_FILE:Qt5::Bluetooth>
+            $<TARGET_FILE_DIR:OpenZenExample>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+           $<TARGET_FILE:Qt5::Core>
+            $<TARGET_FILE_DIR:OpenZenExample>
+    )
+endif()

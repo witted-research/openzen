@@ -4,6 +4,7 @@ project(OpenZen VERSION 0.1.0 LANGUAGES CXX;C)
 add_subdirectory(external)
 
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
+option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
 
 #----------------------------------------------------------------
 # Packages
@@ -13,7 +14,13 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt5Bluetooth REQUIRED)
+# contains additional C/C++ precompiler defines
+# which might be set depending on the selected compile options
+set(zen_optional_compile_definitions_private)
+
+if (ZEN_BLUETOOTH)
+    find_package(Qt5Bluetooth REQUIRED)
+endif()
 
 set(zen_includes
     include/OpenZen.h
@@ -42,6 +49,8 @@ set(zen_sources
     src/LpMatrix.c
     src/LpMatrix.h
 )
+
+set(zen_optional_libs)
 
 set(communication_sources
     src/communication/ConnectionNegotiator.cpp
@@ -74,20 +83,6 @@ set(io_sources
     src/io/IoManager.h
 )
 
-set(io_ble_sources
-    src/io/ble/BleDeviceFinder.cpp
-    src/io/ble/BleDeviceFinder.h
-    src/io/ble/BleDeviceHandler.cpp
-    src/io/ble/BleDeviceHandler.h
-)
-
-set(io_bluetooth_sources
-    src/io/bluetooth/BluetoothDeviceFinder.cpp
-    src/io/bluetooth/BluetoothDeviceFinder.h
-    src/io/bluetooth/BluetoothDeviceHandler.cpp
-    src/io/bluetooth/BluetoothDeviceHandler.h
-)
-
 set(io_can_sources
     src/io/can/CanManager.cpp
     src/io/can/CanManager.h
@@ -95,10 +90,6 @@ set(io_can_sources
 )
 
 set(io_interfaces_sources
-    src/io/interfaces/BleInterface.cpp
-    src/io/interfaces/BleInterface.h
-    src/io/interfaces/BluetoothInterface.cpp
-    src/io/interfaces/BluetoothInterface.h
     src/io/interfaces/CanInterface.cpp
     src/io/interfaces/CanInterface.h
     src/io/interfaces/FtdiUsbInterface.cpp
@@ -106,10 +97,6 @@ set(io_interfaces_sources
 )
 
 set(io_systems_sources
-    src/io/systems/BleSystem.cpp
-    src/io/systems/BleSystem.h
-    src/io/systems/BluetoothSystem.cpp
-    src/io/systems/BluetoothSystem.h
     src/io/systems/FtdiUsbSystem.cpp
     src/io/systems/FtdiUsbSystem.h
 )
@@ -133,6 +120,49 @@ set(utility_sources
     src/utility/StringView.h
     src/utility/ThreadFence.h
 )
+
+if(ZEN_BLUETOOTH)
+    set(io_ble_sources
+        src/io/ble/BleDeviceFinder.cpp
+        src/io/ble/BleDeviceFinder.h
+        src/io/ble/BleDeviceHandler.cpp
+        src/io/ble/BleDeviceHandler.h
+    )
+
+    set(io_bluetooth_sources
+        src/io/bluetooth/BluetoothDeviceFinder.cpp
+        src/io/bluetooth/BluetoothDeviceFinder.h
+        src/io/bluetooth/BluetoothDeviceHandler.cpp
+        src/io/bluetooth/BluetoothDeviceHandler.h
+    )
+
+    list (APPEND io_systems_sources
+        src/io/systems/BleSystem.cpp
+        src/io/systems/BleSystem.h
+        src/io/systems/BluetoothSystem.cpp
+        src/io/systems/BluetoothSystem.h
+    )
+
+    list (APPEND io_interfaces_sources
+        src/io/interfaces/BleInterface.cpp
+        src/io/interfaces/BleInterface.h
+        src/io/interfaces/BluetoothInterface.cpp
+        src/io/interfaces/BluetoothInterface.h
+    )
+
+    list (APPEND zen_optional_libs
+        Qt5::Bluetooth
+    )
+
+    list (APPEND zen_optional_compile_definitions_private
+        ZEN_BLUETOOTH
+    )
+
+else()
+    set(io_ble_sources)
+    set(io_bluetooth_sources)
+endif()
+
 
 if(WIN32)
 
@@ -197,6 +227,7 @@ endif()
 target_compile_definitions(OpenZen
     PRIVATE
         $<IF:$<BOOL:${ZEN_USE_STATIC_LIBS}>,ZEN_API_STATIC,ZEN_API_EXPORT>
+        ${zen_optional_compile_definitions_private}
 )
 
 target_compile_features(OpenZen
@@ -235,9 +266,9 @@ target_link_libraries(OpenZen
         nonstd::expected-lite
         nlohmann_json::nlohmann_json
         GSL
-        Qt5::Bluetooth
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
+        ${zen_optional_libs}
 )
 
 add_subdirectory(examples)

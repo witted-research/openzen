@@ -9,7 +9,9 @@
 #include <thread>
 #include <type_traits>
 
+#ifdef ZEN_BLUETOOTH
 #include <QCoreApplication>
+#endif
 
 #include "nonstd/expected.hpp"
 
@@ -63,7 +65,9 @@ namespace zen
         std::thread m_sensorThread;
         std::thread m_sensorDiscoveryThread;
 
+        #ifdef ZEN_BLUETOOTH
         std::unique_ptr<QCoreApplication> m_app;
+        #endif
     };
 }
 

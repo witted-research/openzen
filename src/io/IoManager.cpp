@@ -15,8 +15,10 @@
 
 namespace zen
 {
+#ifdef ZEN_BLUETOOTH
     static auto bleRegistry = makeRegistry<BleSystem>();
     static auto bluetoothRegistry = makeRegistry<BluetoothSystem>();
+#endif
     static auto ftdiUsbRegistry = makeRegistry<FtdiUsbSystem>();
 
 #if WIN32

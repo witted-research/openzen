@@ -35,6 +35,7 @@ namespace zen
         , m_sensorThread(&SensorManager::sensorLoop, this)
         , m_sensorDiscoveryThread(&SensorManager::sensorDiscoveryLoop, this)   
     {
+#ifdef ZEN_BLUETOOTH
         // Necessary for QBluetooth
         if (QCoreApplication::instance() == nullptr)
         {
@@ -42,6 +43,7 @@ namespace zen
             char* argc[]{ nullptr };
             m_app.reset(new QCoreApplication(argv, argc));
         }
+#endif
 
         ComponentFactoryManager::get().initialize();
         IoManager::get().initialize();
