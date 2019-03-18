@@ -1,4 +1,4 @@
-#include "components/IMUComponent.h"
+#include "components/ImuComponent.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
