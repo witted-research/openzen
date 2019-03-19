@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.10)
 project(OpenZen VERSION 0.1.0 LANGUAGES CXX;C)
 
 add_subdirectory(external)
@@ -45,7 +45,7 @@ set(zen_sources
     src/SensorManager.h
     src/SensorProperties.cpp
     src/SensorProperties.h
-    
+
     src/LpMatrix.c
     src/LpMatrix.h
 )
