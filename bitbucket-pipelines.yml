@@ -1,0 +1,19 @@
+# Automated build file for the OpenZen repository
+# -----
+# Custom Docker image which brings C++ compiler and boost libraries
+image:
+  name: thauth/buildbox-multi-platform:6
+  username: $DOCKER_HUB_USERNAME
+  password: $DOCKER_HUB_PASSWORD
+  email: $DOCKER_HUB_EMAIL
+pipelines:
+  default:
+    - parallel:
+      - step:
+          name: Linux x64 Build
+          script:
+            - git submodule update --init --recursive
+            - mkdir ../linux_x64_build && cd ../linux_x64_build
+            # disable most of optional components for now
+            - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 CMAKE_CC_COMPILER=clang-6.0 ../build
+            - make
