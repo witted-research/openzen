@@ -15,7 +15,7 @@ pipelines:
             - git submodule update --init --recursive
             - mkdir ../linux_x64_build && cd ../linux_x64_build
             # disable most of optional components for now
-            - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 CMAKE_CC_COMPILER=clang-6.0 ../build
+            - cmake ../build
             - make
       - step:
           name: Linux x64 Build no Bluetooth
@@ -23,5 +23,5 @@ pipelines:
             - git submodule update --init --recursive
             - mkdir ../linux_x64_build_nobt && cd ../linux_x64_build_nobt
             # disable most of optional components for now
-            - cmake -DZEN_BLUETOOTH=OFF -DCMAKE_CXX_COMPILER=clang++-6.0 CMAKE_CC_COMPILER=clang-6.0 ../build
+            - cmake -DZEN_BLUETOOTH=OFF ../build
             - make
