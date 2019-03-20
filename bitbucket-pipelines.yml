@@ -12,7 +12,7 @@ pipelines:
       - step:
           name: Linux x64 Build
           script:
-            - git submodule update --init --recursive
+            - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
             # disable most of optional components for now
             - cmake ../build
@@ -20,7 +20,7 @@ pipelines:
       - step:
           name: Linux x64 Build no Bluetooth
           script:
-            - git submodule update --init --recursive
+            - git submodule update --init
             - mkdir ../linux_x64_build_nobt && cd ../linux_x64_build_nobt
             # disable most of optional components for now
             - cmake -DZEN_BLUETOOTH=OFF ../build
