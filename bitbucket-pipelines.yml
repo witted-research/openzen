@@ -1,0 +1,27 @@
+# Automated build file for the OpenZen repository
+# -----
+# Custom Docker image which brings C++ compiler and boost libraries
+image:
+  name: thauth/buildbox-multi-platform:6
+  username: $DOCKER_HUB_USERNAME
+  password: $DOCKER_HUB_PASSWORD
+  email: $DOCKER_HUB_EMAIL
+pipelines:
+  default:
+    - parallel:
+      - step:
+          name: Linux x64 Build
+          script:
+            - git submodule update --init --recursive
+            - mkdir ../linux_x64_build && cd ../linux_x64_build
+            # disable most of optional components for now
+            - cmake ../build
+            - make
+      - step:
+          name: Linux x64 Build no Bluetooth
+          script:
+            - git submodule update --init --recursive
+            - mkdir ../linux_x64_build_nobt && cd ../linux_x64_build_nobt
+            # disable most of optional components for now
+            - cmake -DZEN_BLUETOOTH=OFF ../build
+            - make
