@@ -199,6 +199,8 @@ if(WIN32)
     )
 
     set(utility_sources ${utility_sources}
+        src/utility/windows/FindThisModule.cpp
+        src/utility/windows/FindThisModule.h
         src/utility/windows/WindowsDll.cpp
         src/utility/windows/WindowsDll.h
     )
