@@ -41,7 +41,7 @@ namespace zen
         imuData.gTemp = 0.f;
         imuData.altitude = 0.f;
         imuData.temperature = 0.f;
-        imuData.timestamp = 0.f;
+        imuData.timestamp = 0.;
         imuData.hm.yHeave = 0.f;
     }
 }

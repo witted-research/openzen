@@ -194,7 +194,7 @@ typedef struct ZenImuData
     float temperature;
 
     /// Sampling time of the data.
-    float timestamp;
+    double timestamp;
 
     ZenHeaveMotionData hm;
 } ZenImuData;

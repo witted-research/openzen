@@ -190,7 +190,7 @@ namespace zen
         if (std::distance(begin, data.begin() + sizeof(uint32_t)) > size)
             return ZenError_Io_MsgCorrupt;
 
-        imuData.timestamp = *reinterpret_cast<const uint32_t*>(data.data()) / static_cast<float>(m_cache.borrow()->samplingRate);
+        imuData.timestamp = *reinterpret_cast<const uint32_t*>(data.data()) / static_cast<double>(m_cache.borrow()->samplingRate);
         data = data.subspan(sizeof(uint32_t));
 
         if (auto lowPrec = m_properties->getBool(ZenImuProperty_OutputLowPrecision))
