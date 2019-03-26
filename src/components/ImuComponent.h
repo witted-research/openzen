@@ -23,12 +23,12 @@ namespace zen
 
         ZenError processData(uint8_t function, gsl::span<const std::byte> data) noexcept override;
 
-        ZenError processEvent(ZenEvent event, gsl::span<const std::byte> data) noexcept override;
+        nonstd::expected<ZenEventData, ZenError> processEventData(ZenEvent_t eventType, gsl::span<const std::byte> data) noexcept override;
 
         std::string_view type() const noexcept override { return g_zenSensorType_Imu; }
 
     private:
-        ZenError parseSensorData(ZenImuData& imuData, gsl::span<const std::byte> data) const noexcept;
+        nonstd::expected<ZenEventData, ZenError> parseSensorData(gsl::span<const std::byte> data) const noexcept;
 
         struct IMUState
         {

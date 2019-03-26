@@ -17,12 +17,15 @@
 
 #include "Sensor.h"
 #include "SensorClient.h"
+#include "utility/ReferenceCmp.h"
 
 namespace zen
 {
     class SensorManager
     {
     public:
+        friend class Sensor;
+
         static SensorManager& get();
 
         SensorManager() noexcept;
@@ -31,24 +34,18 @@ namespace zen
         /** Try to obtain a sensor based on a sensor description. */
         nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> obtain(const ZenSensorDesc& desc) noexcept;
 
-        /** Subscribe a client to a sensor */
-        void subscribeToSensor(std::shared_ptr<Sensor> sensor, SensorClient& client) noexcept;
-
         /** Subscribe a client to sensor discovery */
         void subscribeToSensorDiscovery(SensorClient& client) noexcept;
 
-        /** Unsubscribe a client from a sensor */
-        void unsubscribeFromSensor(SensorClient& client, std::shared_ptr<Sensor> sensor) noexcept;
-
-        /** Pushes an event to subscribed clients */
-        void notifyEvent(const ZenEvent& event) noexcept;
-
     private:
+        /** Releases a sensor */
+        std::shared_ptr<Sensor> release(ZenSensorHandle_t sensorHandle) noexcept;
+
         void sensorDiscoveryLoop() noexcept;
         void sensorLoop();
 
-        std::map<std::shared_ptr<Sensor>, std::set<std::reference_wrapper<SensorClient>, SensorClientCmp>, SensorCmp> m_sensorSubscribers;
-        std::set<std::reference_wrapper<SensorClient>, SensorClientCmp> m_discoverySubscribers;
+        std::set<std::shared_ptr<Sensor>, SensorCmp> m_sensors;
+        std::set<std::reference_wrapper<SensorClient>, ReferenceWrapperCmp<SensorClient>> m_discoverySubscribers;
 
         std::vector<ZenSensorDesc> m_devices;
 

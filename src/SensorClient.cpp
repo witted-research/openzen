@@ -10,9 +10,9 @@ namespace zen
 
     SensorClient::~SensorClient() noexcept
     {
-        auto& manager = SensorManager::get();
-        for (auto& sensor : m_sensors)
-            manager.unsubscribeFromSensor(*this, std::move(sensor));
+        for (auto& pair : m_sensors)
+            if (auto sensor = pair.second.lock())
+                sensor->unsubscribe(m_eventQueue);
     }
 
     void SensorClient::listSensorsAsync() noexcept
@@ -20,13 +20,18 @@ namespace zen
         SensorManager::get().subscribeToSensorDiscovery(*this);
     }
 
-    std::shared_ptr<Sensor> SensorClient::findSensor(ZenSensorHandle_t handle) const noexcept
+    std::shared_ptr<Sensor> SensorClient::findSensor(ZenSensorHandle_t handle) noexcept
     {
-        auto it = m_sensors.find(handle);
-        if (it == m_sensors.end())
-            return nullptr;
+        auto it = m_sensors.find(handle.handle);
+        if (it != m_sensors.end())
+        {
+            if (auto sensor = it->second.lock())
+                return sensor;
+            else
+                m_sensors.erase(it);
+        }
 
-        return *it;
+        return nullptr;
     }
 
     nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> SensorClient::obtain(const ZenSensorDesc& desc) noexcept
@@ -34,8 +39,8 @@ namespace zen
         auto& manager = SensorManager::get();
         if (auto sensor = manager.obtain(desc))
         {
-            manager.subscribeToSensor(*sensor, *this);
-            m_sensors.insert(*sensor);
+            if (sensor.value()->subscribe(m_eventQueue))
+                m_sensors.emplace(sensor.value()->token(), *sensor);
 
             return std::move(*sensor);
         }
@@ -47,8 +52,8 @@ namespace zen
 
     ZenError SensorClient::release(std::shared_ptr<Sensor> sensor) noexcept
     {
-        m_sensors.erase(sensor);
-        SensorManager::get().unsubscribeFromSensor(*this, std::move(sensor));
+        sensor->unsubscribe(m_eventQueue);
+        m_sensors.erase(sensor->token());
         return ZenError_None;
     }
 

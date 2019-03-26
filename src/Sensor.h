@@ -4,6 +4,8 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <mutex>
+#include <set>
 #include <thread>
 #include <vector>
 
@@ -14,6 +16,8 @@
 #include "SensorConfig.h"
 #include "SensorComponent.h"
 #include "communication/SyncedModbusCommunicator.h"
+#include "utility/LockingQueue.h"
+#include "utility/ReferenceCmp.h"
 
 namespace zen
 {
@@ -61,16 +65,27 @@ namespace zen
         /** Returns the sensor's unique token */
         uintptr_t token() const noexcept { return m_token; }
 
+        /** Subscribe an event queue to the sensor */
+        bool subscribe(LockingQueue<ZenEvent>& queue) noexcept;
+
+        /** Unsubscribe an event queue from the sensor */
+        void unsubscribe(LockingQueue<ZenEvent>& queue) noexcept;
+
     private:
         ZenError processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept override;
+
+        void publishEvent(const ZenEvent& event) noexcept;
 
         void upload(std::vector<std::byte> firmware);
 
         SensorConfig m_config;
 
+        std::set<std::reference_wrapper<LockingQueue<ZenEvent>>, ReferenceWrapperCmp<LockingQueue<ZenEvent>>> m_subscribers;
         std::vector<std::unique_ptr<SensorComponent>> m_components;
         std::unique_ptr<ISensorProperties> m_properties;
         SyncedModbusCommunicator m_communicator;
+
+        std::mutex m_subscribersMutex;
 
         const uintptr_t m_token;
 

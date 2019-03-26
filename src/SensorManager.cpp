@@ -11,7 +11,7 @@ namespace zen
 {
     namespace
     {
-        void notifyProgress(std::set<std::reference_wrapper<SensorClient>, SensorClientCmp>& subscribers, float progress)
+        void notifyProgress(std::set<std::reference_wrapper<SensorClient>, ReferenceWrapperCmp<SensorClient>>& subscribers, float progress)
         {
             ZenEvent event{};
             event.eventType = ZenSensorEvent_SensorListingProgress;
@@ -64,9 +64,9 @@ namespace zen
     nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> SensorManager::obtain(const ZenSensorDesc& desc) noexcept
     {
         std::unique_lock<std::mutex> lock(m_sensorsMutex);
-        for (auto& pair : m_sensorSubscribers)
-            if (pair.first->equals(desc))
-                return pair.first;
+        for (const auto& sensor : m_sensors)
+            if (sensor->equals(desc))
+                return sensor;
 
         lock.unlock();
 
@@ -94,34 +94,21 @@ namespace zen
         if (!sensor)
             return nonstd::make_unexpected(sensor.error());
 
+        lock.lock();
+        m_sensors.insert(*sensor);
+        lock.unlock();
+
         return std::move(*sensor);
     }
 
-    void SensorManager::subscribeToSensor(std::shared_ptr<Sensor> sensor, SensorClient& client) noexcept
+    std::shared_ptr<Sensor> SensorManager::release(ZenSensorHandle_t sensorHandle) noexcept
     {
         std::lock_guard<std::mutex> lock(m_sensorsMutex);
-        auto it = m_sensorSubscribers.find(sensor);
-        if (it != m_sensorSubscribers.end())
-        {
-            it->second.insert(client);
-        }
-        else
-        {
-            std::set<std::reference_wrapper<SensorClient>, SensorClientCmp> clients;
-            clients.insert(client);
+        auto it = m_sensors.find(sensorHandle);
 
-            m_sensorSubscribers.emplace(std::move(sensor), std::move(clients));
-        }
-    }
-
-    void SensorManager::unsubscribeFromSensor(SensorClient& client, std::shared_ptr<Sensor> sensor) noexcept
-    {
-        std::lock_guard<std::mutex> lock(m_sensorsMutex);
-        auto it = m_sensorSubscribers.find(sensor);
-        it->second.erase(client);
-
-        if (it->second.empty())
-            m_sensorSubscribers.erase(it);
+        const auto sensor = *it;
+        m_sensors.erase(it);
+        return sensor;
     }
 
     void SensorManager::subscribeToSensorDiscovery(SensorClient& client) noexcept
@@ -130,15 +117,6 @@ namespace zen
         m_discoverySubscribers.insert(client);
         m_discovering = true;
         m_discoveryCv.notify_one();
-    }
-
-    void SensorManager::notifyEvent(const ZenEvent& event) noexcept
-    {
-        std::lock_guard<std::mutex> lock(m_sensorsMutex);
-        auto it = m_sensorSubscribers.find(event.sensor);
-        if (it != m_sensorSubscribers.end())
-            for (auto subscriber : it->second)
-                subscriber.get().notifyEvent(event);
     }
 
     void SensorManager::sensorDiscoveryLoop() noexcept

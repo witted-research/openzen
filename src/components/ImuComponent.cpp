@@ -161,34 +161,31 @@ namespace zen
         }
     }
 
-    ZenError ImuComponent::processEvent(ZenEvent event, gsl::span<const std::byte> data) noexcept
+    nonstd::expected<ZenEventData, ZenError> ImuComponent::processEventData(ZenEvent_t eventType, gsl::span<const std::byte> data) noexcept
     {
-        switch (event.eventType)
+        switch (eventType)
         {
         case ZenImuEvent_Sample:
-            if (auto error = parseSensorData(event.data.imuData, data))
-                return error;
-            break;
+            return parseSensorData(data);
 
         default:
-            return ZenError_UnsupportedEvent;
+            return nonstd::make_unexpected(ZenError_UnsupportedEvent);
         }
-
-        SensorManager::get().notifyEvent(std::move(event));
-        return ZenError_None;
     }
 
-    ZenError ImuComponent::parseSensorData(ZenImuData& imuData, gsl::span<const std::byte> data) const noexcept
+    nonstd::expected<ZenEventData, ZenError> ImuComponent::parseSensorData(gsl::span<const std::byte> data) const noexcept
     {
         // Any properties that are retrieved here should be cached locally, because it
         // will take too much time to retrieve from the sensor!
+        ZenEventData eventData;
+        ZenImuData& imuData = eventData.imuData;
         imuDataReset(imuData);
 
         const auto begin = data.begin();
 
         const auto size = data.size();
         if (std::distance(begin, data.begin() + sizeof(uint32_t)) > size)
-            return ZenError_Io_MsgCorrupt;
+            return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
         imuData.timestamp = *reinterpret_cast<const uint32_t*>(data.data()) / static_cast<double>(m_cache.borrow()->samplingRate);
         data = data.subspan(sizeof(uint32_t));
@@ -201,7 +198,7 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.gRaw[idx] = (180.f / float(M_PI)) * (*lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
@@ -217,7 +214,7 @@ namespace zen
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputRawAcc))
@@ -225,7 +222,7 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.aRaw[idx] = *lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
@@ -241,7 +238,7 @@ namespace zen
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputRawMag))
@@ -249,7 +246,7 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.bRaw[idx] = *lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
@@ -265,7 +262,7 @@ namespace zen
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputAngularVel))
@@ -273,7 +270,7 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.w[idx] = (180.f / float(M_PI)) * (*lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
@@ -281,7 +278,7 @@ namespace zen
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputQuat))
@@ -289,7 +286,7 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + 4 * floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     for (unsigned idx = 0; idx < 4; ++idx)
                         imuData.q[idx] = *lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
@@ -303,7 +300,7 @@ namespace zen
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputEuler))
@@ -311,7 +308,7 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.r[idx] = (180.f / float(M_PI)) * (*lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data));
@@ -319,7 +316,7 @@ namespace zen
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputLinearAcc))
@@ -327,7 +324,7 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.linAcc[idx] = *lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
@@ -335,7 +332,7 @@ namespace zen
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputPressure))
@@ -343,14 +340,14 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     imuData.pressure = *lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
                 }
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputAltitude))
@@ -358,14 +355,14 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     imuData.altitude = *lowPrec ? parseFloat16(data, 10.f) : parseFloat32(data);
                 }
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputTemperature))
@@ -373,14 +370,14 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     imuData.temperature = *lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
                 }
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputHeaveMotion))
@@ -388,21 +385,21 @@ namespace zen
                 if (*enabled)
                 {
                     if (std::distance(begin, data.begin() + floatSize) > size)
-                        return ZenError_Io_MsgCorrupt;
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
                     imuData.hm.yHeave = *lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
                 }
             }
             else
             {
-                return enabled.error();
+                return nonstd::make_unexpected(enabled.error());;
             }
 
-            return ZenError_None;
+            return eventData;
         }
         else
         {
-            return lowPrec.error();
+            return nonstd::make_unexpected(lowPrec.error());
         }
     }
 }

@@ -3,7 +3,7 @@
 
 #include <mutex>
 #include <optional>
-#include <set>
+#include <unordered_map>
 
 #include <nonstd/expected.hpp>
 
@@ -24,7 +24,7 @@ namespace zen
          */
         void listSensorsAsync() noexcept;
 
-        std::shared_ptr<Sensor> findSensor(ZenSensorHandle_t handle) const noexcept;
+        std::shared_ptr<Sensor> findSensor(ZenSensorHandle_t handle) noexcept;
 
         nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> obtain(const ZenSensorDesc& desc) noexcept;
 
@@ -42,19 +42,9 @@ namespace zen
     private:
         LockingQueue<ZenEvent> m_eventQueue;
 
-        std::set<std::shared_ptr<Sensor>, SensorCmp> m_sensors;
+        std::unordered_map<uintptr_t, std::weak_ptr<Sensor>> m_sensors;
 
         uintptr_t m_token;
-    };
-
-    struct SensorClientCmp
-    {
-        using type = std::reference_wrapper<SensorClient>;
-
-        bool operator()(const type& lhs, const type& rhs) const noexcept
-        {
-            return std::less<SensorClient*>()(&lhs.get(), &rhs.get());
-        }
     };
 }
 

@@ -5,6 +5,8 @@
 #include <string>
 
 #include "ZenProtocol.h"
+#include "SensorClient.h"
+#include "SensorManager.h"
 #include "SensorProperties.h"
 #include "communication/ConnectionNegotiator.h"
 #include "components/ComponentFactoryManager.h"
@@ -44,7 +46,7 @@ namespace zen
             return result;
         }
 
-        ZenEvent_t parseEvent(gsl::span<const std::byte>& data) noexcept
+        ZenEvent_t parseEventType(gsl::span<const std::byte>& data) noexcept
         {
             const auto result = *reinterpret_cast<const ZenEvent_t*>(data.data());
             data = data.subspan(sizeof(ZenEvent_t));
@@ -56,15 +58,6 @@ namespace zen
             const auto result = *reinterpret_cast<const ZenProperty_t*>(data.data());
             data = data.subspan(sizeof(ZenProperty_t));
             return result;
-        }
-
-        ZenEvent make_event(ZenEvent_t type, uintptr_t sensorHandle, uintptr_t componentHandle) noexcept
-        {
-            ZenEvent event{};
-            event.eventType = type;
-            event.sensor.handle = sensorHandle;
-            event.component.handle = componentHandle;
-            return event;
         }
 
         std::unique_ptr<modbus::IFrameFactory> getFactory(uint32_t version) noexcept
@@ -234,6 +227,22 @@ namespace zen
         return m_communicator.equals(desc);
     }
 
+    bool Sensor::subscribe(LockingQueue<ZenEvent>& queue) noexcept
+    {
+        std::lock_guard<std::mutex> lock(m_subscribersMutex);
+        const auto inserted = m_subscribers.insert(queue);
+        return inserted.second;
+    }
+
+    void Sensor::unsubscribe(LockingQueue<ZenEvent>& queue) noexcept
+    {
+        std::lock_guard<std::mutex> lock(m_subscribersMutex);
+        m_subscribers.erase(queue);
+
+        if (m_subscribers.empty())
+            SensorManager::get().release({ m_token });
+    }
+
     ZenError Sensor::processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept
     {
         if (m_config.version == 0)
@@ -286,9 +295,13 @@ namespace zen
 
                 case EDevicePropertyV0::GetRawSensorData:
                     if (m_initialized)
-                        return m_components[0]->processEvent(make_event(ZenImuEvent_Sample, m_token, 1), data);
-                    else
-                        return ZenError_None;
+                    {
+                        if (auto eventData = m_components[0]->processEventData(ZenImuEvent_Sample, data))
+                            publishEvent({ ZenImuEvent_Sample, m_token, 1, std::move(*eventData) });
+                        else
+                            return eventData.error();
+                    }
+                    return ZenError_None;
 
                 default:
                     return m_components[0]->processData(function, data);
@@ -309,12 +322,30 @@ namespace zen
                 return properties::publishResult(getProperties(*this, m_components, address), m_communicator, parseProperty(data), parseError(data), data);
 
             case ZenProtocolFunction_Event:
-                return address ? m_components[address - 1]->processEvent(make_event(parseEvent(data), m_token, address - 1), data) : ZenError_UnsupportedEvent;
+                if (address)
+                {
+                    const auto eventType = parseEventType(data);
+                    if (auto eventData = m_components[address - 1]->processEventData(eventType, data))
+                        publishEvent({ eventType, m_token, address, std::move(*eventData) });
+                    else
+                        return eventData.error();
+
+                    return ZenError_None;
+                }
+                else
+                    return ZenError_UnsupportedEvent;
 
             default:
                 return ZenError_Io_UnsupportedFunction;
             }
         }
+    }
+
+    void Sensor::publishEvent(const ZenEvent& event) noexcept
+    {
+        std::lock_guard<std::mutex> lock(m_subscribersMutex);
+        for (auto subscriber : m_subscribers)
+            subscriber.get().push(event);
     }
 
     void Sensor::upload(std::vector<std::byte> firmware)

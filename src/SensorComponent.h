@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include <gsl/span>
+#include <nonstd/expected.hpp>
 
 #include "ISensorProperties.h"
 
@@ -25,7 +26,7 @@ namespace zen
         virtual ZenSensorInitError init() noexcept = 0;
 
         virtual ZenError processData(uint8_t function, gsl::span<const std::byte> data) noexcept = 0;
-        virtual ZenError processEvent(ZenEvent event, gsl::span<const std::byte> data) noexcept = 0;
+        virtual nonstd::expected<ZenEventData, ZenError> processEventData(ZenEvent_t eventType, gsl::span<const std::byte> data) noexcept = 0;
 
         virtual std::string_view type() const noexcept = 0;
 
