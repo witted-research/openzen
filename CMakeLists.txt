@@ -117,6 +117,7 @@ set(utility_sources
     src/utility/IPlatformDll.h
     src/utility/LockingQueue.h
     src/utility/Ownership.h
+    src/utility/ReferenceCmp.h
     src/utility/StringView.h
     src/utility/ThreadFence.h
 )
