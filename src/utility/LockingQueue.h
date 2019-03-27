@@ -6,8 +6,6 @@
 #include <mutex>
 #include <optional>
 
-#include "utility/Finally.h"
-
 namespace zen
 {
     template <typename T, typename Container = std::deque<T>>
@@ -71,7 +69,7 @@ namespace zen
         {
             std::unique_lock<std::mutex> lock(m_mutex);
             if (m_container.empty())
-                return {};
+                return std::nullopt;
 
             std::optional<T> result(std::move(m_container.front()));
             m_container.pop_front();
@@ -81,16 +79,17 @@ namespace zen
         std::optional<T> waitToPop() noexcept
         {
             std::unique_lock<std::mutex> lock(m_mutex);
-            auto guard = finally([&]() {
-                --m_nWaiters;
-                lock.unlock();
-                m_cv.notify_all();
-            });
 
             ++m_nWaiters;
             m_cv.wait(lock, [this]() { return !m_container.empty() || m_terminate; });
+            --m_nWaiters;
+
             if (m_terminate)
-                return {};
+            {
+                lock.unlock();
+                m_cv.notify_all();
+                return std::nullopt;
+            }
 
             std::optional<T> result(std::move(m_container.front()));
             m_container.pop_front();
