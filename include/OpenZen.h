@@ -57,13 +57,13 @@ namespace zen
         ZenComponentHandle_t m_componentHandle;
 
     public:
-        ZenSensorComponent(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle)
+        ZenSensorComponent(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle) noexcept
             : m_clientHandle(clientHandle)
             , m_sensorHandle(sensorHandle)
             , m_componentHandle(componentHandle)
         {}
 
-        ZenSensorComponent(const ZenSensorComponent& other)
+        ZenSensorComponent(const ZenSensorComponent& other) noexcept
             : m_clientHandle(other.m_clientHandle)
             , m_sensorHandle(other.m_sensorHandle)
             , m_componentHandle(other.m_componentHandle)
@@ -84,41 +84,41 @@ namespace zen
             return ZenSensorComponentType(m_clientHandle, m_sensorHandle, m_componentHandle);
         }
 
-        ZenError executeProperty(ZenProperty_t property)
+        ZenError executeProperty(ZenProperty_t property) noexcept
         {
             return ZenSensorComponentExecuteProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property);
         }
 
         template <typename T>
-        std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length)
+        std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length) noexcept
         {
             auto result = std::make_pair(ZenError_None, length);
             result.first = ZenSensorComponentGetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type::value, array, &result.second);
             return result;
         }
 
-        std::pair<ZenError, bool> getBoolProperty(ZenProperty_t property)
+        std::pair<ZenError, bool> getBoolProperty(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, false);
             result.first = ZenSensorComponentGetBoolProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, &result.second);
             return result;
         }
 
-        std::pair<ZenError, float> getFloatProperty(ZenProperty_t property)
+        std::pair<ZenError, float> getFloatProperty(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, 0.f);
             result.first = ZenSensorComponentGetFloatProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, &result.second);
             return result;
         }
 
-        std::pair<ZenError, int32_t> getInt32Property(ZenProperty_t property)
+        std::pair<ZenError, int32_t> getInt32Property(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, 0);
             result.first = ZenSensorComponentGetInt32Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, &result.second);
             return result;
         }
 
-        std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property)
+        std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, uint64_t(0));
             result.first = ZenSensorComponentGetUInt64Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, &result.second);
@@ -126,27 +126,27 @@ namespace zen
         }
 
         template <typename T>
-        ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length)
+        ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length) noexcept
         {
             return ZenSensorComponentSetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type::value, array, length);
         }
 
-        ZenError setBoolProperty(ZenProperty_t property, bool value)
+        ZenError setBoolProperty(ZenProperty_t property, bool value) noexcept
         {
             return ZenSensorComponentSetBoolProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
 
-        ZenError setFloatProperty(ZenProperty_t property, float value)
+        ZenError setFloatProperty(ZenProperty_t property, float value) noexcept
         {
             return ZenSensorComponentSetFloatProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
 
-        ZenError setInt32Property(ZenProperty_t property, int32_t value)
+        ZenError setInt32Property(ZenProperty_t property, int32_t value) noexcept
         {
             return ZenSensorComponentSetInt32Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
 
-        ZenError setUInt64Property(ZenProperty_t property, uint64_t value)
+        ZenError setUInt64Property(ZenProperty_t property, uint64_t value) noexcept
         {
             return ZenSensorComponentSetUInt64Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
@@ -175,15 +175,20 @@ namespace zen
 
         ~ZenSensor()
         {
-            ZenReleaseSensor(m_clientHandle, m_sensorHandle);
+            release();
         }
 
-        ZenAsyncStatus updateFirmwareAsync(const std::vector<unsigned char>& firmware)
+        ZenError release() noexcept
+        {
+            return ZenReleaseSensor(m_clientHandle, m_sensorHandle);
+        }
+
+        ZenAsyncStatus updateFirmwareAsync(const std::vector<unsigned char>& firmware) noexcept
         {
             return ZenSensorUpdateFirmwareAsync(m_clientHandle, m_sensorHandle, firmware.data(), firmware.size());
         }
 
-        ZenAsyncStatus updateIAPAsync(const std::vector<unsigned char>& iap)
+        ZenAsyncStatus updateIAPAsync(const std::vector<unsigned char>& iap) noexcept
         {
             return ZenSensorUpdateIAPAsync(m_clientHandle, m_sensorHandle, iap.data(), iap.size());
         }
@@ -198,41 +203,41 @@ namespace zen
             return ZenSensorEquals(m_clientHandle, m_sensorHandle, &desc);
         }
 
-        ZenError executeProperty(ZenProperty_t property)
+        ZenError executeProperty(ZenProperty_t property) noexcept
         {
             return ZenSensorExecuteProperty(m_clientHandle, m_sensorHandle, property);
         }
 
         template <typename T>
-        std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length)
+        std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length) noexcept
         {
             auto result = std::make_pair(ZenError_None, length);
             result.first = ZenSensorGetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type::value, array, &result.second);
             return result;
         }
 
-        std::pair<ZenError, bool> getBoolProperty(ZenProperty_t property)
+        std::pair<ZenError, bool> getBoolProperty(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, false);
             result.first = ZenSensorGetBoolProperty(m_clientHandle, m_sensorHandle, property, &result.second);
             return result;
         }
 
-        std::pair<ZenError, float> getFloatProperty(ZenProperty_t property)
+        std::pair<ZenError, float> getFloatProperty(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, 0.f);
             result.first = ZenSensorGetFloatProperty(m_clientHandle, m_sensorHandle, property, &result.second);
             return result;
         }
 
-        std::pair<ZenError, int32_t> getInt32Property(ZenProperty_t property)
+        std::pair<ZenError, int32_t> getInt32Property(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, 0);
             result.first = ZenSensorGetInt32Property(m_clientHandle, m_sensorHandle, property, &result.second);
             return result;
         }
 
-        std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property)
+        std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, uint64_t(0));
             result.first = ZenSensorGetUInt64Property(m_clientHandle, m_sensorHandle, property, &result.second);
@@ -240,32 +245,32 @@ namespace zen
         }
 
         template <typename T>
-        ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length)
+        ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length) noexcept
         {
             return ZenSensorSetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type::value, array, length);
         }
 
-        ZenError setBoolProperty(ZenProperty_t property, bool value)
+        ZenError setBoolProperty(ZenProperty_t property, bool value) noexcept
         {
             return ZenSensorSetBoolProperty(m_clientHandle, m_sensorHandle, property, value);
         }
 
-        ZenError setFloatProperty(ZenProperty_t property, float value)
+        ZenError setFloatProperty(ZenProperty_t property, float value) noexcept
         {
             return ZenSensorSetFloatProperty(m_clientHandle, m_sensorHandle, property, value);
         }
 
-        ZenError setInt32Property(ZenProperty_t property, int32_t value)
+        ZenError setInt32Property(ZenProperty_t property, int32_t value) noexcept
         {
             return ZenSensorSetInt32Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
-        ZenError setUInt64Property(ZenProperty_t property, uint64_t value)
+        ZenError setUInt64Property(ZenProperty_t property, uint64_t value) noexcept
         {
             return ZenSensorSetUInt64Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
-        std::optional<ZenSensorComponent> getAnyComponentOfType(std::string_view type)
+        std::optional<ZenSensorComponent> getAnyComponentOfType(std::string_view type) noexcept
         {
             ZenComponentHandle_t* handles = nullptr;
             size_t nComponents;
@@ -279,7 +284,7 @@ namespace zen
         }
 
         // [TODO] Remove handle
-        std::pair<ZenError, ZenSensorDesc> desc()
+        std::pair<ZenError, ZenSensorDesc> desc() noexcept
         {
             ZenSensorDesc desc;
 
