@@ -112,6 +112,7 @@ int main(int argc, char *argv[])
         std::cout << "Provide an index within the range 0-" << g_discoveredSensors.size() - 1 << ":" << std::endl;
         std::cin >> idx;
     } while (idx >= g_discoveredSensors.size());
+    std::cin.ignore(INT_MAX, '\n');
 
     auto[obtainError, sensor] = client.obtainSensor(g_discoveredSensors[idx]);
     if (obtainError)
@@ -168,13 +169,20 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::cout << "Type 'q' to quit" << std::endl;
-
     std::string line;
-    while (std::getline(std::cin, line))
+    while (!g_terminate)
     {
-        if (line == "q")
-            break;
+        std::cout << "Type: " << std::endl;
+        std::cout << " - 'q' to quit;" << std::endl;
+        std::cout << " - 'r' to manually release the sensor;" << std::endl;
+
+        if (std::getline(std::cin, line))
+        {
+            if (line == "q")
+                g_terminate = true;
+            else if (line == "r")
+                sensor.release();
+        }
     }
 
     g_terminate = true;
