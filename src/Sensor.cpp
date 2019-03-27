@@ -116,6 +116,13 @@ namespace zen
         // We need to wait for the firmware/IAP upload to stop
         if (m_uploadThread.joinable())
             m_uploadThread.join();
+
+        ZenEventData eventData{};
+        eventData.sensorDisconnected.error = ZenError_None;
+        ZenEvent disconnected{ ZenSensorEvent_SensorDisconnected, m_token, 0, eventData };
+
+        for (auto subscriber : m_subscribers)
+            subscriber.get().push(disconnected);
     }
 
     ZenSensorInitError Sensor::init()

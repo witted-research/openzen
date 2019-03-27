@@ -213,6 +213,11 @@ typedef struct ZenSensorDesc
     };
 } ZenSensorDesc;
 
+typedef struct ZenEventData_SensorDisconnected
+{
+    ZenError_t error;
+} ZenEventData_SensorDisconnected;
+
 typedef ZenSensorDesc ZenEventData_SensorFound;
 
 typedef struct ZenEventData_SensorListingProgress
@@ -223,6 +228,7 @@ typedef struct ZenEventData_SensorListingProgress
 typedef union
 {
     ZenEventData_Imu imuData;
+    ZenEventData_SensorDisconnected sensorDisconnected;
     ZenEventData_SensorFound sensorFound;
     ZenEventData_SensorListingProgress sensorListingProgress;
 } ZenEventData;
@@ -243,6 +249,7 @@ typedef enum ZenSensorEvent : ZenEvent_t
 
     ZenSensorEvent_SensorFound = 1,
     ZenSensorEvent_SensorListingProgress = 2,
+    ZenSensorEvent_SensorDisconnected = 3,
 
     // Sensors are free to expose private events in this reserved region
     ZenSensorEvent_SensorSpecific_Start = 10000,
