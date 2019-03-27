@@ -5,6 +5,7 @@
 #include <condition_variable>
 #include <iostream>
 #include <mutex>
+#include <limits>
 #include <optional>
 #include <string>
 #include <thread>
@@ -112,7 +113,7 @@ int main(int argc, char *argv[])
         std::cout << "Provide an index within the range 0-" << g_discoveredSensors.size() - 1 << ":" << std::endl;
         std::cin >> idx;
     } while (idx >= g_discoveredSensors.size());
-    std::cin.ignore(INT_MAX, '\n');
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     auto[obtainError, sensor] = client.obtainSensor(g_discoveredSensors[idx]);
     if (obtainError)
