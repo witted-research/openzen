@@ -17,6 +17,7 @@ pipelines:
             # disable most of optional components for now
             - cmake ../build
             - make
+      - step:
           name: Linux x64 Build Clang
           script:
             - git submodule update --init
