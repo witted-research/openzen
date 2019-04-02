@@ -4,8 +4,7 @@
 
 namespace zen
 {
-    SensorClient::SensorClient(uintptr_t token) noexcept
-        : m_token(token)
+    SensorClient::SensorClient(uintptr_t) noexcept
     {}
 
     SensorClient::~SensorClient() noexcept

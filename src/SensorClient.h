@@ -43,9 +43,6 @@ namespace zen
         LockingQueue<ZenEvent> m_eventQueue;
 
         std::unordered_map<uintptr_t, std::weak_ptr<Sensor>> m_sensors;
-
-        [[maybe_unused]]
-        uintptr_t m_token;
     };
 }
 
