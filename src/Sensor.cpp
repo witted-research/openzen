@@ -83,7 +83,7 @@ namespace zen
             communicator->setFrameFactory(getFactory(version));
             communicator->setFrameParser(getParser(version));
 
-            return std::move(communicator);
+            return communicator;
         }
     }
 

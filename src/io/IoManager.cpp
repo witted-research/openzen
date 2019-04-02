@@ -92,6 +92,6 @@ namespace zen
         for (const auto& pair : m_ioSystems)
             ioSystems.emplace_back(*pair.second.get());
 
-        return std::move(ioSystems);
+        return ioSystems;
     }
 }
