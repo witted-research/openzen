@@ -119,7 +119,7 @@ namespace zen
 
         ZenEventData eventData{};
         eventData.sensorDisconnected.error = ZenError_None;
-        ZenEvent disconnected{ ZenSensorEvent_SensorDisconnected, m_token, 0, eventData };
+        ZenEvent disconnected{ ZenSensorEvent_SensorDisconnected, {m_token}, {0}, eventData };
 
         for (auto subscriber : m_subscribers)
             subscriber.get().push(disconnected);
@@ -304,7 +304,7 @@ namespace zen
                     if (m_initialized)
                     {
                         if (auto eventData = m_components[0]->processEventData(ZenImuEvent_Sample, data))
-                            publishEvent({ ZenImuEvent_Sample, m_token, 1, std::move(*eventData) });
+                            publishEvent({ ZenImuEvent_Sample, {m_token}, {1}, std::move(*eventData) });
                         else
                             return eventData.error();
                     }
@@ -333,7 +333,7 @@ namespace zen
                 {
                     const auto eventType = parseEventType(data);
                     if (auto eventData = m_components[address - 1]->processEventData(eventType, data))
-                        publishEvent({ eventType, m_token, address, std::move(*eventData) });
+                        publishEvent({ eventType, {m_token}, {address}, std::move(*eventData) });
                     else
                         return eventData.error();
 
