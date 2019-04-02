@@ -7,7 +7,7 @@
 
 namespace zen
 {
-    class LinuxDll : public IPlatformDll
+    class LinuxDll final : public IPlatformDll
     {
     public:
         /** Load a DLL */
