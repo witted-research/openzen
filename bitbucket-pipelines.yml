@@ -10,12 +10,19 @@ pipelines:
   default:
     - parallel:
       - step:
-          name: Linux x64 Build
+          name: Linux x64 Build Gcc
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
             # disable most of optional components for now
             - cmake ../build
+            - make
+          name: Linux x64 Build Clang
+          script:
+            - git submodule update --init
+            - mkdir ../linux_x64_build && cd ../linux_x64_build
+            # disable most of optional components for now
+            - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_CC_COMPILER=clang-6.0 ../build
             - make
       - step:
           name: Linux x64 Build no Bluetooth
