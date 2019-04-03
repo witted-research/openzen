@@ -11,14 +11,14 @@ option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
 #----------------------------------------------------------------
 # Find includes in corresponding build include_directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-# Instruct CMake to run moc automatically when needed
-set(CMAKE_AUTOMOC ON)
 
 # contains additional C/C++ precompiler defines
 # which might be set depending on the selected compile options
 set(zen_optional_compile_definitions_private)
 
 if (ZEN_BLUETOOTH)
+    # Instruct CMake to run moc automatically when needed
+    set(CMAKE_AUTOMOC ON)
     find_package(Qt5Bluetooth REQUIRED)
 endif()
 
