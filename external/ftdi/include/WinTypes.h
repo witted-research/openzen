@@ -40,10 +40,13 @@ typedef struct _OVERLAPPED {
     DWORD Internal;
     DWORD InternalHigh;
     union {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnested-anon-types"
         struct{
             DWORD Offset;
             DWORD OffsetHigh;
         } CombinedOffset;
+#pragma clang diagnostic pop
         PVOID  Pointer;
     };
     HANDLE hEvent;

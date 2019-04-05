@@ -242,11 +242,9 @@ if (MSVC)
             /W4 /WX
     )
 else()
-    # need to disable nested anon types warning because
-    # external ftdi contains one
     target_compile_options(OpenZen
         PRIVATE
-            -Wall -Wextra -pedantic -Werror -Wno-nested-anon-types
+            -Wall -Wextra -pedantic -Werror
     )
 endif()
 
