@@ -10,7 +10,7 @@ namespace zen
 {
     class IModbusFrameSubscriber;
 
-    class ModbusCommunicator : public IIoDataSubscriber
+    class ModbusCommunicator final : public IIoDataSubscriber
     {
     public:
         friend class IModbusFrameSubscriber;

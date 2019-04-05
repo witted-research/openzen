@@ -191,7 +191,7 @@ namespace zen::modbus
         frame[9 + 2 * length] = std::byte(0x0d); // Carriage Return
         frame[10 + 2 * length] = std::byte(0x0a); // Line Feed
 
-        return std::move(frame);
+        return frame;
     }
 
     ASCIIFrameParser::ASCIIFrameParser()
@@ -323,7 +323,7 @@ namespace zen::modbus
         frame[9 + length] = std::byte(0x0d);
         frame[10 + length] = std::byte(0x0a);
 
-        return std::move(frame);
+        return frame;
     }
 
     LpFrameParser::LpFrameParser()
@@ -440,7 +440,7 @@ namespace zen::modbus
         frame[3 + length] = std::byte(checksum & 0xff);
         frame[4 + length] = std::byte((checksum >> 8) & 0xff);
 
-        return std::move(frame);
+        return frame;
     }
 
     RTUFrameParser::RTUFrameParser()

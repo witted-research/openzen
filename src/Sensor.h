@@ -23,7 +23,7 @@ namespace zen
 {
     nonstd::expected<std::shared_ptr<class Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token) noexcept;
 
-    class Sensor : private IModbusFrameSubscriber
+    class Sensor final : private IModbusFrameSubscriber
     {
     public:
         Sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token);
