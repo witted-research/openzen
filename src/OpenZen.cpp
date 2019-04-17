@@ -5,6 +5,9 @@
 #include <numeric>
 #include <unordered_map>
 
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_sinks.h>
+
 #include "SensorClient.h"
 
 namespace
@@ -60,6 +63,35 @@ ZEN_API ZenError ZenShutdown(ZenClientHandle_t handle)
         return ZenError_InvalidClientHandle;
 
     g_clients.erase(it);
+    return ZenError_None;
+}
+
+ZEN_API ZenError ZenSetLogLevel(ZenLogLevel logLevel) {
+    const std::string loggerName = "OpenZen_console";
+    if (!spdlog::get(loggerName)) {
+        auto console_logger = spdlog::stdout_logger_mt(loggerName);
+        spdlog::set_default_logger(console_logger);
+    }
+
+    if (logLevel == ZenLogLevel::ZenLogLevel_Off) {
+        spdlog::set_level(spdlog::level::off);
+    }
+    else if (logLevel == ZenLogLevel::ZenLogLevel_Debug) {
+        spdlog::set_level(spdlog::level::debug);
+    }
+    else if (logLevel == ZenLogLevel::ZenLogLevel_Info) {
+        spdlog::set_level(spdlog::level::info);
+    }
+    else if (logLevel == ZenLogLevel::ZenLogLevel_Warning) {
+        spdlog::set_level(spdlog::level::warn);
+    }
+    else if (logLevel == ZenLogLevel::ZenLogLevel_Error) {
+        spdlog::set_level(spdlog::level::err);
+    } else {
+        spdlog::error("Log Level {} not suppored", logLevel);
+        return ZenError_InvalidArgument;
+    }
+
     return ZenError_None;
 }
 

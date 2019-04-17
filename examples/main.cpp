@@ -77,6 +77,8 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
 
 int main(int argc, char *argv[])
 {
+    ZenSetLogLevel(ZenLogLevel_Info);
+
     auto [clientError, client] = make_client();
     if (clientError)
         return clientError;

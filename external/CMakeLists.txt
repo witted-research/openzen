@@ -7,3 +7,4 @@ add_subdirectory(nlohmann-json)
 
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
+add_subdirectory(spdlog)

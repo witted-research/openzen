@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <spdlog/spdlog.h>
+
 #include "SensorManager.h"
 #include "io/interfaces/SiUsbInterface.h"
 #include "utility/IPlatformDll.h"
@@ -61,9 +63,11 @@ namespace zen
             fnTable.setBaudrate = reinterpret_cast<SiUsbFnTable::SetBaudrateFn>(dll.procedure(m_handle, "SI_SetBaudRate"));
             fnTable.setFlowControl = reinterpret_cast<SiUsbFnTable::SetFlowControlFn>(dll.procedure(m_handle, "SI_SetFlowControl"));
             fnTable.write = reinterpret_cast<SiUsbFnTable::WriteFn>(dll.procedure(m_handle, "SI_Write"));
-            std::cout << "Loaded SiLabs driver." << std::endl;
+            spdlog::info("Loaded SiLabs driver from Dll");
             return true;
         }
+
+        spdlog::warn("Cannot load SiLabs SiUSBXp.dll, USB express connected sensor will not be available.");
 
         return false;
     }

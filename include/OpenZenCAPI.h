@@ -10,6 +10,12 @@ ZEN_API ZenError ZenInit(ZenClientHandle_t* outHandle);
 
 ZEN_API ZenError ZenShutdown(ZenClientHandle_t handle);
 
+/**
+Set the level of log messages that OpenZen writes to the log sink. Currently,
+the only log sink is the console.
+*/
+ZEN_API ZenError ZenSetLogLevel(ZenLogLevel logLevel);
+
 /** Opts in to an asynchronous process that lists available sensors.
  * ZenEventData_SensorListingProgress events will be queued to indicate progress.
  * ZenEventData_SensorFound events will be queued to signal sensor descriptions.

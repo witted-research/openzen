@@ -135,6 +135,17 @@ typedef enum ZenAsyncStatus
     ZenAsync_Max
 } ZenAsyncStatus;
 
+typedef enum ZenLogLevel
+{
+    ZenLogLevel_Off,
+    ZenLogLevel_Debug,
+    ZenLogLevel_Info,
+    ZenLogLevel_Warning,
+    ZenLogLevel_Error,
+
+    ZenLogLevel_Max
+} ZenLogLevel;
+
 typedef struct ZenHeaveMotionData
 {
     float yHeave;
