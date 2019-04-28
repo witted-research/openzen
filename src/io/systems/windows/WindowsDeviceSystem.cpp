@@ -8,7 +8,7 @@ namespace zen
     {
         HANDLE openCOMPort(std::string_view filename)
         {
-            return ::CreateFileA(filename.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+            return ::CreateFileA(filename.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
         }
     }
 
@@ -44,7 +44,18 @@ namespace zen
         if (handle == INVALID_HANDLE_VALUE)
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
 
-        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, handle);
+        // Create overlapped objects for asynchronous communication
+        OVERLAPPED ioReader{ 0 };
+        ioReader.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
+        if (!ioReader.hEvent)
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+
+        OVERLAPPED ioWriter{ 0 };
+        ioWriter.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
+        if (!ioWriter.hEvent)
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+
+        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, handle, ioReader, ioWriter);
 
         DCB config;
         if (!::GetCommState(handle, &config))
