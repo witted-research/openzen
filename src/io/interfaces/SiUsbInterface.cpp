@@ -6,10 +6,10 @@ namespace zen
 {
     SiUsbInterface::SiUsbInterface(IIoDataSubscriber& subscriber, HANDLE handle, OVERLAPPED ioReader) noexcept
         : IIoInterface(subscriber)
+        , m_handle(handle)
         , m_ioReader(ioReader)
         , m_terminate(false)
         , m_pollingThread(&SiUsbInterface::run, this)
-        , m_handle(handle)
         , m_baudrate(0)
     {}
 
