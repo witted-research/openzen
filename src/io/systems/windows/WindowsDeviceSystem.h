@@ -10,9 +10,7 @@
 namespace zen
 {
     class WindowsDeviceSystem : public IIoSystem
-    {
-        constexpr static unsigned int DEFAULT_BAUDRATE = CBR_115200;
-        
+    {   
     public:
         constexpr static const char KEY[] = "WindowsDevice";
 
