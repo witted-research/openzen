@@ -114,6 +114,7 @@ namespace zen
             ZenSensorDesc desc;
             desc.handle32 = deviceId;
             std::memcpy(desc.ioType, PcanBasicSystem::KEY, sizeof(PcanBasicSystem::KEY));
+            desc.baudRate = 921600;
             outDevices.emplace_back(desc);
         }
 

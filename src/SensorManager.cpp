@@ -82,7 +82,7 @@ namespace zen
         else
             return nonstd::make_unexpected(ioInterface.error());
 
-        auto agreement = negotiator.negotiate(*communicator.get());
+        auto agreement = negotiator.negotiate(*communicator.get(), desc.baudRate);
         if (!agreement)
             return nonstd::make_unexpected(agreement.error());
 

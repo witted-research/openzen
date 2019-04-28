@@ -211,6 +211,7 @@ typedef struct ZenSensorDesc
         uint32_t handle32;
         uint64_t handle64;
     };
+    uint32_t baudRate;
 } ZenSensorDesc;
 
 typedef struct ZenEventData_SensorDisconnected

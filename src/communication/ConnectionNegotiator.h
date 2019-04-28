@@ -18,7 +18,7 @@ namespace zen
         ConnectionNegotiator() noexcept;
 
         /** Try to determine the appropriate baudrate, and when done negotiate the configuration of the sensor. */
-        nonstd::expected<SensorConfig, ZenSensorInitError> negotiate(ModbusCommunicator& communicator) const noexcept;
+        nonstd::expected<SensorConfig, ZenSensorInitError> negotiate(ModbusCommunicator& communicator, unsigned int desiredBaudRate) const noexcept;
 
     private:
         ZenError processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept override;

@@ -85,6 +85,8 @@ namespace zen
             if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, desc.name, sizeof(ZenSensorDesc::name), SI_RETURN_SERIAL_NUMBER))
                 return ZenError_Io_GetFailed;
 
+            desc.baudRate = 921600;
+
             outDevices.emplace_back(desc);
         }
 

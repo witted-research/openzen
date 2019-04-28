@@ -66,6 +66,8 @@ namespace zen
             if (!FT_SUCCESS(fnTable.listDevices(&i, desc.serialNumber, FT_LIST_BY_INDEX | FT_OPEN_BY_SERIAL_NUMBER)))
                 return ZenError_Unknown;
 
+            desc.baudRate = 921600;
+
             outDevices.emplace_back(desc);
         }
 

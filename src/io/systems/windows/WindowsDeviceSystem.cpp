@@ -30,6 +30,7 @@ namespace zen
                 desc.name[filename.size()] = '\0';
                 desc.serialNumber[0] = '\0';
                 desc.handle32 = i;
+                desc.baudRate = 921600;
 
                 outDevices.emplace_back(desc);
             }

@@ -15,7 +15,7 @@ namespace zen
         , m_terminated(false)
     {}
 
-    nonstd::expected<SensorConfig, ZenSensorInitError> ConnectionNegotiator::negotiate(ModbusCommunicator& communicator) const noexcept
+    nonstd::expected<SensorConfig, ZenSensorInitError> ConnectionNegotiator::negotiate(ModbusCommunicator& communicator, unsigned int desiredBaudRate) const noexcept
     {
         constexpr const auto IO_TIMEOUT = std::chrono::milliseconds(2000);
         std::vector<unsigned int> baudrates;
@@ -40,7 +40,7 @@ namespace zen
 
         // [LEGACY] Fix for sensors that did not support negotiation yet
         //return nonstd::make_unexpected(ZenSensorInitError_IncompatibleBaudRates);
-        communicator.setBaudRate(921600);
+        communicator.setBaudRate(desiredBaudRate);
 
         SensorConfig config;
         config.version = 0u;
