@@ -55,7 +55,7 @@ namespace zen
         if (!ioWriter.hEvent)
             return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
-        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, handle, ioReader, ioWriter);
+        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, desc.name, handle, ioReader, ioWriter);
 
         DCB config;
         if (!::GetCommState(handle, &config))

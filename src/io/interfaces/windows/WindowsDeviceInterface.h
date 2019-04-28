@@ -18,7 +18,7 @@ namespace zen
     class WindowsDeviceInterface : public IIoInterface
     {
     public:
-        WindowsDeviceInterface(IIoDataSubscriber& subscriber, HANDLE handle, OVERLAPPED ioReader, OVERLAPPED ioWriter) noexcept;
+        WindowsDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, HANDLE handle, OVERLAPPED ioReader, OVERLAPPED ioWriter) noexcept;
         ~WindowsDeviceInterface();
 
         /** Send data to IO interface */
@@ -44,7 +44,7 @@ namespace zen
 
         std::array<std::byte, 256> m_buffer;
 
-        std::string m_deviceId;
+        std::string m_identifier;
 
         DCB m_config;
         HANDLE m_handle;

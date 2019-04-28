@@ -41,8 +41,9 @@ namespace zen
         }
     }
 
-    WindowsDeviceInterface::WindowsDeviceInterface(IIoDataSubscriber& subscriber, HANDLE handle, OVERLAPPED ioReader, OVERLAPPED ioWriter) noexcept
+    WindowsDeviceInterface::WindowsDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, HANDLE handle, OVERLAPPED ioReader, OVERLAPPED ioWriter) noexcept
         : IIoInterface(subscriber)
+        , m_identifier(identifier)
         , m_handle(handle)
         , m_ioReader(ioReader)
         , m_ioWriter(ioWriter)
@@ -137,10 +138,15 @@ namespace zen
         return WindowsDeviceSystem::KEY;
     }
 
-    bool WindowsDeviceInterface::equals(const ZenSensorDesc&) const noexcept
+    bool WindowsDeviceInterface::equals(const ZenSensorDesc& desc) const noexcept
     {
-        // [XXX] TODO
-        return false;
+        if (std::string_view(WindowsDeviceSystem::KEY) != desc.ioType)
+            return false;
+
+        if (desc.name != m_identifier)
+            return false;
+
+        return true;
     }
 
     int WindowsDeviceInterface::run()
