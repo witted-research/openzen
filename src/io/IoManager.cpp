@@ -26,7 +26,7 @@ namespace zen
     static auto siUsbRegistry = makeRegistry<SiUsbSystem>();
 
     // [XXX] Need to re-evaluate the usage
-    //static auto windowsDeviceRegistry = makeRegistry<WindowsDeviceSystem>();
+    static auto windowsDeviceRegistry = makeRegistry<WindowsDeviceSystem>();
 #endif
 
     IAutoIoSystemRegistry* IoManager::head = nullptr;
