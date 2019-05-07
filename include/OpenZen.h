@@ -282,33 +282,6 @@ namespace zen
 
             return std::nullopt;
         }
-
-        // [TODO] Remove handle
-        std::pair<ZenError, ZenSensorDesc> desc() noexcept
-        {
-            ZenSensorDesc desc;
-
-            auto [nameError, nameLength] = getArrayProperty(ZenSensorProperty_DeviceName, reinterpret_cast<std::byte*>(desc.name), sizeof(ZenSensorDesc::name));
-            if (nameError)
-                return std::make_pair(nameError, ZenSensorDesc{}); // [TODO] Specific error Sensor_NameTooLong
-
-            desc.name[nameLength] = '\0';
-
-            auto [serialError, serialLength] = getArrayProperty(ZenSensorProperty_SerialNumber, reinterpret_cast<std::byte*>(desc.serialNumber), sizeof(ZenSensorDesc::serialNumber));
-            if (serialError)
-                return std::make_pair(serialError, ZenSensorDesc{}); // [TODO] Specific error Sensor_SerialNumberTooLong
-
-            desc.serialNumber[serialLength] = '\0';
-
-            const auto type = ioType();
-            if (type.size() >= sizeof(ZenSensorDesc::ioType))
-                return std::make_pair(ZenError_BufferTooSmall, ZenSensorDesc{}); // [TODO] Specific error Sensor_IoTypeTooLong
-
-            std::memcpy(desc.ioType, type.data(), type.size());
-            desc.ioType[type.size()] = '\0';
-            desc.handle64 = 0;
-            return std::make_pair(ZenError_None, std::move(desc));
-        }
     };
 
     class ZenClient
