@@ -104,8 +104,8 @@ int main(int argc, char *argv[])
         return ZenError_Unknown;
     }
 
-    for (const auto& desc : g_discoveredSensors)
-        std::cout << desc.name << " ("  << desc.ioType << ")" << std::endl;
+    for (unsigned idx = 0; idx < g_discoveredSensors.size(); ++idx)
+        std::cout << idx << ": " << g_discoveredSensors[idx].name << " ("  << g_discoveredSensors[idx].ioType << ")" << std::endl;
 
     unsigned int idx;
     do
