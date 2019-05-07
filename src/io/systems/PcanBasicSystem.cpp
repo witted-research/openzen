@@ -1,5 +1,7 @@
 #include "io/systems/PcanBasicSystem.h"
 
+#include <string>
+
 #include "io/can/CanManager.h"
 #include "io/interfaces/CanInterface.h"
 
@@ -54,7 +56,12 @@ namespace zen
     {
         ICanChannel& channel = *m_channels.begin()->get();
 
-        auto ioInterface = std::make_unique<CanInterface>(subscriber, channel, desc.handle32);
+        char* end = const_cast<char*>(std::strchr(desc.identifier, '\0'));
+        const auto deviceId = std::strtoul(desc.identifier, &end, 10);
+        if (deviceId == std::numeric_limits<unsigned long>::max())
+            return nonstd::make_unexpected(ZenSensorInitError_UnknownIdentifier);
+
+        auto ioInterface = std::make_unique<CanInterface>(subscriber, channel, deviceId);
         if (!channel.subscribe(*ioInterface.get()))
             return nullptr;
 

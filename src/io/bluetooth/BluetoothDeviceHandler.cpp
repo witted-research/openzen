@@ -4,8 +4,8 @@
 
 namespace zen
 {
-    BluetoothDeviceHandler::BluetoothDeviceHandler(uint64_t address) noexcept
-        : m_address(address)
+    BluetoothDeviceHandler::BluetoothDeviceHandler(std::string_view address) noexcept
+        : m_address(QString::fromLocal8Bit(address.data(), static_cast<int>(address.size())))
         , m_connected(false)
         , m_initError(ZenSensorInitError_None)
     {}
@@ -85,9 +85,9 @@ namespace zen
         return ZenError_None;
     }
 
-    bool BluetoothDeviceHandler::equals(uint64_t handle) const noexcept
+    bool BluetoothDeviceHandler::equals(std::string_view address) const noexcept
     {
-        return m_address.toUInt64() == handle;
+        return m_address.toString().toStdString() == address;
     }
 
     void BluetoothDeviceHandler::serviceDiscovered(const QBluetoothServiceInfo& service)

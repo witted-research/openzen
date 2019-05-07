@@ -77,16 +77,16 @@ namespace zen
         for (DWORD idx = 0; idx < nDevices; ++idx)
         {
             ZenSensorDesc desc;
-            std::memcpy(desc.ioType, SiUsbSystem::KEY, sizeof(SiUsbSystem::KEY));
+            if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, desc.name, sizeof(ZenSensorDesc::name), SI_RETURN_SERIAL_NUMBER))
+                return ZenError_Io_GetFailed;
 
             if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, desc.serialNumber, sizeof(ZenSensorDesc::serialNumber), SI_RETURN_SERIAL_NUMBER))
                 return ZenError_Io_GetFailed;
 
-            if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, desc.name, sizeof(ZenSensorDesc::name), SI_RETURN_SERIAL_NUMBER))
-                return ZenError_Io_GetFailed;
+            std::memcpy(desc.ioType, SiUsbSystem::KEY, sizeof(SiUsbSystem::KEY));
+            std::memcpy(desc.identifier, desc.serialNumber, sizeof(ZenSensorDesc::serialNumber));
 
             desc.baudRate = 921600;
-
             outDevices.emplace_back(desc);
         }
 
@@ -99,7 +99,7 @@ namespace zen
         if (auto error = SiUsbSystem::fnTable.getNumDevices(&nDevices))
             return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
-        const std::string_view target = desc.serialNumber;
+        const std::string_view target = desc.identifier;
 
         bool found = false;
         char serialNumber[sizeof(ZenSensorDesc::serialNumber)];

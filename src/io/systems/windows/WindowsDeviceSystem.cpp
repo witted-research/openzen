@@ -24,14 +24,19 @@ namespace zen
             {
                 ::CloseHandle(handle);
 
-                ZenSensorDesc desc;
-                std::memcpy(desc.ioType, WindowsDeviceSystem::KEY, sizeof(WindowsDeviceSystem::KEY));
-                std::memcpy(desc.name, filename.c_str(), filename.size());
-                desc.name[filename.size()] = '\0';
-                desc.serialNumber[0] = '\0';
-                desc.handle32 = i;
-                desc.baudRate = 921600;
+                const std::string name("COM PORT #" + std::to_string(i));
 
+                ZenSensorDesc desc;
+                std::memcpy(desc.name, name.c_str(), name.size());
+                desc.name[name.size()] = '\0';
+
+                desc.serialNumber[0] = '\0';
+                std::memcpy(desc.ioType, WindowsDeviceSystem::KEY, sizeof(WindowsDeviceSystem::KEY));
+
+                std::memcpy(desc.identifier, filename.c_str(), filename.size());
+                desc.identifier[filename.size()] = '\0';
+
+                desc.baudRate = 921600;
                 outDevices.emplace_back(desc);
             }
         }
@@ -41,7 +46,7 @@ namespace zen
 
     nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> WindowsDeviceSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
-        auto handle = openCOMPort(desc.name);
+        auto handle = openCOMPort(desc.identifier);
         if (handle == INVALID_HANDLE_VALUE)
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
 
@@ -56,7 +61,7 @@ namespace zen
         if (!ioWriter.hEvent)
             return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
-        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, desc.name, handle, ioReader, ioWriter);
+        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, desc.identifier, handle, ioReader, ioWriter);
 
         DCB config;
         if (!::GetCommState(handle, &config))

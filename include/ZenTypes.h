@@ -106,6 +106,7 @@ typedef enum ZenSensorInitError : ZenError_t
 
     ZenSensorInitError_InvalidHandle,           // Provided client handle is invalid
     ZenSensorInitError_IsNull,                  // Provided pointer is null
+    ZenSensorInitError_UnknownIdentifier,       // Provided sensor identifier is unknown
     ZenSensorInitError_UnsupportedComponent,    // At least one of the sensor's component types is not supported by the host
     ZenSensorInitError_UnsupportedDataFormat,   // Provided Modbus Format is not supported
     ZenSensorInitError_UnsupportedIoType,       // Provided IO type is not supported
@@ -206,11 +207,7 @@ typedef struct ZenSensorDesc
     char name[256];
     char serialNumber[64];
     char ioType[64];
-    union
-    {
-        uint32_t handle32;
-        uint64_t handle64;
-    };
+    char identifier[64];
     uint32_t baudRate;
 } ZenSensorDesc;
 

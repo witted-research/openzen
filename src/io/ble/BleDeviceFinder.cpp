@@ -32,7 +32,11 @@ namespace zen
                 desc.serialNumber[length] = '\0';
 
                 std::memcpy(desc.ioType, BleSystem::KEY, sizeof(BleSystem::KEY));
-                desc.handle64 = device.address().toUInt64();
+
+                const auto identifier = device.address().toString().toUtf8();
+                std::memcpy(desc.identifier, identifier.data(), identifier.size());
+                desc.identifier[identifier.size()] = '\0';
+
                 outDevices.emplace_back(desc);
             }
         }

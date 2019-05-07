@@ -1,5 +1,7 @@
 #include "io/interfaces/CanInterface.h"
 
+#include <cstring>
+#include <string>
 #include <vector>
 
 #include "io/can/ICanChannel.h"
@@ -42,7 +44,12 @@ bool CanInterface::equals(const ZenSensorDesc& desc) const noexcept
     if (!m_channel.equals(desc.ioType))
         return false;
 
-    return m_id == desc.handle32;
+    char* end = const_cast<char*>(std::strchr(desc.identifier, '\0'));
+    const auto deviceId = std::strtoul(desc.identifier, &end, 10);
+    if (deviceId == std::numeric_limits<unsigned long>::max())
+        return false;
+
+    return m_id == deviceId;
 }
 
 ZenError CanInterface::send(gsl::span<const std::byte> data) noexcept

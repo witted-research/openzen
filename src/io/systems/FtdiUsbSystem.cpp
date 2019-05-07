@@ -58,16 +58,16 @@ namespace zen
         for (DWORD i = 0; i < nDevices; ++i)
         {
             ZenSensorDesc desc;
-            std::memcpy(desc.ioType, FtdiUsbSystem::KEY, sizeof(FtdiUsbSystem::KEY));
-
             if (!FT_SUCCESS(fnTable.listDevices(&i, desc.name, FT_LIST_BY_INDEX | FT_OPEN_BY_DESCRIPTION)))
                 return ZenError_Unknown;
 
             if (!FT_SUCCESS(fnTable.listDevices(&i, desc.serialNumber, FT_LIST_BY_INDEX | FT_OPEN_BY_SERIAL_NUMBER)))
                 return ZenError_Unknown;
 
-            desc.baudRate = 921600;
+            std::memcpy(desc.ioType, FtdiUsbSystem::KEY, sizeof(FtdiUsbSystem::KEY));
+            std::memcpy(desc.identifier, desc.serialNumber, sizeof(ZenSensorDesc::serialNumber));
 
+            desc.baudRate = 921600;
             outDevices.emplace_back(desc);
         }
 
@@ -78,7 +78,7 @@ namespace zen
     {
         FT_HANDLE handle;
         // Need to cast do a non-const because the FT_OpenEx interface expects a void pointer
-        if (!FT_SUCCESS(fnTable.openEx(const_cast<char*>(desc.serialNumber), FT_OPEN_BY_SERIAL_NUMBER, &handle)))
+        if (!FT_SUCCESS(fnTable.openEx(const_cast<char*>(desc.identifier), FT_OPEN_BY_SERIAL_NUMBER, &handle)))
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
 
         auto ioInterface = std::make_unique<FtdiUsbInterface>(subscriber, handle);
