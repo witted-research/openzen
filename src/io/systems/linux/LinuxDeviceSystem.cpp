@@ -3,7 +3,6 @@
 #include "io/interfaces/linux/LinuxDeviceInterface.h"
 
 #include <cstring>
-#include <iostream>
 
 #include <fcntl.h>
 #include <termios.h>

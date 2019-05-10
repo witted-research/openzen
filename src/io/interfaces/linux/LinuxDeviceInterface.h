@@ -7,6 +7,8 @@
 #include <string_view>
 #include <thread>
 
+#include <aio.h>
+
 #include "io/IIoInterface.h"
 
 namespace zen
@@ -42,6 +44,7 @@ namespace zen
 
         std::string m_identifier;
 
+        struct aiocb64 m_readCB;
         int m_fd;
 
         std::atomic_bool m_terminate;

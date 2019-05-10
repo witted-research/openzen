@@ -4,6 +4,8 @@
 
 #include "io/systems/linux/LinuxDeviceSystem.h"
 
+#include <cstring>
+
 #include <termios.h>
 #include <unistd.h>
 
@@ -68,7 +70,12 @@ namespace zen
         , m_fd(fd)
         , m_terminate(false)
         , m_pollingThread(&LinuxDeviceInterface::run, this)
-    {}
+    {
+        std::memset(&m_readCB, 0, sizeof(aiocb64));
+        m_readCB.aio_fildes = m_fd;
+        m_readCB.aio_buf = m_buffer.data();
+        m_readCB.aio_nbytes = m_buffer.size();
+    }
 
     LinuxDeviceInterface::~LinuxDeviceInterface()
     {
@@ -120,26 +127,30 @@ namespace zen
     nonstd::expected<std::vector<int32_t>, ZenError> LinuxDeviceInterface::supportedBaudRates() const noexcept
     {
         std::vector<int32_t> baudRates;
-        baudRates.reserve(18);
+        baudRates.reserve(22);
 
-        baudRates.emplace_back(B50);
-        baudRates.emplace_back(B75);
-        baudRates.emplace_back(B110);
-        baudRates.emplace_back(B134);
-        baudRates.emplace_back(B150);
-        baudRates.emplace_back(B200);
-        baudRates.emplace_back(B300);
-        baudRates.emplace_back(B600);
-        baudRates.emplace_back(B1200);
-        baudRates.emplace_back(B1800);
-        baudRates.emplace_back(B2400);
-        baudRates.emplace_back(B4800);
-        baudRates.emplace_back(B9600);
-        baudRates.emplace_back(B19200);
-        baudRates.emplace_back(B38400);
-        baudRates.emplace_back(B57600);
-        baudRates.emplace_back(B115200);
-        baudRates.emplace_back(B230400);
+        baudRates.emplace_back(50);
+        baudRates.emplace_back(75);
+        baudRates.emplace_back(110);
+        baudRates.emplace_back(134);
+        baudRates.emplace_back(150);
+        baudRates.emplace_back(200);
+        baudRates.emplace_back(300);
+        baudRates.emplace_back(600);
+        baudRates.emplace_back(1200);
+        baudRates.emplace_back(1800);
+        baudRates.emplace_back(2400);
+        baudRates.emplace_back(4800);
+        baudRates.emplace_back(9600);
+        baudRates.emplace_back(19200);
+        baudRates.emplace_back(38400);
+        baudRates.emplace_back(57600);
+        baudRates.emplace_back(115200);
+        baudRates.emplace_back(230400);
+        baudRates.emplace_back(460800);
+        baudRates.emplace_back(500000);
+        baudRates.emplace_back(576000);
+        baudRates.emplace_back(921600);
 
         return baudRates;
     }
@@ -162,17 +173,23 @@ namespace zen
 
     int LinuxDeviceInterface::run()
     {
+        struct aiocb64* const list[1] { &m_readCB };
+
         while (!m_terminate)
         {
-            const auto res = ::read(m_fd, m_buffer.data(), m_buffer.size());
-            if (res == -1)
+            if (::aio_read64(&m_readCB) == -1)
                 return ZenError_Io_ReadFailed;
 
-            if (res > 0)
-                if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), res)))
-                    return error;
+            if (::aio_suspend64(list, 1, nullptr) == -1)
+                return ZenError_Io_ReadFailed;
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            if (::aio_error64(&m_readCB) != 0)
+                return ZenError_Io_ReadFailed;
+
+            const auto nBytesReceived = ::aio_return64(&m_readCB);
+            if (nBytesReceived > 0)
+                if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nBytesReceived)))
+                    return error;
         }
 
         return ZenError_None;
