@@ -13,6 +13,18 @@
 
 namespace zen
 {
+    /*
+    The Linux device interface uses the POSIX Asynchronous IO interface
+    to read from a virtual com port device. If an LPMS sensor gets connected,
+    the linux cp210x will map the USB device to a file in /dev/ttyUSB
+    which is opened by this sub-system.
+
+    For regular users to be able to open this virtual file, they need to be
+    a member of the tty group. Add a user with the following command:
+
+    sudo usermod -a -G tty <user name>
+
+    */
     class LinuxDeviceInterface : public IIoInterface
     {
     public:
