@@ -79,6 +79,6 @@ namespace zen
         if (-1 == ::tcsetattr(fd, TCSANOW, &config))
             return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
-        return ioInterface;
+        return std::move(ioInterface);
     }
 }
