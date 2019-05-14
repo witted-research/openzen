@@ -6,38 +6,39 @@ namespace zen
 {
     namespace
     {
-        bool tryToAddFile(unsigned int idx, const std::string& filename, ZenSensorDesc& outDesc)
+        HANDLE openCOMPort(std::string_view filename)
         {
-            auto handle = ::CreateFileA(filename.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-            if (handle != INVALID_HANDLE_VALUE)
-            {
-                ::CloseHandle(handle);
-
-                outDesc.handle32 = idx;
-                return true;
-            }
-
-            return false;
+            return ::CreateFileA(filename.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
         }
     }
 
     ZenError WindowsDeviceSystem::listDevices(std::vector<ZenSensorDesc>& outDevices)
     {
-        ZenSensorDesc desc;
-        std::memcpy(desc.ioType, WindowsDeviceSystem::KEY, sizeof(WindowsDeviceSystem::KEY));
-
-        for (unsigned int i = 1; i <= 9; ++i)
+        constexpr int MAX_COM_PORTS = 256;
+        for (unsigned int i = 1; i <= MAX_COM_PORTS; ++i)
         {
             const std::string filename("\\\\.\\COM" + std::to_string(i));
-            if (tryToAddFile(i, filename, desc))
-                outDevices.emplace_back(desc);
-        }
 
-        for (unsigned int i = 10; i <= std::numeric_limits<uint8_t>::max(); ++i)
-        {
-            const std::string filename("\\.\\COM" + std::to_string(i));
-            if (tryToAddFile(i, filename, desc))
+            auto handle = openCOMPort(filename);
+            if (handle != INVALID_HANDLE_VALUE)
+            {
+                ::CloseHandle(handle);
+
+                const std::string name("COM PORT #" + std::to_string(i));
+
+                ZenSensorDesc desc;
+                std::memcpy(desc.name, name.c_str(), name.size());
+                desc.name[name.size()] = '\0';
+
+                desc.serialNumber[0] = '\0';
+                std::memcpy(desc.ioType, WindowsDeviceSystem::KEY, sizeof(WindowsDeviceSystem::KEY));
+
+                std::memcpy(desc.identifier, filename.c_str(), filename.size());
+                desc.identifier[filename.size()] = '\0';
+
+                desc.baudRate = 921600;
                 outDevices.emplace_back(desc);
+            }
         }
 
         return ZenError_None;
@@ -45,11 +46,22 @@ namespace zen
 
     nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> WindowsDeviceSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
-        HANDLE handle = ::CreateFileA(desc.name, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
+        auto handle = openCOMPort(desc.identifier);
         if (handle == INVALID_HANDLE_VALUE)
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
 
-        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, handle);
+        // Create overlapped objects for asynchronous communication
+        OVERLAPPED ioReader{ 0 };
+        ioReader.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
+        if (!ioReader.hEvent)
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+
+        OVERLAPPED ioWriter{ 0 };
+        ioWriter.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
+        if (!ioWriter.hEvent)
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+
+        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, desc.identifier, handle, ioReader, ioWriter);
 
         DCB config;
         if (!::GetCommState(handle, &config))
@@ -78,8 +90,9 @@ namespace zen
         if (!::SetCommTimeouts(handle, &timeoutConfig))
             return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
-        //if (outError = ioInterface->setBaudrate(DEFAULT_BAUDRATE))
-        //    return nullptr;
+        //constexpr static unsigned int DEFAULT_BAUDRATE = CBR_115200;
+        //if (auto error = ioInterface->setBaudRate(DEFAULT_BAUDRATE))
+        //    return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
 
         return ioInterface;
     }

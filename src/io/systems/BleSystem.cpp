@@ -18,7 +18,7 @@ namespace zen
 
     nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> BleSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
-        auto handle = std::make_unique<BleDeviceHandler>(desc.handle64);
+        auto handle = std::make_unique<BleDeviceHandler>(desc.identifier);
         if (auto error = handle->initialize())
             return nonstd::make_unexpected(error);
 

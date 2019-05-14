@@ -29,7 +29,7 @@ namespace zen
         if (std::string_view(BleSystem::KEY) != desc.ioType)
             return false;
 
-        return m_handler->equals(desc.handle64);
+        return m_handler->equals(desc.identifier);
     }
 
     int BleInterface::run()

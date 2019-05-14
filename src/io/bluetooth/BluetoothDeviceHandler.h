@@ -4,6 +4,7 @@
 #include <atomic>
 #include <future>
 #include <optional>
+#include <string_view>
 
 #include <gsl/span>
 
@@ -29,7 +30,7 @@ namespace zen
         using async_read_value_t = nonstd::expected<std::vector<std::byte>, ZenError>;
 
     public:
-        BluetoothDeviceHandler(uint64_t address) noexcept;
+        BluetoothDeviceHandler(std::string_view address) noexcept;
         ~BluetoothDeviceHandler();
 
         BluetoothDeviceHandler(BluetoothDeviceHandler&&) = default;
@@ -40,7 +41,7 @@ namespace zen
 
         ZenError send(gsl::span<const std::byte> data) noexcept;
 
-        bool equals(uint64_t handle) const noexcept;
+        bool equals(std::string_view address) const noexcept;
 
     private slots:
         void serviceDiscovered(const QBluetoothServiceInfo& service);

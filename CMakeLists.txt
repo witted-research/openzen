@@ -194,6 +194,16 @@ if(WIN32)
 
 elseif(UNIX AND NOT APPLE)
 
+    set(io_interfaces_sources ${io_interfaces_sources}
+        src/io/interfaces/linux/LinuxDeviceInterface.cpp
+        src/io/interfaces/linux/LinuxDeviceInterface.h
+    )
+
+    set(io_systems_sources ${io_systems_sources}
+        src/io/systems/linux/LinuxDeviceSystem.cpp
+        src/io/systems/linux/LinuxDeviceSystem.h
+    )
+
     set(utility_sources ${utility_sources}
         src/utility/linux/LinuxDll.cpp
         src/utility/linux/LinuxDll.h
@@ -267,6 +277,7 @@ target_link_libraries(OpenZen
         nonstd::expected-lite
         nlohmann_json::nlohmann_json
         GSL
+        $<$<PLATFORM_ID:Linux>:rt>
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
         spdlog

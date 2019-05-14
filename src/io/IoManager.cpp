@@ -11,6 +11,8 @@
 #include "io/systems/PcanBasicSystem.h"
 #include "io/systems/SiUsbSystem.h"
 #include "io/systems/windows/WindowsDeviceSystem.h"
+#elif __linux__
+#include "io/systems/linux/LinuxDeviceSystem.h"
 #endif
 
 namespace zen
@@ -26,7 +28,9 @@ namespace zen
     static auto siUsbRegistry = makeRegistry<SiUsbSystem>();
 
     // [XXX] Need to re-evaluate the usage
-    //static auto windowsDeviceRegistry = makeRegistry<WindowsDeviceSystem>();
+    static auto windowsDeviceRegistry = makeRegistry<WindowsDeviceSystem>();
+#elif __linux__
+    static auto linuxDeviceRegistry = makeRegistry<LinuxDeviceSystem>();
 #endif
 
     IAutoIoSystemRegistry* IoManager::head = nullptr;

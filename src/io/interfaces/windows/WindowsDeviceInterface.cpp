@@ -41,24 +41,47 @@ namespace zen
         }
     }
 
-    WindowsDeviceInterface::WindowsDeviceInterface(IIoDataSubscriber& subscriber, HANDLE handle) noexcept
+    WindowsDeviceInterface::WindowsDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, HANDLE handle, OVERLAPPED ioReader, OVERLAPPED ioWriter) noexcept
         : IIoInterface(subscriber)
+        , m_identifier(identifier)
+        , m_handle(handle)
+        , m_ioReader(ioReader)
+        , m_ioWriter(ioWriter)
         , m_terminate(false)
         , m_pollingThread(&WindowsDeviceInterface::run, this)
-        , m_handle(handle)
     {}
 
     WindowsDeviceInterface::~WindowsDeviceInterface()
     {
         m_terminate = true;
+
+        // Terminate wait for the interrupt
+        ::CancelIoEx(m_handle, &m_ioReader);
+        ::PulseEvent(m_ioReader.hEvent);
+
         m_pollingThread.join();
+
         ::CloseHandle(m_handle);
+        ::CloseHandle(m_ioReader.hEvent);
+        ::CloseHandle(m_ioWriter.hEvent);
     }
 
     ZenError WindowsDeviceInterface::send(gsl::span<const std::byte> data) noexcept
     {
         DWORD nBytesWritten;
-        if (!::WriteFile(m_handle, data.data(), static_cast<DWORD>(data.size()), &nBytesWritten, nullptr))
+        if (!::WriteFile(m_handle, data.data(), static_cast<DWORD>(data.size()), &nBytesWritten, &m_ioWriter))
+        {
+            if (::GetLastError() != ERROR_IO_PENDING)
+                return ZenError_Io_SendFailed;
+
+            if (::WaitForSingleObject(m_ioWriter.hEvent, INFINITE) != WAIT_OBJECT_0)
+                return ZenError_Io_SendFailed;
+
+            if (!::GetOverlappedResult(m_handle, &m_ioWriter, &nBytesWritten, false))
+                return ZenError_Io_SendFailed;
+        }
+
+        if (nBytesWritten != data.size())
             return ZenError_Io_SendFailed;
 
         return ZenError_None;
@@ -115,29 +138,37 @@ namespace zen
         return WindowsDeviceSystem::KEY;
     }
 
-    bool WindowsDeviceInterface::equals(const ZenSensorDesc&) const noexcept
+    bool WindowsDeviceInterface::equals(const ZenSensorDesc& desc) const noexcept
     {
-        // [XXX] TODO
-        return false;
+        if (std::string_view(WindowsDeviceSystem::KEY) != desc.ioType)
+            return false;
+
+        if (desc.name != m_identifier)
+            return false;
+
+        return true;
     }
 
     int WindowsDeviceInterface::run()
     {
         while (!m_terminate)
         {
-            bool shouldParse = true;
-            while (shouldParse)
+            DWORD nReceivedBytes = 0;
+            if (!::ReadFile(m_handle, m_buffer.data(), static_cast<DWORD>(m_buffer.size()), &nReceivedBytes, &m_ioReader))
             {
-                DWORD nReceivedBytes;
-                if (!::ReadFile(m_handle, m_buffer.data(), static_cast<DWORD>(m_buffer.size()), &nReceivedBytes, nullptr))
+                if (::GetLastError() != ERROR_IO_PENDING)
                     return ZenError_Io_ReadFailed;
 
-                if (nReceivedBytes > 0)
-                    if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nReceivedBytes)))
-                        return error;
+                if (::WaitForSingleObject(m_ioReader.hEvent, INFINITE) != WAIT_OBJECT_0)
+                    return ZenError_Io_ReadFailed;
+
+                if (!::GetOverlappedResult(m_handle, &m_ioReader, &nReceivedBytes, false))
+                    return ZenError_Io_ReadFailed;
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            if (nReceivedBytes > 0)
+                if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nReceivedBytes)))
+                    return error;
         }
 
         return ZenError_None;

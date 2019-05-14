@@ -1,6 +1,7 @@
 #include "io/can/PcanBasicChannel.h"
 
 #include <limits>
+#include <string>
 
 #include "communication/Modbus.h"
 #include "io/can/CanManager.h"
@@ -111,9 +112,19 @@ namespace zen
     {
         for (uint32_t deviceId : m_deviceIds)
         {
+            const std::string identifier = std::to_string(deviceId);
+
             ZenSensorDesc desc;
-            desc.handle32 = deviceId;
+            std::memcpy(desc.name, identifier.c_str(), identifier.size());
+            desc.name[identifier.size()] = '\0';
+
+            desc.serialNumber[0] = '\0';
             std::memcpy(desc.ioType, PcanBasicSystem::KEY, sizeof(PcanBasicSystem::KEY));
+
+            std::memcpy(desc.identifier, identifier.c_str(), identifier.size());
+            desc.identifier[identifier.size()] = '\0';
+
+            desc.baudRate = 921600;
             outDevices.emplace_back(desc);
         }
 

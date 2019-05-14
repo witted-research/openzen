@@ -1,5 +1,5 @@
-#ifndef ZEN_IO_INTERFACES_WINDOWS_WINDOWSDEVICEINTERFACE_H_
-#define ZEN_IO_INTERFACES_WINDOWS_WINDOWSDEVICEINTERFACE_H_
+#ifndef ZEN_IO_INTERFACES_LINUX_LINUXDEVICEINTERFACE_H_
+#define ZEN_IO_INTERFACES_LINUX_LINUXDEVICEINTERFACE_H_
 
 #include <array>
 #include <atomic>
@@ -7,19 +7,29 @@
 #include <string_view>
 #include <thread>
 
-#define NOMINMAX
-#include <Windows.h>
-#undef NOMINMAX
+#include <aio.h>
 
 #include "io/IIoInterface.h"
 
 namespace zen
 {
-    class WindowsDeviceInterface : public IIoInterface
+    /*
+    The Linux device interface uses the POSIX Asynchronous IO interface
+    to read from a virtual com port device. If an LPMS sensor gets connected,
+    the linux cp210x will map the USB device to a file in /dev/ttyUSB
+    which is opened by this sub-system.
+
+    For regular users to be able to open this virtual file, they need to be
+    a member of the tty group. Add a user with the following command:
+
+    sudo usermod -a -G tty <user name>
+
+    */
+    class LinuxDeviceInterface : public IIoInterface
     {
     public:
-        WindowsDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, HANDLE handle, OVERLAPPED ioReader, OVERLAPPED ioWriter) noexcept;
-        ~WindowsDeviceInterface();
+        LinuxDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, int fd) noexcept;
+        ~LinuxDeviceInterface();
 
         /** Send data to IO interface */
         ZenError send(gsl::span<const std::byte> data) noexcept override;
@@ -46,10 +56,8 @@ namespace zen
 
         std::string m_identifier;
 
-        DCB m_config;
-        HANDLE m_handle;
-        OVERLAPPED m_ioReader;
-        OVERLAPPED m_ioWriter;
+        struct aiocb64 m_readCB;
+        int m_fd;
 
         std::atomic_bool m_terminate;
         std::thread m_pollingThread;

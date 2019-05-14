@@ -1,18 +1,14 @@
-#ifndef ZEN_IO_SYSTEMS_WINDOWS_WINDOWSDEVICESYSTEM_H_
-#define ZEN_IO_SYSTEMS_WINDOWS_WINDOWSDEVICESYSTEM_H_
+#ifndef ZEN_IO_SYSTEMS_LINUX_LINUXDEVICESYSTEM_H_
+#define ZEN_IO_SYSTEMS_LINUX_LINUXDEVICESYSTEM_H_
 
 #include "io/IIoSystem.h"
 
-#define NOMINMAX
-#include <Windows.h>
-#undef NOMINMAX
-
 namespace zen
 {
-    class WindowsDeviceSystem : public IIoSystem
-    {   
+    class LinuxDeviceSystem : public IIoSystem
+    {
     public:
-        constexpr static const char KEY[] = "WindowsDevice";
+        constexpr static const char KEY[] = "LinuxDevice";
 
         bool available() override { return true; }
 

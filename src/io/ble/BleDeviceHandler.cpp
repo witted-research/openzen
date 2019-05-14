@@ -2,8 +2,8 @@
 
 namespace zen
 {
-    BleDeviceHandler::BleDeviceHandler(uint64_t address)
-        : m_controller(QBluetoothAddress(address), this)
+    BleDeviceHandler::BleDeviceHandler(std::string_view address)
+        : m_controller(QBluetoothAddress(QString::fromLocal8Bit(address.data(), static_cast<int>(address.size()))), this)
         , m_disconnected(false)
     {
         connect(&m_controller, &QLowEnergyController::connected, this, [this]() {
@@ -86,9 +86,9 @@ namespace zen
         return m_queue.tryToPop();
     }
 
-    bool BleDeviceHandler::equals(uint64_t handle) const
+    bool BleDeviceHandler::equals(std::string_view address) const
     {
-        return m_controller.remoteAddress().toUInt64() == handle;
+        return m_controller.remoteAddress().toString().toStdString() == address;
     }
 
     void BleDeviceHandler::serviceDiscovered(const QBluetoothUuid& service)

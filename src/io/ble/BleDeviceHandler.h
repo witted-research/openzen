@@ -22,7 +22,7 @@ namespace zen
         static constexpr const unsigned char ZEN_IMUDATA_UUID[16] { 0xc1, 0x3c, 0x35, 0x55, 0x28, 0x11, 0xe1, 0xaa, 0x76, 0x48, 0x42, 0xb0, 0x80, 0xd7, 0xad, 0xe7 };
 
     public:
-        BleDeviceHandler(uint64_t address);
+        BleDeviceHandler(std::string_view address);
         ~BleDeviceHandler();
 
         ZenSensorInitError initialize();
@@ -30,7 +30,7 @@ namespace zen
         ZenError send(gsl::span<const std::byte> data);
         std::optional<std::vector<std::byte>> tryToGetReceivedData();
 
-        bool equals(uint64_t handle) const;
+        bool equals(std::string_view address) const;
 
     private slots:
         void serviceDiscovered(const QBluetoothUuid& service);

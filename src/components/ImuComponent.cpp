@@ -23,7 +23,9 @@ namespace zen
         {
             const int32_t temp = ((int32_t(data[3]) * 256 + int32_t(data[2])) * 256 + int32_t(data[1])) * 256 + int32_t(data[0]);
             data = data.subspan(sizeof(int32_t));
-            return *reinterpret_cast<const float*>(&temp);
+            float result;
+            std::memcpy(&result, &temp, sizeof(int32_t));
+            return result;
         }
     }
 
@@ -80,7 +82,7 @@ namespace zen
             const auto result = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->accBias.data), 3));
             if (result.first)
                 return ZenSensorInitError_RetrieveFailed;
-            
+
             m_properties->subscribeToPropertyChanges(ZenImuProperty_AccBias, [=](SensorPropertyValue value) {
                 const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
                 std::copy(data, data + 3, cache->accBias.data);
@@ -90,7 +92,7 @@ namespace zen
             const auto result = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->gyrBias.data), 3));
             if (result.first)
                 return ZenSensorInitError_RetrieveFailed;
-            
+
             m_properties->subscribeToPropertyChanges(ZenImuProperty_GyrBias, [=](SensorPropertyValue value) {
                 const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
                 std::copy(data, data + 3, cache->gyrBias.data);
@@ -100,7 +102,7 @@ namespace zen
             const auto result = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->hardIronOffset.data), 3));
             if (result.first)
                 return ZenSensorInitError_RetrieveFailed;
-            
+
             m_properties->subscribeToPropertyChanges(ZenImuProperty_MagHardIronOffset, [=](SensorPropertyValue value) {
                 const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
                 std::copy(data, data + 3, cache->hardIronOffset.data);
