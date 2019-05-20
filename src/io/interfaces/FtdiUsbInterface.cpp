@@ -105,7 +105,9 @@ namespace zen
             if (nReceivedBytes > 0 && !FT_SUCCESS(FtdiUsbSystem::fnTable.read(m_handle, m_buffer.data(), static_cast<DWORD>(m_buffer.size()), &nReceivedBytes)))
                 return ZenError_Io_ReadFailed;
 
-            publishReceivedData(m_buffer);
+            if (!m_terminate) {
+                publishReceivedData(m_buffer);
+            }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }

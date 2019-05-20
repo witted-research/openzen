@@ -100,7 +100,7 @@ namespace zen
                     return ZenError_Io_ReadFailed;
             }
 
-            if (nReceivedBytes > 0)
+            if (!m_terminate && (nReceivedBytes > 0)) {
                 if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nReceivedBytes)))
                     return error;
         }
