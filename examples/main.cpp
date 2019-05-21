@@ -6,7 +6,6 @@
 #include <iostream>
 #include <mutex>
 #include <limits>
-#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -27,15 +26,6 @@ namespace
         std::lock_guard<std::mutex> lock(g_discoverMutex);
         g_discoveredSensors.push_back(desc);
     }
-
-    std::optional<ZenSensorComponent> getImuComponent(gsl::span<ZenSensorComponent> components)
-    {
-        for (const auto& component : components)
-            if (component.type() == g_zenSensorType_Imu)
-                return component;
-
-        return std::nullopt;
-    }
 }
 
 void pollLoop(std::reference_wrapper<ZenClient> client)
@@ -43,29 +33,41 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
     while (!g_terminate)
     {
         unsigned int i = 0;
-        while (auto event = client.get().waitForNextEvent())
+        while (true)
         {
-            if (!event->component.handle)
+#if __cplusplus >= 201703L
+            auto optEvent = client.get().waitForNextEvent();
+            const bool success = optEvent.has_value();
+            auto& event = *optEvent;
+#else
+            const auto pair = client.get().waitForNextEvent();
+            const bool success = pair.first;
+            auto& event = pair.second;
+#endif
+            if (!success)
+                break;
+
+            if (!event.component.handle)
             {
-                switch (event->eventType)
+                switch (event.eventType)
                 {
                 case ZenSensorEvent_SensorFound:
-                    addDiscoveredSensor(event->data.sensorFound);
+                    addDiscoveredSensor(event.data.sensorFound);
                     break;
 
                 case ZenSensorEvent_SensorListingProgress:
-                    if (event->data.sensorListingProgress.progress == 1.0f)
+                    if (event.data.sensorListingProgress.progress == 1.0f)
                         g_discoverCv.notify_one();
                     break;
                 }
             }
             else
             {
-                switch (event->eventType)
+                switch (event.eventType)
                 {
                 case ZenImuEvent_Sample:
                     if (i++ % 100 == 0)
-                        std::cout << "Event type: " << event->eventType << std::endl;
+                        std::cout << "Event type: " << event.eventType << std::endl;
                     break;
                 }
             }
@@ -77,7 +79,9 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
 
 int main(int argc, char *argv[])
 {
-    auto [clientError, client] = make_client();
+    auto clientPair = make_client();
+    auto& clientError = clientPair.first;
+    auto& client = clientPair.second;
     if (clientError)
         return clientError;
 
@@ -115,7 +119,9 @@ int main(int argc, char *argv[])
     } while (idx >= g_discoveredSensors.size());
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    auto[obtainError, sensor] = client.obtainSensor(g_discoveredSensors[idx]);
+    auto sensorPair = client.obtainSensor(g_discoveredSensors[idx]);
+    auto& obtainError = sensorPair.first;
+    auto& sensor = sensorPair.second;
     if (obtainError)
     {
         g_terminate = true;
@@ -124,8 +130,17 @@ int main(int argc, char *argv[])
         return obtainError;
     }
 
+#if __cplusplus >= 201703L
     const auto optImu = sensor.getAnyComponentOfType(g_zenSensorType_Imu);
-    if (!optImu)
+    const bool hasImu = optImu.has_value();
+    auto imu = *optImu;
+#else
+    auto imuPair = sensor.getAnyComponentOfType(g_zenSensorType_Imu);
+    auto& hasImu = imuPair.first;
+    auto imu = imuPair.second;
+#endif
+
+    if (!hasImu)
     {
         g_terminate = true;
         client.close();
@@ -133,10 +148,10 @@ int main(int argc, char *argv[])
         return ZenError_WrongSensorType;
     }
 
-    auto imu = *optImu;
 
     // Get a sensor property
-    auto [timeError, time] = sensor.getInt32Property(ZenSensorProperty_TimeOffset);
+    auto getPair = sensor.getInt32Property(ZenSensorProperty_TimeOffset);
+    auto& timeError = getPair.first;
     if (timeError)
     {
         g_terminate = true;
@@ -147,7 +162,9 @@ int main(int argc, char *argv[])
 
     // Get an array property
     std::array<int32_t, 3> version;
-    auto [versionError, versionSize] = sensor.getArrayProperty(ZenSensorProperty_FirmwareVersion, version.data(), version.size());
+    auto versionPair = sensor.getArrayProperty(ZenSensorProperty_FirmwareVersion, version.data(), version.size());
+    auto& versionError = versionPair.first;
+    auto& versionSize = versionPair.second;
     if (versionError)
     {
         g_terminate = true;

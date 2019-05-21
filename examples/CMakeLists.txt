@@ -44,3 +44,10 @@ if(ZEN_BLUETOOTH)
             $<TARGET_FILE_DIR:OpenZenExample>
     )
 endif()
+
+if (MSVC)
+    target_compile_options(OpenZenExample
+        PRIVATE
+            /Zc:__cplusplus
+    )
+endif()

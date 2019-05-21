@@ -7,11 +7,14 @@
 #include <chrono>
 #include <cstddef>
 #include <cstring>
-#include <optional>
-#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
+
+#if __cplusplus >= 201703L
+#include <optional>
+#include <string_view>
+#endif
 
 namespace details
 {
@@ -19,7 +22,11 @@ namespace details
     struct PropertyType
     {};
 
+#if __cplusplus >= 201703L
     template <> struct PropertyType<std::byte>
+#else
+    template <> struct PropertyType<unsigned char>
+#endif
     {
         using type = std::integral_constant<ZenPropertyType, ZenPropertyType_Byte>;
     };
@@ -79,7 +86,11 @@ namespace zen
             return m_componentHandle;
         }
 
+#if __cplusplus >= 201703L
         std::string_view type() const noexcept
+#else
+        const char* type() const noexcept
+#endif
         {
             return ZenSensorComponentType(m_clientHandle, m_sensorHandle, m_componentHandle);
         }
@@ -193,7 +204,11 @@ namespace zen
             return ZenSensorUpdateIAPAsync(m_clientHandle, m_sensorHandle, iap.data(), iap.size());
         }
 
+#if __cplusplus >= 201703L
         std::string_view ioType() const noexcept
+#else
+        const char* ioType() const noexcept
+#endif
         {
             return ZenSensorIoType(m_clientHandle, m_sensorHandle);
         }
@@ -270,6 +285,7 @@ namespace zen
             return ZenSensorSetUInt64Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
+#if __cplusplus >= 201703L
         std::optional<ZenSensorComponent> getAnyComponentOfType(std::string_view type) noexcept
         {
             ZenComponentHandle_t* handles = nullptr;
@@ -277,11 +293,25 @@ namespace zen
             if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type.data(), &handles, &nComponents))
                 return std::nullopt;
 
-            if (nComponents > 0)
-                return ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]);
+            if (nComponents == 0)
+                return std::nullopt;
 
-            return std::nullopt;
+            return ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]);
         }
+#else
+        std::pair<bool, ZenSensorComponent> getAnyComponentOfType(const char* type) noexcept
+        {
+            ZenComponentHandle_t* handles = nullptr;
+            size_t nComponents;
+            if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type, &handles, &nComponents))
+                return std::make_pair(false, ZenSensorComponent(m_clientHandle, m_sensorHandle, ZenComponentHandle_t{ 0 }));
+
+            if (nComponents == 0)
+                return std::make_pair(false, ZenSensorComponent(m_clientHandle, m_sensorHandle, ZenComponentHandle_t{ 0 }));
+
+            return std::make_pair(true, ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]));
+        }
+#endif
     };
 
     class ZenClient
@@ -331,22 +361,50 @@ namespace zen
             return ZenError_None;
         }
 
+#if __cplusplus >= 201703L
         std::optional<ZenEvent> pollNextEvent() noexcept
+#else
+        std::pair<bool, ZenEvent> pollNextEvent() noexcept
+#endif
         {
             ZenEvent event;
             if (ZenPollNextEvent(m_handle, &event))
+            {
+#if __cplusplus >= 201703L
                 return std::move(event);
+#else
+                return std::make_pair(true, std::move(event));
+#endif
+            }
 
+#if __cplusplus >= 201703L
             return std::nullopt;
+#else
+            return std::make_pair(false, std::move(event));
+#endif
         }
 
+#if __cplusplus >= 201703L
         std::optional<ZenEvent> waitForNextEvent() noexcept
+#else
+        std::pair<bool, ZenEvent> waitForNextEvent() noexcept
+#endif
         {
             ZenEvent event;
             if (ZenWaitForNextEvent(m_handle, &event))
+            {
+#if __cplusplus >= 201703L
                 return std::move(event);
+#else
+                return std::make_pair(true, std::move(event));
+#endif
+            }
 
+#if __cplusplus >= 201703L
             return std::nullopt;
+#else
+            return std::make_pair(false, std::move(event));
+#endif
         }
     };
 
