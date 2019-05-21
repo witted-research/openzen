@@ -100,8 +100,8 @@ namespace zen
 
     Sensor::Sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token)
         : m_config(std::move(config))
-        , m_communicator(moveCommunicator(std::move(communicator), *this, m_config.version))
         , m_token(token)
+        , m_communicator(moveCommunicator(std::move(communicator), *this, m_config.version))
         , m_updatingFirmware(false)
         , m_updatedFirmware(false)
         , m_updatingIAP(false)
@@ -113,10 +113,15 @@ namespace zen
 
     Sensor::~Sensor()
     {
-        // We need to wait for the firmware/IAP upload to stop
+        // First we need to wait for the firmware/IAP upload to stop
         if (m_uploadThread.joinable())
             m_uploadThread.join();
 
+        // Then the communicator needs to be destroyed before to guarantee that the
+        // underlying IO interface does not call processReceivedData anymore
+        m_communicator.close();
+
+        // After that we can guarantee to subscribers that the sensor has shut down
         ZenEventData eventData{};
         eventData.sensorDisconnected.error = ZenError_None;
         ZenEvent disconnected{ ZenSensorEvent_SensorDisconnected, {m_token}, {0}, eventData };
