@@ -1,6 +1,19 @@
 #ifndef ZEN_API_OPENZEN_H_
 #define ZEN_API_OPENZEN_H_
 
+/**
+This is the C++14 API to the OpenZen library. It is a header-only wrapper around
+the C-API.
+
+Use the zen::make_client function to create a ZenClient object which you can then
+use to list all available sensors with the ZenClient::listSensorsAsync() method. With all
+available sensors, you can then use the ZenClient::obtainSensor() method to
+connect to a sensor and receive its measurement data.
+
+You can use the waitForNextEvent() and pollNextEvent() of the ZenClient class to get
+ZenEvents about sensor discovery results and incoming measurement data.
+*/
+
 #include "OpenZenCAPI.h"
 
 #include <algorithm>
@@ -49,6 +62,10 @@ namespace zen
 {
     class ZenClient;
 
+    /**
+    A sensor component represents one measurement data source on a sensor, for example an
+    inertial measurement unit (IMU) or GPS receiver.
+    */
     class ZenSensorComponent
     {
     private:
@@ -152,6 +169,10 @@ namespace zen
         }
     };
 
+    /**
+    This class represents one sensor connected by OpenZen. One sensor can contain one or more
+    components which deliver measurement data.
+    */
     class ZenSensor
     {
     private:
@@ -284,6 +305,10 @@ namespace zen
         }
     };
 
+    /**
+    This class is the primary access point into the OpenZen library. Use the zen::make_client
+    method to obtain an instance of this class.
+    */
     class ZenClient
     {
     private:
@@ -350,6 +375,11 @@ namespace zen
         }
     };
 
+    /**
+    Use this function to create a ZenClient object. This instance of
+    ZenClient can then be used to list all available sensors and connect
+    to them.
+    */
     inline std::pair<ZenError, ZenClient> make_client() noexcept
     {
         ZenClientHandle_t handle;
