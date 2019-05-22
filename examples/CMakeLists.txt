@@ -10,7 +10,7 @@ include(FindThreads)
 
 target_compile_features(OpenZenExample
     PRIVATE
-        cxx_std_17
+        cxx_std_14
 )
 
 target_link_libraries(OpenZenExample

@@ -35,15 +35,9 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
         unsigned int i = 0;
         while (true)
         {
-#if __cplusplus >= 201703L
-            auto optEvent = client.get().waitForNextEvent();
-            const bool success = optEvent.has_value();
-            auto& event = *optEvent;
-#else
             const auto pair = client.get().waitForNextEvent();
             const bool success = pair.first;
             auto& event = pair.second;
-#endif
             if (!success)
                 break;
 
@@ -130,15 +124,9 @@ int main(int argc, char *argv[])
         return obtainError;
     }
 
-#if __cplusplus >= 201703L
-    const auto optImu = sensor.getAnyComponentOfType(g_zenSensorType_Imu);
-    const bool hasImu = optImu.has_value();
-    auto imu = *optImu;
-#else
     auto imuPair = sensor.getAnyComponentOfType(g_zenSensorType_Imu);
     auto& hasImu = imuPair.first;
     auto imu = imuPair.second;
-#endif
 
     if (!hasImu)
     {
