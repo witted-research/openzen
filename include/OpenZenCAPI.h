@@ -6,8 +6,25 @@
 
 #include "ZenTypes.h"
 
+/**
+This is the C API for the OpenZen library. If your project is compiled with C++, consider
+using the C++ interface in the file OpenZen.h
+*/
+
+/**
+This function initializes the OpenZen system. It needs to be called before
+any other function call to the libray is performed
+@param outHandle pointer to a ZenClient handle. This handle will be set by the
+                 ZenInit call and needs to be passed to all calls to OpenZen
+                 library functions.
+*/
 ZEN_API ZenError ZenInit(ZenClientHandle_t* outHandle);
 
+/**
+Releases the OpenZen library. This method needs to be called after the usage
+of the library is finished
+@param handle OpenZen handle obtained by ZenInit function.
+*/
 ZEN_API ZenError ZenShutdown(ZenClientHandle_t handle);
 
 /** Opts in to an asynchronous process that lists available sensors.
