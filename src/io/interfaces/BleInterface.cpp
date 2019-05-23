@@ -37,12 +37,8 @@ namespace zen
         while (!m_terminate)
         {
             while (auto data = m_handler->tryToGetReceivedData())
-            {
-                if (!m_terminate) {
-                    if (auto error = publishReceivedData(*data))
-                        return error;
-                }
-            }
+                if (auto error = publishReceivedData(*data))
+                    return error;
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }

@@ -67,10 +67,8 @@ namespace zen
                 auto buffer = future->get();
                 if (buffer.has_value())
                 {
-                    if (!m_terminate) {
-                        if (auto error = publishReceivedData(*buffer))
-                            return error;
-                    }
+                    if (auto error = publishReceivedData(*buffer))
+                        return error;
                 }
                 else
                 {

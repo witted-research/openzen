@@ -164,10 +164,6 @@ namespace zen
 
                 if (!::GetOverlappedResult(m_handle, &m_ioReader, &nReceivedBytes, false))
                     return ZenError_Io_ReadFailed;
-
-                if (!m_terminate && (nReceivedBytes > 0))
-                    if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nReceivedBytes)))
-                        return error;
             }
 
             if (nReceivedBytes > 0)
