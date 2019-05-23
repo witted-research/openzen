@@ -250,7 +250,6 @@ if (MSVC)
     target_compile_options(OpenZen
         PRIVATE
             /W4 /WX
-            /Zc:__cplusplus
     )
 else()
     target_compile_options(OpenZen

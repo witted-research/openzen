@@ -2,8 +2,11 @@
 #define ZEN_API_OPENZEN_H_
 
 /**
-This is the C++14 API to the OpenZen library. It is a header-only wrapper around
+This is the C++ API to the OpenZen library. It is a header-only wrapper around
 the C-API.
+
+Depending on your chosen version of C++, this will be a C++14 or C++17 interface.
+See below how to override the default choice.
 
 Use the zen::make_client function to create a ZenClient object which you can then
 use to list all available sensors with the ZenClient::listSensorsAsync() method. With all
@@ -16,6 +19,18 @@ ZenEvents about sensor discovery results and incoming measurement data.
 
 #include "OpenZenCAPI.h"
 
+// Decide whether to use the C++17 or C++14 API.
+// The user can force C++14 even if compiling with C++17 by defining OPENZEN_CXX14.
+// Also, C++17 can be forced by defining OPENZEN_CXX17
+//
+// Visual C++ defines __cplusplus to 199807L unless /Zc:__cplusplus is given,
+// so we need to treat it as a special case.
+#if (__cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)) && !defined(OPENZEN_CXX14)
+#ifndef OPENZEN_CXX17
+#define OPENZEN_CXX17
+#endif
+#endif
+
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
@@ -24,7 +39,7 @@ ZenEvents about sensor discovery results and incoming measurement data.
 #include <utility>
 #include <vector>
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
 #include <optional>
 #include <string_view>
 #endif
@@ -35,7 +50,7 @@ namespace details
     struct PropertyType
     {};
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
     template <> struct PropertyType<std::byte>
 #else
     template <> struct PropertyType<unsigned char>
@@ -103,7 +118,7 @@ namespace zen
             return m_componentHandle;
         }
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
         std::string_view type() const noexcept
 #else
         const char* type() const noexcept
@@ -225,7 +240,7 @@ namespace zen
             return ZenSensorUpdateIAPAsync(m_clientHandle, m_sensorHandle, iap.data(), iap.size());
         }
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
         std::string_view ioType() const noexcept
 #else
         const char* ioType() const noexcept
@@ -306,7 +321,7 @@ namespace zen
             return ZenSensorSetUInt64Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
         std::optional<ZenSensorComponent> getAnyComponentOfType(std::string_view type) noexcept
         {
             ZenComponentHandle_t* handles = nullptr;
@@ -386,7 +401,7 @@ namespace zen
             return ZenError_None;
         }
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
         std::optional<ZenEvent> pollNextEvent() noexcept
 #else
         std::pair<bool, ZenEvent> pollNextEvent() noexcept
@@ -395,21 +410,21 @@ namespace zen
             ZenEvent event;
             if (ZenPollNextEvent(m_handle, &event))
             {
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
                 return std::move(event);
 #else
                 return std::make_pair(true, std::move(event));
 #endif
             }
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
             return std::nullopt;
 #else
             return std::make_pair(false, std::move(event));
 #endif
         }
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
         std::optional<ZenEvent> waitForNextEvent() noexcept
 #else
         std::pair<bool, ZenEvent> waitForNextEvent() noexcept
@@ -418,14 +433,14 @@ namespace zen
             ZenEvent event;
             if (ZenWaitForNextEvent(m_handle, &event))
             {
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
                 return std::move(event);
 #else
                 return std::make_pair(true, std::move(event));
 #endif
             }
 
-#if __cplusplus >= 201703L
+#ifdef OPENZEN_CXX17
             return std::nullopt;
 #else
             return std::make_pair(false, std::move(event));
