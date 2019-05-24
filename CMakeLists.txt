@@ -4,6 +4,7 @@ project(OpenZen VERSION 0.1.0 LANGUAGES CXX;C)
 add_subdirectory(external)
 
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
+option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
 
 #----------------------------------------------------------------
@@ -256,6 +257,15 @@ else()
         PRIVATE
             -Wall -Wextra -pedantic -Werror
     )
+
+    # add linker options to statically compile in libstdc++
+    # this makes the library portable to older Linux versions
+    if (ZEN_STATIC_LINK_LIBCXX)
+        list (APPEND zen_optional_libs
+            -static-libstdc++
+            -static-libgcc
+        )
+    endif()
 endif()
 
 target_include_directories(OpenZen
