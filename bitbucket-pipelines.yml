@@ -38,7 +38,6 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build_release && cd ../linux_x64_build_release
-            # disable most of optional components for now
             - cmake -DCMAKE_INSTALL_PREFIX=../openzen_install ../build
             - make install
             - mkdir ../linux_x64_build_standalone && cd ../linux_x64_build_standalone
