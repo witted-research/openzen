@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     std::cout << "Firmware version: " << version.at(0) << "." << version.at(1) << "." << version.at(2) << std::endl;
 
     // Do something based on the sensor property
-    if (time)
+    if (getPair.second)
     {
         if (auto error = imu.setBoolProperty(ZenImuProperty_StreamData, true))
         {
