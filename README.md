@@ -16,16 +16,26 @@ OpenZen uses CMake (3.11 or higher) as build system, and has been built and test
 1. Install MSVC build tools, or the Visual Studio IDE (requires C++17 support)
 2. Install CMake, or a GUI (e.g. Visual Studio) that incorporates CMake
 3. Install Qt (5.11.2 or higher)
-4. Configure CMake with the environment variable `CMAKE_PREFIX_PATH` pointing towards your Qt bin directory
-5. Compile and run the *OpenZenExample* using MSVC
+4. Clone the external repositories: `git submodule update --init`
+5. Configure CMake with the environment variable `CMAKE_PREFIX_PATH` pointing towards your Qt bin directory
+6. Compile and run the *OpenZenExample* using MSVC
 
 ### Linux
 
 1. Install gcc7 (requires C++17 support): `sudo apt-get install gcc-7`
 2. Install CMake ([instructions](https://peshmerge.io/how-to-install-cmake-3-11-0-on-ubuntu-16-04/))
 3. Install Qt (5.11.2 or higher): `sudo apt-get install qtbase5-dev qtconnectivity5-dev`
-4. Configue CMake (it should detect the Qt install directory automatically)
-5. Compile and run the *OpenZenExample*: `make`
+4. Clone the external repositories: `git submodule update --init`
+5. Create a build folder and run cmake:
+```
+mkdir build && cd build
+cmake ..
+```
+6. Compile and run the *OpenZenExample*: 
+```
+make -j4
+examples/OpenZenExample
+```
 
 An example of how to use the OpenZen API is included with the repository. If you are looking for more information on how to use the API, visit the documentation on the [Wiki](https://bitbucket.org/lpresearch/openzen/wiki/API%20Documentation).
 
