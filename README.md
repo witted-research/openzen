@@ -39,6 +39,20 @@ examples/OpenZenExample
 
 An example of how to use the OpenZen API is included with the repository. If you are looking for more information on how to use the API, visit the documentation on the [Wiki](https://bitbucket.org/lpresearch/openzen/wiki/API%20Documentation).
 
+## Deployment
+
+If you want to compile OpenZen and use the binary library on other systems, you can use CMake for that too. To build a standlone version of OpenZen, you can use the following command:
+
+```
+cmake -DCMAKE_BUILD_TYPE=Release -DZEN_STATIC_LINK_LIBCXX=On -DZEN_BLUETOOTH=OFF -DCMAKE_INSTALL_PREFIX=../OpenZenRelease/ ..
+make -j4 install
+```
+
+This will compile OpenZen without Bluetooth support (if you don't need it) which makes the library independant of any Qt libraries. Furthermore, it will statically link libstdc++ which increase the size of the library bigger but makes it more portable.
+After calling `make install`, the folder `OpenZenRelease` will contain the binary library, the required interface header files and CMake configuration file to easily integrate the library into your project.
+
+Please see this [CMake file](https://bitbucket.org/lpresearch/openzen/src/master/standalone_example/CMakeLists.txt) for an example how to use OpenZen as an external, binary-only package in your build.
+
 ## Roadmap
 
 OpenZen is only just taking its first baby steps, but we already have plans for some improvements. As a counterpart to the existing OpenZen framework, we hope to release an open-source firmware module for communication and boilerplate logic in the near future. The goal is to enable developers, tinkerers and rapid-prototypers by providing a single solution for all tedious parts of development on both host and client-side; instead allowing them to focus on what they do best.
