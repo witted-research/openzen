@@ -35,7 +35,7 @@ namespace zen::modbus
     public:
         virtual ~IFrameFactory() = default;
 
-        virtual std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) = 0;
+        virtual std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) const = 0;
     };
 
     class IFrameParser
@@ -104,7 +104,7 @@ namespace zen::modbus
 
     class ASCIIFrameFactory : public IFrameFactory
     {
-        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) override;
+        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) const override;
     };
 
     enum class RTUFrameParseState
@@ -122,7 +122,7 @@ namespace zen::modbus
 
     class RTUFrameFactory : public IFrameFactory
     {
-        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) override;
+        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) const override;
     };
 
     class RTUFrameParser : public IFrameParser
@@ -162,7 +162,7 @@ namespace zen::modbus
 
     class LpFrameFactory : public IFrameFactory
     {
-        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) override;
+        std::vector<std::byte> makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) const override;
     };
 
     class LpFrameParser : public IFrameParser

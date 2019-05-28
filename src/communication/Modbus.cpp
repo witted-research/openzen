@@ -166,7 +166,7 @@ namespace zen::modbus
         }
     }
 
-    std::vector<std::byte> ASCIIFrameFactory::makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length)
+    std::vector<std::byte> ASCIIFrameFactory::makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) const
     {
         constexpr uint8_t WRAPPER_SIZE = 9; // 1 (start) + 2 (address) + 2 (function) + 2 (LRC) + 2 (end)
         std::vector<std::byte> frame(WRAPPER_SIZE + 2 + 2 * length);
@@ -303,7 +303,7 @@ namespace zen::modbus
         return FrameParseError_None;
     }
 
-    std::vector<std::byte> LpFrameFactory::makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length)
+    std::vector<std::byte> LpFrameFactory::makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) const
     {
         constexpr uint8_t WRAPPER_SIZE = 9; // 1 (start) + 2 (address) + 2 (function) + 2 (LRC) + 2 (end)
         std::vector<std::byte> frame(WRAPPER_SIZE + 2 + length);
@@ -426,7 +426,7 @@ namespace zen::modbus
     }
 
     // Requires a wait of 3.5 character times
-    std::vector<std::byte> RTUFrameFactory::makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length)
+    std::vector<std::byte> RTUFrameFactory::makeFrame(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) const
     {
         constexpr size_t WRAPPER_SIZE = 4; // 1 (address) + 1 (function) + 2 (CRC)
         std::vector<std::byte> frame(WRAPPER_SIZE + 1 + length);
