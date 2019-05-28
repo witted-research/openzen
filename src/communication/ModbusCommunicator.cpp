@@ -33,35 +33,38 @@ namespace zen
     {
         while (!data.empty())
         {
-            if (modbus::FrameParseError_None != m_parser->parse(data))
             {
-                std::cout << "Received corrupt message: ";
-                for (auto c : data)
-                    std::cout << std::to_integer<unsigned>(c) << ",";
-                std::cout << std::endl;
-
-                do
+                std::scoped_lock<std::mutex> lock(m_parserLock);
+                if (modbus::FrameParseError_None != m_parser->parse(data))
                 {
-                    m_parser->reset();
-                    data = data.subspan(1);
-                } while (!data.empty() && modbus::FrameParseError_None != m_parser->parse(data));
-                continue;
-            }
+                    std::cout << "Received corrupt message: ";
+                    for (auto c : data)
+                        std::cout << std::to_integer<unsigned>(c) << ",";
+                    std::cout << std::endl;
 
-            if (m_parser->finished())
-            {
-                const auto& frame = m_parser->frame();
-                if (auto error = m_subscriber->processReceivedData(frame.address, frame.function, frame.data))
-                {
-                    std::cout << "Failed to process message with address '" << std::to_string(frame.address) <<
-                        "', function '" << std::to_string(frame.function) <<
-                        "', data '";
-
-                    for (auto c : frame.data)
-                        std::cout << std::to_integer<unsigned>(c);
-                    std::cout << "' due to error '" << error << "'." << std::endl;
+                    do
+                    {
+                        m_parser->reset();
+                        data = data.subspan(1);
+                    } while (!data.empty() && modbus::FrameParseError_None != m_parser->parse(data));
+                    continue;
                 }
-                m_parser->reset();
+
+                if (m_parser->finished())
+                {
+                    const auto& frame = m_parser->frame();
+                    if (auto error = m_subscriber->processReceivedData(frame.address, frame.function, frame.data))
+                    {
+                        std::cout << "Failed to process message with address '" << std::to_string(frame.address) <<
+                            "', function '" << std::to_string(frame.function) <<
+                            "', data '";
+
+                        for (auto c : frame.data)
+                            std::cout << std::to_integer<unsigned>(c);
+                        std::cout << "' due to error '" << error << "'." << std::endl;
+                    }
+                    m_parser->reset();
+                }
             }
         }
 

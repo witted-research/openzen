@@ -39,14 +39,21 @@ namespace zen
 
         void setSubscriber(IModbusFrameSubscriber& subscriber) noexcept { m_subscriber = &subscriber; }
         void setFrameFactory(std::unique_ptr<modbus::IFrameFactory> factory) noexcept { m_factory = std::move(factory); }
-        void setFrameParser(std::unique_ptr<modbus::IFrameParser> parser) noexcept { m_parser = std::move(parser); }
+        void setFrameParser(std::unique_ptr<modbus::IFrameParser> parser) noexcept {
+            std::scoped_lock<std::mutex> lock(m_parserLock);
+            m_parser = std::move(parser);
+        }
 
     private:
         ZenError processData(gsl::span<const std::byte> data) noexcept override;
 
         IModbusFrameSubscriber* m_subscriber;
         std::unique_ptr<modbus::IFrameFactory> m_factory;
+
+        /* Access to the parser is only allowed if the m_parserLock is held, because the
+           parser object might be replaced after the connection to the sensor is established.*/
         std::unique_ptr<modbus::IFrameParser> m_parser;
+        std::mutex m_parserLock;
         std::unique_ptr<IIoInterface> m_ioInterface;
     };
 
