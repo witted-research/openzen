@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7054465F-91D5-460F-9189-D258EFAA280B}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OpenZenCSharpBindingTest</RootNamespace>
+    <AssemblyName>OpenZenCSharpBindingTest</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\OpenZenCSharp\EZenImuProperty.cs">
+      <Link>EZenImuProperty.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\EZenSensorProperty.cs">
+      <Link>EZenSensorProperty.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\OpenZen.cs">
+      <Link>OpenZen.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\OpenZenFloatArray.cs">
+      <Link>OpenZenFloatArray.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\OpenZenPINVOKE.cs">
+      <Link>OpenZenPINVOKE.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_bool.cs">
+      <Link>SWIGTYPE_p_bool.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_float.cs">
+      <Link>SWIGTYPE_p_float.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_int.cs">
+      <Link>SWIGTYPE_p_int.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_p_ZenComponentHandle.cs">
+      <Link>SWIGTYPE_p_p_ZenComponentHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_size_t.cs">
+      <Link>SWIGTYPE_p_size_t.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_unsigned_char.cs">
+      <Link>SWIGTYPE_p_unsigned_char.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_unsigned_long.cs">
+      <Link>SWIGTYPE_p_unsigned_long.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_void.cs">
+      <Link>SWIGTYPE_p_void.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenAsyncStatus.cs">
+      <Link>ZenAsyncStatus.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenClientHandle_t.cs">
+      <Link>ZenClientHandle_t.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenComponentHandle_t.cs">
+      <Link>ZenComponentHandle_t.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenError.cs">
+      <Link>ZenError.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenEvent.cs">
+      <Link>ZenEvent.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenEventData.cs">
+      <Link>ZenEventData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenEventData_SensorDisconnected.cs">
+      <Link>ZenEventData_SensorDisconnected.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenEventData_SensorListingProgress.cs">
+      <Link>ZenEventData_SensorListingProgress.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenHeaveMotionData.cs">
+      <Link>ZenHeaveMotionData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenImuData.cs">
+      <Link>ZenImuData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenImuEvent.cs">
+      <Link>ZenImuEvent.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenOrientationOffsetMode.cs">
+      <Link>ZenOrientationOffsetMode.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenPropertyType.cs">
+      <Link>ZenPropertyType.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenSensorDesc.cs">
+      <Link>ZenSensorDesc.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenSensorEvent.cs">
+      <Link>ZenSensorEvent.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenSensorHandle_t.cs">
+      <Link>ZenSensorHandle_t.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenSensorInitError.cs">
+      <Link>ZenSensorInitError.cs</Link>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

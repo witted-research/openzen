@@ -16,6 +16,7 @@ namespace zen
             ZenEvent event{};
             event.eventType = ZenSensorEvent_SensorListingProgress;
             event.data.sensorListingProgress.progress = progress;
+            event.data.sensorListingProgress.complete = progress == 1.0f;
 
             for (auto& subscriber : subscribers)
                 subscriber.get().notifyEvent(event);

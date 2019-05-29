@@ -25,7 +25,7 @@
 
 #else
 
-#error "This platform is not supported, yet."
+//#error "This platform is not supported, yet."
 
 #endif
 
@@ -221,6 +221,8 @@ typedef ZenSensorDesc ZenEventData_SensorFound;
 typedef struct ZenEventData_SensorListingProgress
 {
     float progress;
+    /* This variable is != zero if the search for sensors in complete */
+    char complete;
 } ZenEventData_SensorListingProgress;
 
 typedef union

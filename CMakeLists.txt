@@ -6,6 +6,7 @@ add_subdirectory(external)
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
 option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
+option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
 
 #----------------------------------------------------------------
 # Packages
@@ -50,6 +51,15 @@ set(zen_sources
     src/LpMatrix.c
     src/LpMatrix.h
 )
+
+if(ZEN_CSHARP)
+    list (APPEND zen_sources
+        ## run
+        # swig.exe -csharp -small -c++ -debug-typedef -DSWIGWORDSIZE64 -o OpenZenCSharp/OpenZen_wrap_csharp.cxx -outdir OpenZenCSharp OpenZen.i
+        # in the bindings folder to generate
+        swig/OpenZen_wrap_csharp.cxx
+    )
+endif()
 
 set(zen_optional_libs)
 
