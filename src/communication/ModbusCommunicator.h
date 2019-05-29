@@ -16,7 +16,6 @@ namespace zen
         friend class IModbusFrameSubscriber;
 
         ModbusCommunicator(IModbusFrameSubscriber& subscriber, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
-        ModbusCommunicator(ModbusCommunicator&&) noexcept = default;
 
         void init(std::unique_ptr<IIoInterface> ioInterface) noexcept;
 
