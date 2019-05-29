@@ -1,7 +1,7 @@
 #ifndef ZEN_COMMUNICATION_MODBUSCOMMUNICATOR_H_
 #define ZEN_COMMUNICATION_MODBUSCOMMUNICATOR_H_
 
-#include <mutex>
+#include <atomic>
 
 #include "Modbus.h"
 #include "io/IIoInterface.h"
@@ -39,9 +39,13 @@ namespace zen
 
         void setSubscriber(IModbusFrameSubscriber& subscriber) noexcept { m_subscriber = &subscriber; }
         void setFrameFactory(std::unique_ptr<modbus::IFrameFactory> factory) noexcept { m_factory = std::move(factory); }
-        void setFrameParser(std::unique_ptr<modbus::IFrameParser> parser) noexcept {
-            std::scoped_lock<std::mutex> lock(m_parserLock);
+        void setFrameParser(std::unique_ptr<modbus::IFrameParser> parser) noexcept
+        {
+            // The frame parser is only set once - on initialisation of a new sensor. We have chosen to
+            // use a spinlock, as it will be virtually cost-free (no system calls) in all other use cases.
+            while (m_parserBusy.test_and_set(std::memory_order_acquire)) { /* Spin lock */; }
             m_parser = std::move(parser);
+            m_parserBusy.clear(std::memory_order_release);
         }
 
     private:
@@ -50,10 +54,11 @@ namespace zen
         IModbusFrameSubscriber* m_subscriber;
         std::unique_ptr<modbus::IFrameFactory> m_factory;
 
-        /* Access to the parser is only allowed if the m_parserLock is held, because the
-           parser object might be replaced after the connection to the sensor is established.*/
+        /** Access to the parser is only allowed if the m_parserBusy flag is true, because the
+            parser object might be replaced after the connection to the sensor is established.
+         */
         std::unique_ptr<modbus::IFrameParser> m_parser;
-        std::mutex m_parserLock;
+        std::atomic_flag m_parserBusy;
         std::unique_ptr<IIoInterface> m_ioInterface;
     };
 
