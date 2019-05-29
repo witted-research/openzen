@@ -275,6 +275,8 @@ target_include_directories(OpenZen
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:GSL,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:nonstd::expected-lite,INTERFACE_INCLUDE_DIRECTORIES>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:pcanbasic,INTERFACE_INCLUDE_DIRECTORIES>>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:siusb,INTERFACE_INCLUDE_DIRECTORIES>>
 )
@@ -285,9 +287,7 @@ target_link_libraries(OpenZen
     PRIVATE
         $<$<PLATFORM_ID:Linux>:atomic>
         $<$<PLATFORM_ID:Linux>:dl>
-        nonstd::expected-lite
         nlohmann_json::nlohmann_json
-        GSL
         $<$<PLATFORM_ID:Linux>:rt>
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
