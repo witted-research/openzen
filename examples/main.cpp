@@ -199,7 +199,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    g_terminate = true;
     client.close();
     pollingThread.join();
     return 0;
