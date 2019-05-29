@@ -101,12 +101,12 @@ namespace zen
     Sensor::Sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token)
         : m_config(std::move(config))
         , m_token(token)
+        , m_initialized(false)
         , m_communicator(moveCommunicator(std::move(communicator), *this, m_config.version))
         , m_updatingFirmware(false)
         , m_updatedFirmware(false)
         , m_updatingIAP(false)
         , m_updatedIAP(false)
-        , m_initialized(false)
     {
         m_components.reserve(m_config.components.size());
     }

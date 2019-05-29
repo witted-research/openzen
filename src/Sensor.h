@@ -80,6 +80,8 @@ namespace zen
 
         SensorConfig m_config;
         const uintptr_t m_token;
+        // [LEGACY]
+        std::atomic_bool m_initialized;
 
         std::mutex m_subscribersMutex;
         std::set<std::reference_wrapper<LockingQueue<ZenEvent>>, ReferenceWrapperCmp<LockingQueue<ZenEvent>>> m_subscribers;
@@ -98,8 +100,6 @@ namespace zen
 
         std::thread m_uploadThread;
 
-        // [LEGACY]
-        std::atomic_bool m_initialized;
     };
 
     struct SensorCmp
