@@ -308,39 +308,39 @@ install(TARGETS OpenZen EXPORT OpenZenTarget
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     PUBLIC_HEADER DESTINATION include
-    )
+)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
-  VERSION ${OpenZen_VERSION}
-  COMPATIBILITY AnyNewerVersion
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
+    VERSION ${OpenZen_VERSION}
+    COMPATIBILITY AnyNewerVersion
 )
 
 export(EXPORT OpenZenTarget
-  FILE "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigTargets.cmake"
-  NAMESPACE OpenZen::
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigTargets.cmake"
+    NAMESPACE OpenZen::
 )
 configure_file(cmake/OpenZenConfig.cmake
-  "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfig.cmake"
-  COPYONLY
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfig.cmake"
+    COPYONLY
 )
 
 set(ConfigPackageLocation lib/cmake/OpenZen)
 install(EXPORT OpenZenTarget
-  FILE
-	OpenZenTargets.cmake
-  NAMESPACE
-	OpenZen::
-  DESTINATION
-	${ConfigPackageLocation}
+    FILE
+        OpenZenTargets.cmake
+    NAMESPACE
+        OpenZen::
+    DESTINATION
+        ${ConfigPackageLocation}
 )
 install(
-  FILES
-	cmake/OpenZenConfig.cmake
-	"${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
-  DESTINATION
-	${ConfigPackageLocation}
-  COMPONENT
-	Devel
+    FILES
+        cmake/OpenZenConfig.cmake
+        "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
+    DESTINATION
+        ${ConfigPackageLocation}
+    COMPONENT
+        Devel
 )
