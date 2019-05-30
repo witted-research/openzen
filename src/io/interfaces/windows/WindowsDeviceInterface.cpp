@@ -81,7 +81,7 @@ namespace zen
                 return ZenError_Io_SendFailed;
         }
 
-        if (nBytesWritten != data.size())
+        if (nBytesWritten != static_cast<DWORD>(data.size()))
             return ZenError_Io_SendFailed;
 
         return ZenError_None;
