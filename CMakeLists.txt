@@ -275,6 +275,8 @@ target_include_directories(OpenZen
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:GSL,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:nonstd::expected-lite,INTERFACE_INCLUDE_DIRECTORIES>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:pcanbasic,INTERFACE_INCLUDE_DIRECTORIES>>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:siusb,INTERFACE_INCLUDE_DIRECTORIES>>
 )
@@ -285,9 +287,7 @@ target_link_libraries(OpenZen
     PRIVATE
         $<$<PLATFORM_ID:Linux>:atomic>
         $<$<PLATFORM_ID:Linux>:dl>
-        nonstd::expected-lite
         nlohmann_json::nlohmann_json
-        GSL
         $<$<PLATFORM_ID:Linux>:rt>
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
@@ -308,39 +308,39 @@ install(TARGETS OpenZen EXPORT OpenZenTarget
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     PUBLIC_HEADER DESTINATION include
-    )
+)
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
-  VERSION ${OpenZen_VERSION}
-  COMPATIBILITY AnyNewerVersion
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
+    VERSION ${OpenZen_VERSION}
+    COMPATIBILITY AnyNewerVersion
 )
 
 export(EXPORT OpenZenTarget
-  FILE "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigTargets.cmake"
-  NAMESPACE OpenZen::
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigTargets.cmake"
+    NAMESPACE OpenZen::
 )
 configure_file(cmake/OpenZenConfig.cmake
-  "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfig.cmake"
-  COPYONLY
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfig.cmake"
+    COPYONLY
 )
 
 set(ConfigPackageLocation lib/cmake/OpenZen)
 install(EXPORT OpenZenTarget
-  FILE
-	OpenZenTargets.cmake
-  NAMESPACE
-	OpenZen::
-  DESTINATION
-	${ConfigPackageLocation}
+    FILE
+        OpenZenTargets.cmake
+    NAMESPACE
+        OpenZen::
+    DESTINATION
+        ${ConfigPackageLocation}
 )
 install(
-  FILES
-	cmake/OpenZenConfig.cmake
-	"${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
-  DESTINATION
-	${ConfigPackageLocation}
-  COMPONENT
-	Devel
+    FILES
+        cmake/OpenZenConfig.cmake
+        "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
+    DESTINATION
+        ${ConfigPackageLocation}
+    COMPONENT
+        Devel
 )

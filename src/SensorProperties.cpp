@@ -53,7 +53,14 @@ namespace zen
             {
                 auto dst = m_buffer.data();
                 std::memcpy(dst, &property, sizeof(property));
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
                 std::memcpy(dst + sizeof(property), buffer, bufferSize);
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
             }
 
             gsl::span<const std::byte> data() const noexcept { return m_buffer; }
