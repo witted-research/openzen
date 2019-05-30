@@ -57,7 +57,7 @@ namespace zen
             parser object might be replaced after the connection to the sensor is established.
          */
         std::unique_ptr<modbus::IFrameParser> m_parser;
-        std::atomic_flag m_parserBusy;
+        std::atomic_flag m_parserBusy = ATOMIC_FLAG_INIT;
         std::unique_ptr<IIoInterface> m_ioInterface;
     };
 

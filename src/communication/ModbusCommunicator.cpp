@@ -11,7 +11,6 @@ namespace zen
         : m_subscriber(&subscriber)
         , m_factory(std::move(factory))
         , m_parser(std::move(parser))
-        , m_parserBusy ATOMIC_FLAG_INIT
     {}
 
     void ModbusCommunicator::init(std::unique_ptr<IIoInterface> ioInterface) noexcept
