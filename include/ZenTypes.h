@@ -23,9 +23,11 @@
 #define ZEN_API extern "C"
 #endif
 
+#elif SWIG
+#define ZEN_API extern "C"
 #else
 
-//#error "This platform is not supported, yet."
+#error "This platform is not supported, yet."
 
 #endif
 

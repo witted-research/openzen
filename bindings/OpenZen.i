@@ -1,6 +1,3 @@
-
-#define ZEN_API extern
-
 %include "carrays.i"
 // generate the helper class to convert float c arrays (which are treated as float *)
 // to proper arrays
