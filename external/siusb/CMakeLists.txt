@@ -21,4 +21,11 @@ if(WIN32)
 	set_target_properties(siusb PROPERTIES
 		IMPORTED_LOCATION ${SHARED_LIB}
 	)
+
+    # copy the required DLL to the output folder, so the examples can run
+    configure_file(${SHARED_LIB} ${CMAKE_BINARY_DIR} COPYONLY)
+    # this cmake file might be the first to access the examples folder on a
+    # clean-slate build, so make sure it exists.
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/examples)
+    configure_file(${SHARED_LIB} ${CMAKE_BINARY_DIR}/examples COPYONLY)
 endif()
