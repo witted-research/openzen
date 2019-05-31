@@ -8,6 +8,11 @@ option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portabl
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
 option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
 
+
+# Enable this line and set it to the correct Qt installation path if you want to compile
+# with bluetooth support on Windows
+#set(CMAKE_PREFIX_PATH "C://Qt//5.12.3//msvc2017_64//")
+
 #----------------------------------------------------------------
 # Packages
 #----------------------------------------------------------------

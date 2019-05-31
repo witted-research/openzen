@@ -18,6 +18,13 @@ OpenZen uses CMake (3.11 or higher) as build system, and has been built and test
 3. Install Qt (5.11.2 or higher)
 4. Clone the external repositories: `git submodule update --init`
 5. Configure CMake with the environment variable `CMAKE_PREFIX_PATH` pointing towards your Qt bin directory
+
+You can do that by inserting this line (with the correct Qt installation path on your system)
+```
+set(CMAKE_PREFIX_PATH "C://Qt//5.12.3//msvc2017_64//")
+```
+in the topmost CMakeLists.txt
+
 6. Compile and run the *OpenZenExample* using MSVC
 
 ### Linux
