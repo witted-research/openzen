@@ -57,7 +57,7 @@ if(ZEN_CSHARP)
         ## run
         # swig.exe -csharp -small -c++ -debug-typedef -DSWIGWORDSIZE64 -o OpenZenCSharp/OpenZen_wrap_csharp.cxx -outdir OpenZenCSharp OpenZen.i
         # in the bindings folder to generate
-        swig/OpenZen_wrap_csharp.cxx
+        bindings/OpenZenCSharp/OpenZen_wrap_csharp.cxx
     )
 endif()
 
