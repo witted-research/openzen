@@ -6,7 +6,7 @@
 
 namespace zen
 {
-    ZenError BluetoothDeviceFinder::listDevices(std::vector<ZenSensorDesc>& outDevices)
+    ZenError BluetoothDeviceFinder::listDevices(std::vector<ZenSensorDesc>& outDevices, bool applyWhitlelist)
     {
         start();
 
@@ -27,6 +27,10 @@ namespace zen
         {
             if (device.coreConfigurations() & QBluetoothDeviceInfo::BaseRateCoreConfiguration)
             {
+                if (applyWhitlelist && !inWhitelist(device.address().toString())) {
+                    continue;
+                }
+
                 const auto name = device.name().toStdString();
                 const auto address = device.address().toString().toStdString();
 
@@ -66,4 +70,20 @@ namespace zen
 
         m_fence.terminate();
     }
+
+    bool BluetoothDeviceFinder::inWhitelist(QString const& address) const {
+#ifdef Q_OS_MAC
+        // MacOS does not forward the actual bluetooth address to the
+        // user code, so here devices cannot be white-listed by
+        // address
+        return true;
+#else
+        for (auto const& item : m_whitelistAddresses) {
+            if (address.startsWith(item, Qt::CaseInsensitive))
+                return true;
+        }
+        return false;
+#endif
+    }
+
 }
