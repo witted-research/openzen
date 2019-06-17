@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 
+#include "utility/Finally.h"
+
 namespace zen
 {
     ModbusCommunicator::ModbusCommunicator(IModbusFrameSubscriber& subscriber, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept
@@ -33,6 +35,11 @@ namespace zen
     {
         while (!data.empty())
         {
+            while (m_parserBusy.test_and_set(std::memory_order_acquire)) { /* Spin lock */; }
+            auto guard = finally([this]() {
+                m_parserBusy.clear(std::memory_order_release);
+            });
+
             if (modbus::FrameParseError_None != m_parser->parse(data))
             {
                 std::cout << "Received corrupt message: ";

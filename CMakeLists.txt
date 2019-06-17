@@ -4,7 +4,14 @@ project(OpenZen VERSION 0.1.0 LANGUAGES CXX;C)
 add_subdirectory(external)
 
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
+option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
+option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
+
+
+# Enable this line and set it to the correct Qt installation path if you want to compile
+# with bluetooth support on Windows
+#set(CMAKE_PREFIX_PATH "C://Qt//5.12.3//msvc2017_64//")
 
 #----------------------------------------------------------------
 # Packages
@@ -49,6 +56,15 @@ set(zen_sources
     src/LpMatrix.c
     src/LpMatrix.h
 )
+
+if(ZEN_CSHARP)
+    list (APPEND zen_sources
+        ## run
+        # swig.exe -csharp -small -c++ -debug-typedef -DSWIGWORDSIZE64 -o OpenZenCSharp/OpenZen_wrap_csharp.cxx -outdir OpenZenCSharp OpenZen.i
+        # in the bindings folder to generate
+        bindings/OpenZenCSharp/OpenZen_wrap_csharp.cxx
+    )
+endif()
 
 set(zen_optional_libs)
 
@@ -188,6 +204,8 @@ if(WIN32)
     )
 
     set(utility_sources ${utility_sources}
+        src/utility/windows/FindThisModule.cpp
+        src/utility/windows/FindThisModule.h
         src/utility/windows/WindowsDll.cpp
         src/utility/windows/WindowsDll.h
     )
@@ -256,14 +274,26 @@ else()
         PRIVATE
             -Wall -Wextra -pedantic -Werror
     )
+
+    # add linker options to statically compile in libstdc++
+    # this makes the library portable to older Linux versions
+    if (ZEN_STATIC_LINK_LIBCXX)
+        list (APPEND zen_optional_libs
+            -static-libstdc++
+            -static-libgcc
+        )
+    endif()
 endif()
 
 target_include_directories(OpenZen
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:GSL,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:nonstd::expected-lite,INTERFACE_INCLUDE_DIRECTORIES>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:pcanbasic,INTERFACE_INCLUDE_DIRECTORIES>>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:siusb,INTERFACE_INCLUDE_DIRECTORIES>>
 )
@@ -274,9 +304,7 @@ target_link_libraries(OpenZen
     PRIVATE
         $<$<PLATFORM_ID:Linux>:atomic>
         $<$<PLATFORM_ID:Linux>:dl>
-        nonstd::expected-lite
         nlohmann_json::nlohmann_json
-        GSL
         $<$<PLATFORM_ID:Linux>:rt>
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
@@ -285,3 +313,52 @@ target_link_libraries(OpenZen
 )
 
 add_subdirectory(examples)
+
+# configuration for CMake package installation
+set_property(TARGET OpenZen PROPERTY PUBLIC_HEADER
+    include/OpenZen.h
+    include/OpenZenCAPI.h
+    include/ZenProtocol.h
+    include/ZenTypes.h
+)
+
+install(TARGETS OpenZen EXPORT OpenZenTarget
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    PUBLIC_HEADER DESTINATION include
+)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
+    VERSION ${OpenZen_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+export(EXPORT OpenZenTarget
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigTargets.cmake"
+    NAMESPACE OpenZen::
+)
+configure_file(cmake/OpenZenConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfig.cmake"
+    COPYONLY
+)
+
+set(ConfigPackageLocation lib/cmake/OpenZen)
+install(EXPORT OpenZenTarget
+    FILE
+        OpenZenTargets.cmake
+    NAMESPACE
+        OpenZen::
+    DESTINATION
+        ${ConfigPackageLocation}
+)
+install(
+    FILES
+        cmake/OpenZenConfig.cmake
+        "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
+    DESTINATION
+        ${ConfigPackageLocation}
+    COMPONENT
+        Devel
+)

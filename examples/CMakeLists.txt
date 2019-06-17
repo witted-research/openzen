@@ -10,7 +10,7 @@ include(FindThreads)
 
 target_compile_features(OpenZenExample
     PRIVATE
-        cxx_std_17
+        cxx_std_14
 )
 
 target_link_libraries(OpenZenExample
@@ -43,5 +43,12 @@ if(ZEN_BLUETOOTH)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
            $<TARGET_FILE:Qt5::Core>
             $<TARGET_FILE_DIR:OpenZenExample>
+    )
+endif()
+
+if (MSVC)
+    target_compile_options(OpenZenExample
+        PRIVATE
+            /Zc:__cplusplus
     )
 endif()

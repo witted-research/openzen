@@ -26,7 +26,7 @@ namespace zen
         if (!FT_SUCCESS(FtdiUsbSystem::fnTable.write(m_handle, const_cast<std::byte*>(data.data()), static_cast<DWORD>(data.size()), &nBytesWritten)))
             return ZenError_Io_SendFailed;
 
-        if (nBytesWritten != data.size())
+        if (nBytesWritten != static_cast<DWORD>(data.size()))
             return ZenError_Io_SendFailed;
 
         return ZenError_None;

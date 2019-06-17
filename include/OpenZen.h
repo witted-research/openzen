@@ -1,17 +1,48 @@
 #ifndef ZEN_API_OPENZEN_H_
 #define ZEN_API_OPENZEN_H_
 
+/**
+This is the C++ API to the OpenZen library. It is a header-only wrapper around
+the C-API.
+
+Depending on your chosen version of C++, this will be a C++14 or C++17 interface.
+See below how to override the default choice.
+
+Use the zen::make_client function to create a ZenClient object which you can then
+use to list all available sensors with the ZenClient::listSensorsAsync() method. With all
+available sensors, you can then use the ZenClient::obtainSensor() method to
+connect to a sensor and receive its measurement data.
+
+You can use the waitForNextEvent() and pollNextEvent() of the ZenClient class to get
+ZenEvents about sensor discovery results and incoming measurement data.
+*/
+
 #include "OpenZenCAPI.h"
+
+// Decide whether to use the C++17 or C++14 API.
+// The user can force C++14 even if compiling with C++17 by defining OPENZEN_CXX14.
+// Also, C++17 can be forced by defining OPENZEN_CXX17
+//
+// Visual C++ defines __cplusplus to 199807L unless /Zc:__cplusplus is given,
+// so we need to treat it as a special case.
+#if (__cplusplus >= 201703L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L)) && !defined(OPENZEN_CXX14)
+#ifndef OPENZEN_CXX17
+#define OPENZEN_CXX17
+#endif
+#endif
 
 #include <algorithm>
 #include <chrono>
 #include <cstddef>
 #include <cstring>
-#include <optional>
-#include <string_view>
 #include <thread>
 #include <utility>
 #include <vector>
+
+#ifdef OPENZEN_CXX17
+#include <optional>
+#include <string_view>
+#endif
 
 namespace details
 {
@@ -19,7 +50,11 @@ namespace details
     struct PropertyType
     {};
 
+#ifdef OPENZEN_CXX17
     template <> struct PropertyType<std::byte>
+#else
+    template <> struct PropertyType<unsigned char>
+#endif
     {
         using type = std::integral_constant<ZenPropertyType, ZenPropertyType_Byte>;
     };
@@ -49,6 +84,10 @@ namespace zen
 {
     class ZenClient;
 
+    /**
+    A sensor component represents one measurement data source on a sensor, for example an
+    inertial measurement unit (IMU) or GPS receiver.
+    */
     class ZenSensorComponent
     {
     private:
@@ -79,7 +118,11 @@ namespace zen
             return m_componentHandle;
         }
 
+#ifdef OPENZEN_CXX17
         std::string_view type() const noexcept
+#else
+        const char* type() const noexcept
+#endif
         {
             return ZenSensorComponentType(m_clientHandle, m_sensorHandle, m_componentHandle);
         }
@@ -152,6 +195,10 @@ namespace zen
         }
     };
 
+    /**
+    This class represents one sensor connected by OpenZen. One sensor can contain one or more
+    components which deliver measurement data.
+    */
     class ZenSensor
     {
     private:
@@ -193,7 +240,11 @@ namespace zen
             return ZenSensorUpdateIAPAsync(m_clientHandle, m_sensorHandle, iap.data(), iap.size());
         }
 
+#ifdef OPENZEN_CXX17
         std::string_view ioType() const noexcept
+#else
+        const char* ioType() const noexcept
+#endif
         {
             return ZenSensorIoType(m_clientHandle, m_sensorHandle);
         }
@@ -270,6 +321,7 @@ namespace zen
             return ZenSensorSetUInt64Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
+#ifdef OPENZEN_CXX17
         std::optional<ZenSensorComponent> getAnyComponentOfType(std::string_view type) noexcept
         {
             ZenComponentHandle_t* handles = nullptr;
@@ -277,13 +329,31 @@ namespace zen
             if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type.data(), &handles, &nComponents))
                 return std::nullopt;
 
-            if (nComponents > 0)
-                return ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]);
+            if (nComponents == 0)
+                return std::nullopt;
 
-            return std::nullopt;
+            return ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]);
         }
+#else
+        std::pair<bool, ZenSensorComponent> getAnyComponentOfType(const char* type) noexcept
+        {
+            ZenComponentHandle_t* handles = nullptr;
+            size_t nComponents;
+            if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type, &handles, &nComponents))
+                return std::make_pair(false, ZenSensorComponent(m_clientHandle, m_sensorHandle, ZenComponentHandle_t{ 0 }));
+
+            if (nComponents == 0)
+                return std::make_pair(false, ZenSensorComponent(m_clientHandle, m_sensorHandle, ZenComponentHandle_t{ 0 }));
+
+            return std::make_pair(true, ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]));
+        }
+#endif
     };
 
+    /**
+    This class is the primary access point into the OpenZen library. Use the zen::make_client
+    method to obtain an instance of this class.
+    */
     class ZenClient
     {
     private:
@@ -331,25 +401,58 @@ namespace zen
             return ZenError_None;
         }
 
+#ifdef OPENZEN_CXX17
         std::optional<ZenEvent> pollNextEvent() noexcept
+#else
+        std::pair<bool, ZenEvent> pollNextEvent() noexcept
+#endif
         {
             ZenEvent event;
             if (ZenPollNextEvent(m_handle, &event))
+            {
+#ifdef OPENZEN_CXX17
                 return std::move(event);
+#else
+                return std::make_pair(true, std::move(event));
+#endif
+            }
 
+#ifdef OPENZEN_CXX17
             return std::nullopt;
+#else
+            return std::make_pair(false, std::move(event));
+#endif
         }
 
+#ifdef OPENZEN_CXX17
         std::optional<ZenEvent> waitForNextEvent() noexcept
+#else
+        std::pair<bool, ZenEvent> waitForNextEvent() noexcept
+#endif
         {
             ZenEvent event;
             if (ZenWaitForNextEvent(m_handle, &event))
+            {
+#ifdef OPENZEN_CXX17
                 return std::move(event);
+#else
+                return std::make_pair(true, std::move(event));
+#endif
+            }
 
+#ifdef OPENZEN_CXX17
             return std::nullopt;
+#else
+            return std::make_pair(false, std::move(event));
+#endif
         }
     };
 
+    /**
+    Use this function to create a ZenClient object. This instance of
+    ZenClient can then be used to list all available sensors and connect
+    to them.
+    */
     inline std::pair<ZenError, ZenClient> make_client() noexcept
     {
         ZenClientHandle_t handle;

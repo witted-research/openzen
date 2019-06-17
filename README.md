@@ -16,18 +16,49 @@ OpenZen uses CMake (3.11 or higher) as build system, and has been built and test
 1. Install MSVC build tools, or the Visual Studio IDE (requires C++17 support)
 2. Install CMake, or a GUI (e.g. Visual Studio) that incorporates CMake
 3. Install Qt (5.11.2 or higher)
-4. Configure CMake with the environment variable `CMAKE_PREFIX_PATH` pointing towards your Qt bin directory
-5. Compile and run the *OpenZenExample* using MSVC
+4. Clone the external repositories: `git submodule update --init`
+5. Configure CMake with the environment variable `CMAKE_PREFIX_PATH` pointing towards your Qt bin directory
+
+You can do that by inserting this line (with the correct Qt installation path on your system)
+```
+set(CMAKE_PREFIX_PATH "C://Qt//5.12.3//msvc2017_64//")
+```
+in the topmost CMakeLists.txt
+
+6. Compile and run the *OpenZenExample* using MSVC
 
 ### Linux
 
 1. Install gcc7 (requires C++17 support): `sudo apt-get install gcc-7`
 2. Install CMake ([instructions](https://peshmerge.io/how-to-install-cmake-3-11-0-on-ubuntu-16-04/))
 3. Install Qt (5.11.2 or higher): `sudo apt-get install qtbase5-dev qtconnectivity5-dev`
-4. Configue CMake (it should detect the Qt install directory automatically)
-5. Compile and run the *OpenZenExample*: `make`
+4. Clone the external repositories: `git submodule update --init`
+5. Create a build folder and run cmake:
+```
+mkdir build && cd build
+cmake ..
+```
+6. Compile and run the *OpenZenExample*: 
+```
+make -j4
+examples/OpenZenExample
+```
 
 An example of how to use the OpenZen API is included with the repository. If you are looking for more information on how to use the API, visit the documentation on the [Wiki](https://bitbucket.org/lpresearch/openzen/wiki/API%20Documentation).
+
+## Deployment
+
+If you want to compile OpenZen and use the binary library on other systems, you can use CMake for that too. To build a standlone version of OpenZen, you can use the following command:
+
+```
+cmake -DCMAKE_BUILD_TYPE=Release -DZEN_STATIC_LINK_LIBCXX=On -DZEN_BLUETOOTH=OFF -DCMAKE_INSTALL_PREFIX=../OpenZenRelease/ ..
+make -j4 install
+```
+
+This will compile OpenZen without Bluetooth support (if you don't need it) which makes the library independant of any Qt libraries. Furthermore, it will statically link libstdc++ which increase the size of the library bigger but makes it more portable.
+After calling `make install`, the folder `OpenZenRelease` will contain the binary library, the required interface header files and CMake configuration file to easily integrate the library into your project.
+
+Please see this [CMake file](https://bitbucket.org/lpresearch/openzen/src/master/standalone_example/CMakeLists.txt) for an example how to use OpenZen as an external, binary-only package in your build.
 
 ## Roadmap
 

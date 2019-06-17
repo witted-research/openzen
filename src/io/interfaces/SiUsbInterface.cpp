@@ -34,7 +34,7 @@ namespace zen
         if (auto error = SiUsbSystem::fnTable.write(m_handle, const_cast<std::byte*>(data.data()), static_cast<DWORD>(data.size()), &nBytesWritten, nullptr))
             return ZenError_Io_SendFailed;
 
-        if (nBytesWritten != data.size())
+        if (nBytesWritten != static_cast<DWORD>(data.size()))
             return ZenError_Io_SendFailed;
 
         return ZenError_None;

@@ -42,6 +42,8 @@ namespace zen
                 std::memcpy(desc.identifier, filename.c_str(), filename.size());
                 desc.identifier[filename.size()] = '\0';
 
+                desc.baudRate = 921600;
+
                 outDevices.emplace_back(desc);
             }
         }

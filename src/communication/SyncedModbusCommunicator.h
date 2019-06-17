@@ -19,6 +19,9 @@ namespace zen
     public:
         SyncedModbusCommunicator(std::unique_ptr<ModbusCommunicator> communicator) noexcept;
 
+        /** Close the IO interface. It is no longer usable after this point! */
+        void close() { m_communicator.reset(); }
+
         /** Returns the IO interface's baudrate (bit/s) */
         nonstd::expected<int32_t, ZenError> baudRate() const noexcept { return m_communicator->baudRate(); }
 

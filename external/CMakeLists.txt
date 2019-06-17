@@ -1,9 +1,13 @@
-add_subdirectory(expected-lite)
+# EXCLUDE_FROM_ALL is needed for the header-only libraries
+# so their headers and cmake files are not copied to the
+# output folder when "make install" is used
+
+add_subdirectory(expected-lite EXCLUDE_FROM_ALL)
 add_subdirectory(ftdi)
-add_subdirectory(gsl)
+add_subdirectory(gsl EXCLUDE_FROM_ALL)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(nlohmann-json)
+add_subdirectory(nlohmann-json EXCLUDE_FROM_ALL)
 
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)

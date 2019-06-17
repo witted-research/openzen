@@ -79,15 +79,16 @@ namespace zen
         void upload(std::vector<std::byte> firmware);
 
         SensorConfig m_config;
+        const uintptr_t m_token;
+        // [LEGACY]
+        std::atomic_bool m_initialized;
 
+        std::mutex m_subscribersMutex;
         std::set<std::reference_wrapper<LockingQueue<ZenEvent>>, ReferenceWrapperCmp<LockingQueue<ZenEvent>>> m_subscribers;
+
         std::vector<std::unique_ptr<SensorComponent>> m_components;
         std::unique_ptr<ISensorProperties> m_properties;
         SyncedModbusCommunicator m_communicator;
-
-        std::mutex m_subscribersMutex;
-
-        const uintptr_t m_token;
 
         std::atomic_bool m_updatingFirmware;
         std::atomic_bool m_updatedFirmware;
@@ -99,8 +100,6 @@ namespace zen
 
         std::thread m_uploadThread;
 
-        // [LEGACY]
-        std::atomic_bool m_initialized;
     };
 
     struct SensorCmp

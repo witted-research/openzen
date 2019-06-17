@@ -53,12 +53,14 @@ namespace zen
             {
                 auto dst = m_buffer.data();
                 std::memcpy(dst, &property, sizeof(property));
-
-                // for the gsl::span this warning detects very large bufferSizes
-                // with Gcc 7.4
-                #pragma GCC diagnostic ignored "-Wstringop-overflow"
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
                 std::memcpy(dst + sizeof(property), buffer, bufferSize);
-                #pragma GCC diagnostic pop
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
             }
 
             gsl::span<const std::byte> data() const noexcept { return m_buffer; }
