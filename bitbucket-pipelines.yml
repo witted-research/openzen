@@ -17,6 +17,7 @@ pipelines:
             # disable most of optional components for now
             - cmake ../build
             - make
+            - ./OpenZenTests
       - step:
           name: Linux x64 Build Clang
           script:
@@ -25,6 +26,7 @@ pipelines:
             # disable most of optional components for now
             - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_CC_COMPILER=clang-6.0 ../build
             - make
+            - ./OpenZenTests
       - step:
           name: Linux x64 Build no Bluetooth
           script:
@@ -33,6 +35,7 @@ pipelines:
             # disable most of optional components for now
             - cmake -DZEN_BLUETOOTH=OFF ../build
             - make
+            - ./OpenZenTests
       - step:
           name: Linux x64 CMake Package compile and Standalone test
           script:

@@ -231,7 +231,7 @@ else()
     message(FATAL_ERROR "OS not supported.")
 endif()
 
-set(all_sources
+set(zen_all_sources
     ${zen_includes}
     ${zen_sources}
     ${communication_sources}
@@ -248,9 +248,9 @@ set(all_sources
 )
 
 if(ZEN_USE_STATIC_LIBS)
-    add_library(OpenZen STATIC ${all_sources})
+    add_library(OpenZen STATIC ${zen_all_sources})
 else()
-    add_library(OpenZen SHARED ${all_sources})
+    add_library(OpenZen SHARED ${zen_all_sources})
 endif()
 
 target_compile_definitions(OpenZen
@@ -285,11 +285,12 @@ else()
     endif()
 endif()
 
-target_include_directories(OpenZen
-    PUBLIC
+set(zen_include_dirs_public
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-    PRIVATE
+)
+
+set(zen_include_dirs_private
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:GSL,INTERFACE_INCLUDE_DIRECTORIES>
@@ -298,10 +299,16 @@ target_include_directories(OpenZen
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:siusb,INTERFACE_INCLUDE_DIRECTORIES>>
 )
 
+target_include_directories(OpenZen
+    PUBLIC
+        ${zen_include_dirs_public}
+    PRIVATE
+        ${zen_include_dirs_private}
+)
+
 include(FindThreads)
 
-target_link_libraries(OpenZen
-    PRIVATE
+set (zen_libs
         $<$<PLATFORM_ID:Linux>:atomic>
         $<$<PLATFORM_ID:Linux>:dl>
         nlohmann_json::nlohmann_json
@@ -312,6 +319,48 @@ target_link_libraries(OpenZen
         ${zen_optional_libs}
 )
 
+target_link_libraries(OpenZen
+    PRIVATE
+        ${zen_libs}
+)
+
+# Unit test binary for OpenZen
+#
+# This will build the OpenZen source files into a binary
+# and compile the unit test code. The DLL version of OpenZen cannot be used
+# because the most of the symbols we want to test are not visible with the
+# Windows DLL default visibility.
+add_executable(OpenZenTests
+  ${zen_all_sources}
+  src/test/ModbusTest.cpp
+  src/test/OpenZenTests.cpp)
+
+target_include_directories(OpenZenTests
+    PUBLIC
+        ${zen_include_dirs_public}
+    PRIVATE
+        ${zen_include_dirs_private}
+)
+
+target_link_libraries(OpenZenTests
+    PRIVATE
+        gtest
+        ${zen_libs}
+)
+
+target_compile_features(OpenZenTests
+    PRIVATE
+        cxx_std_17
+)
+
+# always compile the unit test binary without any function exports
+target_compile_definitions(OpenZenTests
+    PRIVATE
+        ZEN_API_STATIC
+        ${zen_optional_compile_definitions_private}
+)
+
+# build example code
 add_subdirectory(examples)
 
 # configuration for CMake package installation
