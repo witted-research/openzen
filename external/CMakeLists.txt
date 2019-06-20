@@ -6,6 +6,9 @@ add_subdirectory(expected-lite EXCLUDE_FROM_ALL)
 add_subdirectory(ftdi)
 add_subdirectory(gsl EXCLUDE_FROM_ALL)
 
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+add_subdirectory(googletest EXCLUDE_FROM_ALL)
+
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(nlohmann-json EXCLUDE_FROM_ALL)
 
