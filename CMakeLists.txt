@@ -315,6 +315,7 @@ set (zen_libs
         $<$<PLATFORM_ID:Linux>:rt>
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
+        spdlog
         ${zen_optional_libs}
 )
 

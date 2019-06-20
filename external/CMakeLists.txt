@@ -14,3 +14,4 @@ add_subdirectory(nlohmann-json EXCLUDE_FROM_ALL)
 
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
+add_subdirectory(spdlog)

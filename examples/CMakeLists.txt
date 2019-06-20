@@ -18,6 +18,7 @@ target_link_libraries(OpenZenExample
         OpenZen
         GSL
         Threads::Threads
+        spdlog
 )
 
 if(ZEN_USE_STATIC_LIBS)
