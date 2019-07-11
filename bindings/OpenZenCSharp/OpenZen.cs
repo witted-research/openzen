@@ -28,6 +28,11 @@ public class OpenZen {
     return ret;
   }
 
+  public static ZenError ZenSetLogLevel(ZenLogLevel logLevel) {
+    ZenError ret = (ZenError)OpenZenPINVOKE.ZenSetLogLevel((int)logLevel);
+    return ret;
+  }
+
   public static ZenError ZenListSensorsAsync(ZenClientHandle_t handle) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenListSensorsAsync(ZenClientHandle_t.getCPtr(handle));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
@@ -36,6 +41,12 @@ public class OpenZen {
 
   public static ZenSensorInitError ZenObtainSensor(ZenClientHandle_t clientHandle, ZenSensorDesc desc, ZenSensorHandle_t outSensorHandle) {
     ZenSensorInitError ret = (ZenSensorInitError)OpenZenPINVOKE.ZenObtainSensor(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorDesc.getCPtr(desc), ZenSensorHandle_t.getCPtr(outSensorHandle));
+    if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
+    return ret;
+  }
+
+  public static ZenSensorInitError ZenObtainSensorByName(ZenClientHandle_t clientHandle, string ioType, string sensorIdentifier, uint baudRate, ZenSensorHandle_t outSensorHandle) {
+    ZenSensorInitError ret = (ZenSensorInitError)OpenZenPINVOKE.ZenObtainSensorByName(ZenClientHandle_t.getCPtr(clientHandle), ioType, sensorIdentifier, baudRate, ZenSensorHandle_t.getCPtr(outSensorHandle));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }

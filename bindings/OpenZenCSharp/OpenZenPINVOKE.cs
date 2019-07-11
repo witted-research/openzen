@@ -513,11 +513,17 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenShutdown")]
   public static extern int ZenShutdown(global::System.Runtime.InteropServices.HandleRef jarg1);
 
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSetLogLevel")]
+  public static extern int ZenSetLogLevel(int jarg1);
+
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenListSensorsAsync")]
   public static extern int ZenListSensorsAsync(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenObtainSensor")]
   public static extern int ZenObtainSensor(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenObtainSensorByName")]
+  public static extern int ZenObtainSensorByName(global::System.Runtime.InteropServices.HandleRef jarg1, string jarg2, string jarg3, uint jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenReleaseSensor")]
   public static extern int ZenReleaseSensor(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);

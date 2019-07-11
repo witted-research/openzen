@@ -631,6 +631,8 @@ SWIGEXPORT int SWIGSTDCALL CSharp_ZenShutdown(void * jarg1) { int jresult ; ZenC
   ZenError result; argp1 = (ZenClientHandle_t *)jarg1;  if (!argp1) {
     SWIG_CSharpSetPendingExceptionArgument(SWIG_CSharpArgumentNullException, "Attempt to dereference null ZenClientHandle_t", 0);
     return 0; }  arg1 = *argp1;  result = (ZenError)ZenShutdown(arg1); jresult = (int)result;  return jresult; }
+SWIGEXPORT int SWIGSTDCALL CSharp_ZenSetLogLevel(int jarg1) { int jresult ; ZenLogLevel arg1 ; ZenError result;
+  arg1 = (ZenLogLevel)jarg1;  result = (ZenError)ZenSetLogLevel(arg1); jresult = (int)result;  return jresult; }
 SWIGEXPORT int SWIGSTDCALL CSharp_ZenListSensorsAsync(void * jarg1) { int jresult ; ZenClientHandle_t arg1 ;
   ZenClientHandle_t *argp1 ; ZenError result; argp1 = (ZenClientHandle_t *)jarg1;  if (!argp1) {
     SWIG_CSharpSetPendingExceptionArgument(SWIG_CSharpArgumentNullException, "Attempt to dereference null ZenClientHandle_t", 0);
@@ -642,6 +644,15 @@ SWIGEXPORT int SWIGSTDCALL CSharp_ZenObtainSensor(void * jarg1, void * jarg2, vo
     SWIG_CSharpSetPendingExceptionArgument(SWIG_CSharpArgumentNullException, "Attempt to dereference null ZenClientHandle_t", 0);
     return 0; }  arg1 = *argp1;  arg2 = (ZenSensorDesc *)jarg2;  arg3 = (ZenSensorHandle_t *)jarg3; 
   result = (ZenSensorInitError)ZenObtainSensor(arg1,(ZenSensorDesc const *)arg2,arg3); jresult = (int)result;  return jresult; }
+SWIGEXPORT int SWIGSTDCALL CSharp_ZenObtainSensorByName(void * jarg1, char * jarg2, char * jarg3, unsigned int jarg4, void * jarg5) {
+  int jresult ; ZenClientHandle_t arg1 ; char *arg2 = (char *) 0 ; char *arg3 = (char *) 0 ; uint32_t arg4 ;
+  ZenSensorHandle_t *arg5 = (ZenSensorHandle_t *) 0 ; ZenClientHandle_t *argp1 ; ZenSensorInitError result;
+  argp1 = (ZenClientHandle_t *)jarg1;  if (!argp1) {
+    SWIG_CSharpSetPendingExceptionArgument(SWIG_CSharpArgumentNullException, "Attempt to dereference null ZenClientHandle_t", 0);
+    return 0; }  arg1 = *argp1;  arg2 = (char *)jarg2;  arg3 = (char *)jarg3;  arg4 = (uint32_t)jarg4; 
+  arg5 = (ZenSensorHandle_t *)jarg5; 
+  result = (ZenSensorInitError)ZenObtainSensorByName(arg1,(char const *)arg2,(char const *)arg3,arg4,arg5);
+  jresult = (int)result;  return jresult; }
 SWIGEXPORT int SWIGSTDCALL CSharp_ZenReleaseSensor(void * jarg1, void * jarg2) { int jresult ; ZenClientHandle_t arg1 ;
   ZenSensorHandle_t arg2 ; ZenClientHandle_t *argp1 ; ZenSensorHandle_t *argp2 ; ZenError result;
   argp1 = (ZenClientHandle_t *)jarg1;  if (!argp1) {
