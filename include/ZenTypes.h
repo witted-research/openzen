@@ -217,10 +217,34 @@ typedef ZenImuData ZenEventData_Imu;
 
 typedef struct ZenSensorDesc
 {
+    /**
+    User-readable name of the sensor device
+    */
     char name[256];
+
+    /**
+    Hardware serial number of the sensor. If the IO subsystem
+    cannot read of the serial number, this can be another form
+    of identification number.
+    */
     char serialNumber[64];
+
+    /**
+    The IO Subsystem name this sensor is connected by.
+    */
     char ioType[64];
+
+    /**
+    This identifier holds the actual hardware address of the sensor
+    and can be used by OpenZen to connect.
+    */
     char identifier[64];
+
+    /**
+     baud rate to use with the device. A baud rate of 0 indicates
+     that OpenZen should use the default baudrate or negotiagte a
+     suitable baud rate with the device.
+     */
     uint32_t baudRate;
 } ZenSensorDesc;
 
