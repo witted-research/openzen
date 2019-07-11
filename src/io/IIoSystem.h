@@ -24,6 +24,8 @@ namespace zen
 
         /** If succesful, obtains the IO interface for the provided sensor description. Otherwise, returns an error. */
         virtual nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept = 0;
+
+        virtual uint32_t getDefaultBaudrate() { return 0; }
     };
 }
 

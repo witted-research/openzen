@@ -134,6 +134,33 @@ ZEN_API ZenSensorInitError ZenObtainSensor(ZenClientHandle_t clientHandle, const
     }
 }
 
+ZEN_API ZenSensorInitError ZenObtainSensorByName(ZenClientHandle_t clientHandle,
+    const char * ioType,
+    const char * sensorIdentifier,
+    uint32_t baudRate,
+    ZenSensorHandle_t* outSensorHandle) {
+
+    if (outSensorHandle == nullptr)
+        return ZenSensorInitError_IsNull;
+
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->obtain(ioType, sensorIdentifier, baudRate))
+        {
+            outSensorHandle->handle = sensor.value()->token();
+            return ZenSensorInitError_None;
+        }
+        else
+        {
+            return sensor.error();
+        }
+    }
+    else
+    {
+        return ZenSensorInitError_InvalidHandle;
+    }
+}
+
 ZEN_API ZenError ZenReleaseSensor(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
 {
     if (auto client = getClient(clientHandle))

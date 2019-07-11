@@ -40,7 +40,28 @@ ZEN_API ZenError ZenSetLogLevel(ZenLogLevel logLevel);
 ZEN_API ZenError ZenListSensorsAsync(ZenClientHandle_t handle);
 
 /** Obtain a sensor from the client */
-ZEN_API ZenSensorInitError ZenObtainSensor(ZenClientHandle_t clientHandle, const ZenSensorDesc* const desc, ZenSensorHandle_t* outSensorHandle);
+ZEN_API ZenSensorInitError ZenObtainSensor(ZenClientHandle_t clientHandle,
+    const ZenSensorDesc* const desc,
+    ZenSensorHandle_t* outSensorHandle);
+
+/** Obtain a sensor from the client giving directly the IO sub-system and sensor identifier.
+    This method can be called without listing the sensor first with a call to ZenListSensorsAsync
+    if the ioType and identifier of a sensor is known.
+@param ioType name of the IoType the sensor is connected on. Possible options are
+              Bluetooth, SiUsb, WindowsDevice for windows COM port
+              and LinuxDevive for Linux COM port
+@param sensorIdentifier Unique identifier, you can obtain this identifier by listing the
+                        sensors with OpenZen.
+@param baudRate For some IO interfaces, a specific baud rate needs to be provided (esp. COM port
+                interfaces). For other interfaces or if you want to use the default baud rate,
+                give 0 for this parameter.
+@param outSensorHandle Outputs the obtained sensor handle.
+*/
+ZEN_API ZenSensorInitError ZenObtainSensorByName(ZenClientHandle_t clientHandle,
+    const char * ioType,
+    const char * sensorIdentifier,
+    uint32_t baudRate,
+    ZenSensorHandle_t* outSensorHandle);
 
 /** Release a sensor from the client */
 ZEN_API ZenError ZenReleaseSensor(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle);

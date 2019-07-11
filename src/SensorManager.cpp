@@ -62,9 +62,11 @@ namespace zen
             m_sensorThread.join();
     }
 
-    nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> SensorManager::obtain(const ZenSensorDesc& desc) noexcept
+    nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> SensorManager::obtain(const ZenSensorDesc& const_desc) noexcept
     {
         std::unique_lock<std::mutex> lock(m_sensorsMutex);
+        ZenSensorDesc desc = const_desc;
+
         for (const auto& sensor : m_sensors)
             if (sensor->equals(desc))
                 return sensor;
@@ -77,6 +79,11 @@ namespace zen
 
         ConnectionNegotiator negotiator;
         auto communicator = std::make_unique<ModbusCommunicator>(negotiator, std::make_unique<modbus::RTUFrameFactory>(), std::make_unique<modbus::RTUFrameParser>());
+
+        // load the default baud rate, if needed
+        if (desc.baudRate == 0) {
+            desc.baudRate = ioSystem->get().getDefaultBaudrate();
+        }
 
         if (auto ioInterface = ioSystem->get().obtain(desc, *communicator.get()))
             communicator->init(std::move(*ioInterface));

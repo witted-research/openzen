@@ -2,6 +2,13 @@
 
 #include "SensorManager.h"
 
+namespace {
+    void safeStringToChar(std::string const& str, char * ch, size_t maxCharacter) {
+        std::copy_n(str.begin(), std::min(size_t(maxCharacter), str.length()), ch);
+        ch[std::min(size_t(maxCharacter - 1), str.length())] = 0;
+    }
+}
+
 namespace zen
 {
     SensorClient::SensorClient(uintptr_t) noexcept
@@ -47,6 +54,17 @@ namespace zen
         {
             return nonstd::make_unexpected(sensor.error());
         }
+    }
+
+    nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> SensorClient::obtain(const std::string& ioType,
+        const std::string& identifier, uint32_t baudRate) noexcept {
+
+        ZenSensorDesc desc;
+        desc.baudRate = baudRate;
+        safeStringToChar(ioType, desc.ioType, size_t(64));
+        safeStringToChar(identifier, desc.identifier, size_t(64));
+
+        return obtain(desc);
     }
 
     ZenError SensorClient::release(std::shared_ptr<Sensor> sensor) noexcept

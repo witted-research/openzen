@@ -28,6 +28,9 @@ namespace zen
 
         nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> obtain(const ZenSensorDesc& desc) noexcept;
 
+        nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> obtain(const std::string& ioType,
+            const std::string& identifier, uint32_t baudRate) noexcept;
+
         ZenError release(std::shared_ptr<Sensor> sensor) noexcept;
 
         /** Returns true and fills the next event on the queue if there is one, otherwise returns false. */

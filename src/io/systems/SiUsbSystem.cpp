@@ -90,7 +90,7 @@ namespace zen
             std::memcpy(desc.ioType, SiUsbSystem::KEY, sizeof(SiUsbSystem::KEY));
             std::memcpy(desc.identifier, desc.serialNumber, sizeof(ZenSensorDesc::serialNumber));
 
-            desc.baudRate = 921600;
+            desc.baudRate = getDefaultBaudrate();
             outDevices.emplace_back(desc);
         }
 
