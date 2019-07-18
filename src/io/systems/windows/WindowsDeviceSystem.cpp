@@ -4,8 +4,6 @@
 
 #include "EnumerateSerialPorts.h"
 
-#include <iostream>
-
 namespace zen
 {
     ZenError WindowsDeviceSystem::listDevices(std::vector<ZenSensorDesc>& outDevices)
