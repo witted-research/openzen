@@ -2,51 +2,42 @@
 
 #include "io/interfaces/windows/WindowsDeviceInterface.h"
 
+#include "EnumerateSerialPorts.h"
+
+#include <iostream>
+
 namespace zen
 {
-    namespace
-    {
-        HANDLE openCOMPort(std::string_view filename)
-        {
-            return ::CreateFileA(filename.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
-        }
-    }
-
     ZenError WindowsDeviceSystem::listDevices(std::vector<ZenSensorDesc>& outDevices)
     {
-        constexpr int MAX_COM_PORTS = 256;
-        for (unsigned int i = 1; i <= MAX_COM_PORTS; ++i)
-        {
-            const std::string filename("\\\\.\\COM" + std::to_string(i));
+        std::vector<std::string> serialPorts;
+        if (!EnumerateSerialPorts(serialPorts))
+            return ZenError_Device_ListingFailed;
 
-            auto handle = openCOMPort(filename);
-            if (handle != INVALID_HANDLE_VALUE)
-            {
-                ::CloseHandle(handle);
+        for (auto it = serialPorts.begin(); it != serialPorts.end(); ++it) {
+            ZenSensorDesc desc;
 
-                const std::string name("COM PORT #" + std::to_string(i));
+            const std::string name("COM PORT #" + it->substr(3));
+            std::memcpy(desc.name, name.c_str(), name.size());
+            desc.name[name.size()] = '\0';
 
-                ZenSensorDesc desc;
-                std::memcpy(desc.name, name.c_str(), name.size());
-                desc.name[name.size()] = '\0';
+            desc.serialNumber[0] = '\0';
+            std::memcpy(desc.ioType, WindowsDeviceSystem::KEY, sizeof(WindowsDeviceSystem::KEY));
 
-                desc.serialNumber[0] = '\0';
-                std::memcpy(desc.ioType, WindowsDeviceSystem::KEY, sizeof(WindowsDeviceSystem::KEY));
+            const std::string filename("\\\\.\\" + *it);
+            std::memcpy(desc.identifier, filename.c_str(), filename.size());
+            desc.identifier[filename.size()] = '\0';
 
-                std::memcpy(desc.identifier, filename.c_str(), filename.size());
-                desc.identifier[filename.size()] = '\0';
-
-                desc.baudRate = 921600;
-                outDevices.emplace_back(desc);
-            }
+            desc.baudRate = 921600;
+            outDevices.emplace_back(desc);
         }
-
         return ZenError_None;
     }
 
     nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> WindowsDeviceSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
-        auto handle = openCOMPort(desc.identifier);
+        auto handle = ::CreateFileA(desc.identifier, GENERIC_READ | GENERIC_WRITE,
+            0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
         if (handle == INVALID_HANDLE_VALUE)
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
 
