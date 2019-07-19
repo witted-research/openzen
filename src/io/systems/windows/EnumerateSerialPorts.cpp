@@ -66,7 +66,7 @@ namespace {
     }
 }
 
-bool EnumerateSerialPorts(std::vector<std::string>& ports)
+bool zen::EnumerateSerialPorts(std::vector<std::string>& ports)
 {
     ports = {};
 

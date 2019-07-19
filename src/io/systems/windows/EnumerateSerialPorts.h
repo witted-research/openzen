@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
-bool EnumerateSerialPorts(std::vector<std::string>& ports);
+namespace zen {
+    bool EnumerateSerialPorts(std::vector<std::string>& ports);
+}
 
 #endif
