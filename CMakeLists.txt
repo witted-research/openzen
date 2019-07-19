@@ -199,6 +199,8 @@ if(WIN32)
         src/io/systems/PcanBasicSystem.h
         src/io/systems/SiUsbSystem.cpp
         src/io/systems/SiUsbSystem.h
+        src/io/systems/windows/EnumerateSerialPorts.cpp
+        src/io/systems/windows/EnumerateSerialPorts.h
         src/io/systems/windows/WindowsDeviceSystem.cpp
         src/io/systems/windows/WindowsDeviceSystem.h
     )
