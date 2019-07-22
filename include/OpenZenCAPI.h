@@ -72,7 +72,6 @@ ZEN_API bool ZenPollNextEvent(ZenClientHandle_t handle, ZenEvent* const outEvent
 /** Returns true and fills the next event on the queue when there is a new one, otherwise returns false upon a call to ZenShutdown() */
 ZEN_API bool ZenWaitForNextEvent(ZenClientHandle_t handle, ZenEvent* const outEvent);
 
-
 /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength, otherwise, returns an error.
  * If the type variable points to a string, only components of that type are returned. If it is a nullptr, all components are returned, irrespective of type.
  */
@@ -146,7 +145,6 @@ ZEN_API bool ZenSensorIsExecutableProperty(ZenClientHandle_t clientHandle, ZenSe
 
 /** Returns the type of the property */
 ZEN_API ZenPropertyType ZenSensorPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property);
-
 
 /** Returns the type of the sensor component */
 ZEN_API const char* ZenSensorComponentType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle);
