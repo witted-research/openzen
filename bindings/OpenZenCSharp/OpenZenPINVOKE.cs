@@ -537,6 +537,9 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponents")]
   public static extern int ZenSensorComponents(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, string jarg3, global::System.Runtime.InteropServices.HandleRef jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
 
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentsByNumber")]
+  public static extern int ZenSensorComponentsByNumber(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, string jarg3, uint jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
+
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorIoType")]
   public static extern string ZenSensorIoType(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
 

@@ -681,6 +681,16 @@ SWIGEXPORT int SWIGSTDCALL CSharp_ZenSensorComponents(void * jarg1, void * jarg2
     SWIG_CSharpSetPendingExceptionArgument(SWIG_CSharpArgumentNullException, "Attempt to dereference null ZenSensorHandle_t", 0);
     return 0; }  arg2 = *argp2;  arg3 = (char *)jarg3;  arg4 = (ZenComponentHandle_t **)jarg4;  arg5 = (size_t *)jarg5; 
   result = (ZenError)ZenSensorComponents(arg1,arg2,(char const *)arg3,arg4,arg5); jresult = (int)result;  return jresult; }
+SWIGEXPORT int SWIGSTDCALL CSharp_ZenSensorComponentsByNumber(void * jarg1, void * jarg2, char * jarg3, unsigned long jarg4, void * jarg5) {
+  int jresult ; ZenClientHandle_t arg1 ; ZenSensorHandle_t arg2 ; char *arg3 = (char *) (char *)0 ; size_t arg4 ;
+  ZenComponentHandle_t *arg5 = (ZenComponentHandle_t *) 0 ; ZenClientHandle_t *argp1 ; ZenSensorHandle_t *argp2 ;
+  ZenError result; argp1 = (ZenClientHandle_t *)jarg1;  if (!argp1) {
+    SWIG_CSharpSetPendingExceptionArgument(SWIG_CSharpArgumentNullException, "Attempt to dereference null ZenClientHandle_t", 0);
+    return 0; }  arg1 = *argp1;  argp2 = (ZenSensorHandle_t *)jarg2;  if (!argp2) {
+    SWIG_CSharpSetPendingExceptionArgument(SWIG_CSharpArgumentNullException, "Attempt to dereference null ZenSensorHandle_t", 0);
+    return 0; }  arg2 = *argp2;  arg3 = (char *)jarg3;  arg4 = (size_t)jarg4;  arg5 = (ZenComponentHandle_t *)jarg5; 
+  result = (ZenError)ZenSensorComponentsByNumber(arg1,arg2,(char const *)arg3,arg4,arg5); jresult = (int)result; 
+  return jresult; }
 SWIGEXPORT char * SWIGSTDCALL CSharp_ZenSensorIoType(void * jarg1, void * jarg2) { char * jresult ; ZenClientHandle_t arg1 ;
   ZenSensorHandle_t arg2 ; ZenClientHandle_t *argp1 ; ZenSensorHandle_t *argp2 ; char *result = 0 ;
   argp1 = (ZenClientHandle_t *)jarg1;  if (!argp1) {

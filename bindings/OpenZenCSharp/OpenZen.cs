@@ -75,6 +75,12 @@ public class OpenZen {
     return ret;
   }
 
+  public static ZenError ZenSensorComponentsByNumber(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, string type, uint number, ZenComponentHandle_t outComponentHandle) {
+    ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentsByNumber(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), type, number, ZenComponentHandle_t.getCPtr(outComponentHandle));
+    if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
+    return ret;
+  }
+
   public static string ZenSensorIoType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle) {
     string ret = OpenZenPINVOKE.ZenSensorIoType(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();

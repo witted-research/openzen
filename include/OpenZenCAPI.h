@@ -77,6 +77,11 @@ ZEN_API bool ZenWaitForNextEvent(ZenClientHandle_t handle, ZenEvent* const outEv
  */
 ZEN_API ZenError ZenSensorComponents(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const char* const type, ZenComponentHandle_t** outComponentHandles, size_t* const outLength);
 
+/** Returns the sensor component by its type and number. If no sensor component with that type and number is available, outComponentHandle will be null.
+ *  Numbering starts at 0. This function is especially used to keep the library wrapper SWIG interface easier.
+ */
+ZEN_API ZenError ZenSensorComponentsByNumber(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const char* const type, size_t number, ZenComponentHandle_t* outComponentHandle);
+
 /** Returns the sensor's IO type */
 ZEN_API const char* ZenSensorIoType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle);
 

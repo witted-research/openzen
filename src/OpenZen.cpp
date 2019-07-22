@@ -267,6 +267,24 @@ ZEN_API ZenError ZenSensorComponents(ZenClientHandle_t clientHandle, ZenSensorHa
     }
 }
 
+ZEN_API ZenError ZenSensorComponentsByNumber(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const char* const type, size_t number, ZenComponentHandle_t* outComponentHandle)
+{
+    ZenComponentHandle_t* handles = nullptr;
+    size_t nComponents;
+    if (auto error = ZenSensorComponents(clientHandle, sensorHandle, type, &handles, &nComponents)) {
+        outComponentHandle->handle = 0;
+        return error;
+    }
+
+    if (nComponents <= number) {
+        outComponentHandle->handle = 0;
+        return ZenError_InvalidArgument;
+    }
+
+    *outComponentHandle = handles[number];
+    return ZenError_None;
+}
+
 ZEN_API const char* ZenSensorIoType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
 {
     if (auto client = getClient(clientHandle))
