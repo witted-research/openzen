@@ -70,7 +70,8 @@ namespace zen
     class IModbusFrameSubscriber
     {
     public:
-        virtual ZenError processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept = 0;
+        virtual ZenError processReceivedData(uint8_t address, uint8_t function,
+          gsl::span<const std::byte> data) noexcept = 0;
     };
 }
 
