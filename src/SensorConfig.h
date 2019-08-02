@@ -6,8 +6,8 @@
 
 struct ComponentConfig
 {
-    std::string id;
     uint32_t version;
+    std::string id;
 };
 
 struct SensorConfig
