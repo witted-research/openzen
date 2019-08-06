@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <string_view>
 #include <vector>
+#include <sstream>
 
 namespace util
 {
@@ -36,6 +37,13 @@ namespace util
             return strIn;
         auto endString = strIn.find_last_not_of(trimChar);
         return strIn.substr(0, endString + 1);
+    }
+
+    inline std::string spanToString(gsl::span<const std::byte> const& data) {
+        std::stringstream rawOutput;
+        for (auto c : data)
+            rawOutput << std::to_integer<unsigned>(c) << ",";
+        return rawOutput.str();
     }
 }
 
