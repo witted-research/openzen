@@ -35,6 +35,7 @@ ZenEvents about sensor discovery results and incoming measurement data.
 #include <chrono>
 #include <cstddef>
 #include <cstring>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
