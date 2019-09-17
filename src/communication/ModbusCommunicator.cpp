@@ -44,6 +44,7 @@ namespace zen
 
             if (modbus::FrameParseError_None != m_parser->parse(data))
             {
+                spdlog::debug("Parsing of packet failed, can happen when OpenZen started to parse in the middle of a package.");
                 // drop first byte and look for new start character
                 m_parser->reset();
                 data = data.subspan(1);
@@ -54,6 +55,7 @@ namespace zen
             if (m_parser->finished())
             {
                 const auto& frame = m_parser->frame();
+
                 if (m_subscriber->processReceivedData(frame.address, frame.function, frame.data))
                 {
                     spdlog::error("Failed to process message with address {} function {} data {}",
