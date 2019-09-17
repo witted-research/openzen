@@ -4,6 +4,8 @@
 #include <cstring>
 #include <string>
 
+#include <spdlog/spdlog.h>
+
 #include "ZenProtocol.h"
 #include "SensorClient.h"
 #include "SensorManager.h"
@@ -14,8 +16,10 @@
 #include "io/IIoInterface.h"
 #include "io/IoManager.h"
 #include "properties/BaseSensorPropertiesV0.h"
+#include "properties/BaseSensorPropertiesV1.h"
 #include "properties/CorePropertyRulesV1.h"
 #include "properties/LegacyCoreProperties.h"
+#include "properties/Ig1CoreProperties.h"
 #include "utility/Finally.h"
 
 namespace zen
@@ -27,6 +31,8 @@ namespace zen
             switch (version)
             {
             case 1:
+                return std::make_unique<SensorProperties<CorePropertyRulesV1>>(id, communicator);
+            case 2:
                 return std::make_unique<SensorProperties<CorePropertyRulesV1>>(id, communicator);
 
             default:
@@ -64,6 +70,8 @@ namespace zen
         {
             if (version == 0)
                 return std::make_unique<modbus::LpFrameFactory>();
+            else if (version == 1)
+                return std::make_unique<modbus::LpFrameFactory>();
 
             return std::make_unique<modbus::RTUFrameFactory>();
         }
@@ -71,6 +79,8 @@ namespace zen
         std::unique_ptr<modbus::IFrameParser> getParser(uint32_t version) noexcept
         {
             if (version == 0)
+                return std::make_unique<modbus::LpFrameParser>();
+            if (version == 1)
                 return std::make_unique<modbus::LpFrameParser>();
 
             return std::make_unique<modbus::RTUFrameParser>();
@@ -136,32 +146,44 @@ namespace zen
         uint8_t idx = 1;
         for (const auto& config : m_config.components)
         {
+            spdlog::debug("Creating component object for component {0} and version {1}", config.id, config.version);
             auto factory = manager.getFactory(config.id);
-            if (!factory)
+            if (!factory) {
+                spdlog::error("Cannot find factory for component {0}", config.id);
                 return ZenSensorInitError_UnsupportedComponent;
+            }
 
             auto component = factory.value()->make_component(config.version, idx++, m_communicator);
-            if (!component)
+            if (!component) {
+                spdlog::error("Cannot create object for component {0} and version {1}", config.id, config.version);
                 return component.error();
-
+            }
+            spdlog::debug("Created component object for component {0} and version {1}", config.id, config.version);
             m_components.push_back(std::move(*component));
         }
 
-        if (m_config.version == 0)
+        if ((m_config.version == 0) || (m_config.version == 1)) {
             m_initialized = true;
+        }
 
         for (auto& component : m_components)
             if (auto error = component->init())
                 return error;
 
+        spdlog::debug("Components created and initialized");
+
         // [LEGACY] Fix for sensors that did not support negotiation yet
         // [LEGACY] Swap the order of sensor-component initialization in the future
         if (m_config.version == 0)
             m_properties = std::make_unique<LegacyCoreProperties>(m_communicator, *m_components[0]->properties());
+        else if (m_config.version == 1)
+            m_properties = std::make_unique<Ig1CoreProperties>(m_communicator, *m_components[0]->properties());
         else if (auto properties = make_properties(0, m_config.version, m_communicator))
             m_properties = std::move(properties);
         else
             return ZenSensorInitError_UnsupportedProtocol;
+
+        spdlog::debug("Sensor properties initialized");
 
         return ZenSensorInitError_None;
     }
@@ -316,6 +338,70 @@ namespace zen
                     return ZenError_None;
 
                 default:
+                    return m_components[0]->processData(function, data);
+                }
+            }
+        }
+        else if (m_config.version == 1)
+        {
+            if (auto optInternal = base::v1::internal::map(function))
+            {
+                switch (*optInternal)
+                {
+                case EDevicePropertyInternal::Ack:
+                    return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_None);
+
+                case EDevicePropertyInternal::Nack:
+                    return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
+
+                case EDevicePropertyInternal::Config:
+                    if (data.size() != sizeof(uint32_t))
+                        return ZenError_Io_MsgCorrupt;
+                    return m_communicator.publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::Config),
+                        ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
+
+                default:
+                    return ZenError_Io_UnsupportedFunction;
+                }
+            }
+            else
+            {
+                const auto property = static_cast<EDevicePropertyV1>(function);
+                switch (property)
+                {
+                case EDevicePropertyV1::GetBatteryCharging:
+                case EDevicePropertyV1::GetBatteryLevel:
+                case EDevicePropertyV1::GetBatteryVoltage:
+                    if (data.size() != sizeof(float))
+                        return ZenError_Io_MsgCorrupt;
+                    return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data.data()));
+
+                case EDevicePropertyV1::GetSerialNumber:
+                case EDevicePropertyV1::GetSensorModel:
+                case EDevicePropertyV1::GetFirmwareInfo:
+                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
+
+                case EDevicePropertyV1::GetFirmwareVersion:
+                    if (data.size() != sizeof(uint32_t) * 3)
+                        return ZenError_Io_MsgCorrupt;
+                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const uint32_t*>(data.data()), 3));
+
+                case EDevicePropertyV1::GetRawImuSensorData:
+                    if (m_initialized)
+                    {
+                        if (auto eventData = m_components[0]->processEventData(ZenImuEvent_Sample, data))
+                            publishEvent({ ZenImuEvent_Sample, {m_token}, {1}, std::move(*eventData) });
+                        else
+                            return eventData.error();
+                    }
+                    return ZenError_None;
+
+                case EDevicePropertyV1::GetRawGpsSensorData:
+                    // ignore for now
+                    return ZenError_None;
+
+                default:
+                    // the components have not been created at this point !
                     return m_components[0]->processData(function, data);
                 }
             }
