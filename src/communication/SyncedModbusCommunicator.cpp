@@ -13,10 +13,12 @@ namespace zen
         , m_resultError(ZenError_None)
     {}
 
-    ZenError SyncedModbusCommunicator::sendAndWaitForAck(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const std::byte> data) noexcept
+    ZenError SyncedModbusCommunicator::sendAndWaitForAck(uint8_t address, uint8_t function, ZenProperty_t property,
+        gsl::span<const std::byte> data) noexcept
     {
-        if (auto error = tryToWait(property, true))
+        if (auto error = tryToWait(property, true)) {
             return error;
+        }
 
         auto guard = finally([this]() {
             m_waiting.clear();
@@ -29,7 +31,8 @@ namespace zen
     }
 
     template <typename T>
-    std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const std::byte> data, gsl::span<T> outArray) noexcept
+    std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t address, uint8_t function,
+        ZenProperty_t property, gsl::span<const std::byte> data, gsl::span<T> outArray) noexcept
     {
         if (auto error = tryToWait(property, false))
             return std::make_pair(error, outArray.size());
@@ -52,7 +55,8 @@ namespace zen
     }
 
     template <typename T>
-    nonstd::expected<T, ZenError> SyncedModbusCommunicator::sendAndWaitForResult(uint8_t address, uint8_t function, ZenProperty_t property, gsl::span<const std::byte> data) noexcept
+    nonstd::expected<T, ZenError> SyncedModbusCommunicator::sendAndWaitForResult(uint8_t address, uint8_t function,
+        ZenProperty_t property, gsl::span<const std::byte> data) noexcept
     {
         if (auto error = tryToWait(property, false))
             return nonstd::make_unexpected(error);
@@ -92,7 +96,8 @@ namespace zen
     }
 
     template <typename T>
-    ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t property, ZenError error, gsl::span<const T> array) noexcept
+    ZenError SyncedModbusCommunicator::publishArray(ZenProperty_t property, ZenError error,
+        gsl::span<const T> array) noexcept
     {
         if (!prepareForPublishing())
             return ZenError_None;
