@@ -15,7 +15,7 @@
 
 namespace zen
 {
-    ConnectionNegotiator::ConnectionNegotiator() noexcept
+    ConnectionNegotiator::ConnectionNegotiator() noexcept :
         m_terminated(false)
     {
         // add all supported sensor types and their configurations
