@@ -44,9 +44,11 @@ TEST(ConnectionNegotiator, connectIg1Sensor) {
     auto sensorConfig = negotiator.negotiate(mockbus, 57600);
     ASSERT_TRUE(sensorConfig);
     ASSERT_EQ(1, sensorConfig->version);
-    ASSERT_EQ(2, sensorConfig->components.size());
+    ASSERT_EQ(1, sensorConfig->components.size());
     ASSERT_EQ(1, sensorConfig->components[0].version);
     ASSERT_EQ(g_zenSensorType_Imu, sensorConfig->components[0].id);
+    /* renable this once the GNSS has been implemented
     ASSERT_EQ(1, sensorConfig->components[1].version);
     ASSERT_EQ(g_zenSensorType_Gnss, sensorConfig->components[1].id);
+    */
 }
