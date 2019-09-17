@@ -394,6 +394,16 @@ typedef enum EZenImuProperty : ZenProperty_t
     ZenImuProperty_OutputPressure,               // bool
     ZenImuProperty_OutputTemperature,            // bool
 
+    /* new Ig1 properties */
+    ZenImuProperty_OutputAccCalibrated,          // bool
+    ZenImuProperty_OutputRawGyr0,                // bool
+    ZenImuProperty_OutputRawGyr1,                // bool
+    ZenImuProperty_OutputGyr0BiasCalib,          // bool
+    ZenImuProperty_OutputGyr1BiasCalib,          // bool
+    ZenImuProperty_OutputGyr0AlignCalib,         // bool
+    ZenImuProperty_OutputGyr1AlignCalib,         // bool
+    ZenImuProperty_OutputMagCalib,               // bool
+
     ZenImuProperty_Max
 } EZenImuProperty;
 

@@ -85,6 +85,8 @@ set(components_sources
     src/components/IComponentFactory.h
     src/components/ImuComponent.cpp
     src/components/ImuComponent.h
+    src/components/ImuIg1Component.cpp
+    src/components/ImuIg1Component.h
 )
 
 set(components_factories_sources
@@ -119,13 +121,20 @@ set(io_systems_sources
 
 set(properties_sources
     src/properties/BaseSensorPropertiesV0.h
+    src/properties/BaseSensorPropertiesV1.h
     src/properties/CorePropertyRulesV1.h
     src/properties/ImuPropertyRulesV1.h
+    src/properties/ImuPropertyRulesV2.h
     src/properties/ImuSensorPropertiesV0.h
+    src/properties/ImuSensorPropertiesV1.h
     src/properties/LegacyCoreProperties.cpp
     src/properties/LegacyCoreProperties.h
+    src/properties/Ig1CoreProperties.cpp
+    src/properties/Ig1CoreProperties.h
     src/properties/LegacyImuProperties.cpp
     src/properties/LegacyImuProperties.h
+    src/properties/Ig1ImuProperties.cpp
+    src/properties/Ig1ImuProperties.h
 )
 
 set(utility_sources
