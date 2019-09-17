@@ -37,7 +37,7 @@ namespace zen
     {
         while (!data.empty())
         {
-            while (m_parserBusy.test_and_set(std::memory_order_acquire)) { /* Spin lock */; }
+            while (m_parserBusy.test_and_set(std::memory_order_acquire)) { /*spin lock*/ }
             auto guard = finally([this]() {
                 m_parserBusy.clear(std::memory_order_release);
             });
