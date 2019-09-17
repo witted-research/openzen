@@ -113,8 +113,8 @@ enum class EDevicePropertyV1 : DeviceProperty_t
     GetConfig = 4,                      // uint32_t (bitset)
     GetStatus = 5,                      // uint32_t (bitset)
 
-    SetCommandMode = 6,                 // uint32_t
-    SetStreamMode = 7,                  // uint32_t
+    GotoCommandMode = 6,                // none
+    GotoStreamMode = 7,                 // none
 
     GetRawImuSensorData = 9,            // uint8[]
     GetRawGpsSensorData = 10,           // uint8[]
@@ -135,8 +135,9 @@ enum class EDevicePropertyV1 : DeviceProperty_t
     SetAccBias = 27,                    // float[3]
     GetAccBias = 28,                    // float[3]
     SetAccAlignment = 29,               // float[9]
-    GetAccAlignment = 30,               // float[9]
-    SetAccRange = 31,                   // uint32
+    SetTransmitData = 30,               // uint32
+    GetTransmitData = 31,               // uint32
+
     GetAccRange = 32,                   // uint32
     SetMagRange = 33,                   // uint32
     //GetMagRange = 34,                   // uint32
@@ -187,8 +188,6 @@ enum class EDevicePropertyV1 : DeviceProperty_t
     GetSensorModel = 20,                // char[24]
     GetFirmwareInfo = 21,
 
-    GetPing = 98,                        // uint32
-
     SetGpsTransmitData = 160,
     GetGpsTransmitData = 161,
 
@@ -199,8 +198,6 @@ enum class EDevicePropertyV1 : DeviceProperty_t
 
     CmdV2SetDegRedOutput = CmdV2StartAddress + 1,
     CmdV2GetDegRedOutput = CmdV2StartAddress + 2,
-    CmdV2SetTransmitData = CmdV2StartAddress + 3,
-    CmdV2GetTransmitData = 31,
     CmdV2SetStreamFreq = CmdV2StartAddress + 5,
     CmdV2GetStreamFreq = CmdV2StartAddress + 6,
     CmdV2GetSensorStatus = CmdV2StartAddress + 7,
