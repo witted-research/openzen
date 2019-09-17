@@ -420,7 +420,6 @@ typedef enum ZenPropertyType
 } ZenPropertyType;
 
 static const char g_zenSensorType_Imu[] = "imu";
-static const char g_zenSensorType_ImuIg1[] = "imu_ig1";
 static const char g_zenSensorType_Gnss[] = "gnss";
 
 #endif

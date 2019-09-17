@@ -46,7 +46,7 @@ TEST(ConnectionNegotiator, connectIg1Sensor) {
     ASSERT_EQ(1, sensorConfig->version);
     ASSERT_EQ(2, sensorConfig->components.size());
     ASSERT_EQ(1, sensorConfig->components[0].version);
-    ASSERT_EQ(g_zenSensorType_ImuIg1, sensorConfig->components[0].id);
+    ASSERT_EQ(g_zenSensorType_Imu, sensorConfig->components[0].id);
     ASSERT_EQ(1, sensorConfig->components[1].version);
     ASSERT_EQ(g_zenSensorType_Gnss, sensorConfig->components[1].id);
 }
