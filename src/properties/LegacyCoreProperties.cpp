@@ -87,7 +87,17 @@ namespace zen
 
                         return std::make_pair(ZenError_None, result.second);
                     }
+                    case ZenPropertyType_Byte:
+                    {
+                        std::byte* uiBuffer = reinterpret_cast<std::byte*>(buffer.data());
+                        const auto result = m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(uiBuffer, buffer.size()));
+                        if (result.first)
+                            return result;
 
+                        return std::make_pair(ZenError_None, result.second);
+
+                        // return std::make_pair(ZenError_WrongDataType, buffer.size());
+                    }
                     default:
                         return std::make_pair(ZenError_WrongDataType, buffer.size());
                     }

@@ -130,6 +130,9 @@ namespace zen
         case EDevicePropertyV0::GetAccRange:
         case EDevicePropertyV0::GetGyrRange:
         case EDevicePropertyV0::GetMagRange:
+        case EDevicePropertyV0::GetUartBaudrate:
+        case EDevicePropertyV0::GetCanHeartbeat:
+        case EDevicePropertyV0::GetCanConfiguration:
             if (data.size() != sizeof(uint32_t))
                 return ZenError_Io_MsgCorrupt;
             return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
@@ -157,6 +160,11 @@ namespace zen
             if (data.size() != sizeof(float) * 9)
                 return ZenError_Io_MsgCorrupt;
             return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const float*>(data.data()), 9));
+
+        case EDevicePropertyV0::GetCanMapping:
+            if (data.size() != sizeof(uint32_t) * 16)
+                return ZenError_Io_MsgCorrupt;
+            return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const float*>(data.data()), 16));
 
         default:
             return ZenError_Io_UnsupportedFunction;

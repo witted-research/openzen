@@ -101,6 +101,32 @@ namespace zen
             case ZenImuProperty_MagSoftIronMatrix:
                 return GET_SET(EDevicePropertyV0::GetMagSoftIronMatrix, EDevicePropertyV0::SetMagSoftIronMatrix);
 
+            /* CAN bus properties */
+            case ZenImuProperty_CanChannelMode:
+                return GET_SET(EDevicePropertyV0::GetCanConfiguration, EDevicePropertyV0::SetCanChannelMode);
+
+            case ZenImuProperty_CanPointMode:
+                return GET_SET(EDevicePropertyV0::GetCanConfiguration, EDevicePropertyV0::SetCanPointMode);
+
+            case ZenImuProperty_CanStartId:
+                return GET_SET(EDevicePropertyV0::GetCanConfiguration, EDevicePropertyV0::SetCanStartId);
+
+            case ZenImuProperty_CanBaudrate:
+                return GET_SET(EDevicePropertyV0::GetConfig, EDevicePropertyV0::SetCanBaudrate);
+
+            case ZenImuProperty_CanMapping:
+                return GET_SET(EDevicePropertyV0::GetCanMapping, EDevicePropertyV0::SetCanMapping);
+
+            case ZenImuProperty_CanHeartbeat:
+                return GET_SET(EDevicePropertyV0::GetCanHeartbeat, EDevicePropertyV0::SetCanHeartbeat);
+
+            /* UART output properties */
+            case ZenImuProperty_UartBaudRate:
+                return GET_SET(EDevicePropertyV0::GetUartBaudrate, EDevicePropertyV0::SetUartBaudrate);
+
+            case ZenImuProperty_UartFormat:
+                return GET_SET(EDevicePropertyV0::GetUartBaudrate, EDevicePropertyV0::SetUartFormat);
+
             default:
                 return EDevicePropertyV0::Ack;
             }

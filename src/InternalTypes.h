@@ -98,6 +98,19 @@ enum class EDevicePropertyV0 : DeviceProperty_t
     
     GetPing = 98                        // uint32
 
+    SetCanBaudrate = 46,				// uint32
+    SetCanMapping = 62,					// uint32
+    GetCanMapping = 63,					// uint32
+    SetCanHeartbeat = 64,				// uint32
+    GetCanHeartbeat = 65,				// uint32
+    GetCanConfiguration = 71,			// uint32
+    SetCanChannelMode = 72,				// uint32
+    SetCanPointMode = 73,				// uint32
+    SetCanStartId = 74,					// uint32
+
+    SetUartBaudrate = 84,				// uint32
+    GetUartBaudrate = 85,				// uint32
+    SetUartFormat = 86					// uint32
 };
 
 // IG1 device properties
@@ -120,12 +133,12 @@ enum class EDevicePropertyV1 : DeviceProperty_t
     GetRawGpsSensorData = 10,           // uint8[]
 
     // old one: SetTransmitData = 10,               // uint32_t (bitset)
-    SetSamplingRate = 11,               // uint32_t
+    SetSamplingRate = 34, // 11,               // uint32_t
 
     WriteRegisters = 15,                // void
     RestoreFactorySettings = 16,        // void
 
-    SetOrientationOffsetMode = 18,      // uint32_t
+    SetOrientationOffsetMode = 38,      // uint32_t
 
     StartGyroCalibration = 22,          // void
     SetGyrUseAutoCalibration = 23,      // bool
@@ -135,9 +148,8 @@ enum class EDevicePropertyV1 : DeviceProperty_t
     SetAccBias = 27,                    // float[3]
     GetAccBias = 28,                    // float[3]
     SetAccAlignment = 29,               // float[9]
-    SetTransmitData = 30,               // uint32
-    GetTransmitData = 31,               // uint32
-
+    GetAccAlignment = 30,               // float[9]
+    SetAccRange = 31,                   // uint32
     GetAccRange = 32,                   // uint32
     SetMagRange = 33,                   // uint32
     //GetMagRange = 34,                   // uint32
@@ -163,7 +175,7 @@ enum class EDevicePropertyV1 : DeviceProperty_t
     SetGyrAlignment = 50,               // float[9]
     GetGyrAlignment = 51,               // float[9]
 
-    SetTimestamp = 66,                  // uint32
+    SetTimestamp = 152, // 66,                  // uint32
     SetLinearCompensationRate = 67,     // uint32
     GetLinearCompensationRate = 68,     // uint32
     SetCentricCompensationRate = 69,    // float
@@ -176,7 +188,7 @@ enum class EDevicePropertyV1 : DeviceProperty_t
     GetMagAlignment = 79,               // float[9]
     GetMagBias = 80,                    // float[3]
     GetMagReference = 81,               // float[3]
-    ResetOrientationOffset = 82,        // void
+    ResetOrientationOffset = 39, // 82,        // void
 
     SetBaudRate = 84,
     GetBaudRate = 85,
@@ -188,6 +200,19 @@ enum class EDevicePropertyV1 : DeviceProperty_t
     GetSensorModel = 20,                // char[24]
     GetFirmwareInfo = 21,
 
+    SetCanMapping = 62,
+    GetCanMapping = 63,
+    SetCanHeartbeat = 64,
+    GetCanHeartbeat = 65,
+    GetCanConfiguration = 71,
+    SetCanChannelMode = 72,
+    SetCanPointMode = 73,
+    SetCanStartId = 74,
+    
+    SetUartBaudrate = 84,
+    GetUartBaudrate = 85,
+    SetUartFormat = 86,
+    
     SetGpsTransmitData = 160,
     GetGpsTransmitData = 161,
 

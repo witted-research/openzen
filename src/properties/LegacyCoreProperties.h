@@ -64,6 +64,11 @@ namespace zen
     private:
         std::pair<ZenError, size_t> supportedBaudRates(gsl::span<std::byte> buffer) const noexcept;
 
+        struct CoreState
+        {
+            std::string deviceName;
+        } m_cache;
+
         SyncedModbusCommunicator& m_communicator;
         ISensorProperties& m_imu;
     };
