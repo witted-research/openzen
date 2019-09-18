@@ -21,9 +21,18 @@
 
 namespace zen
 {
+    /**
+    Central class which marshalls access to the available IoSystems and their
+    connected sensors. This class lives as a static singleton, which is contained
+    in the get() method;
+    */
     class SensorManager
     {
     public:
+        /**
+        Access to the SensorManager singleton. The SensorManager lives as static inside
+        this method.
+        */
         friend class Sensor;
 
         static SensorManager& get();
