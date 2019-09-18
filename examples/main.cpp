@@ -147,7 +147,6 @@ int main(int argc, char *argv[])
         return ZenError_WrongSensorType;
     }
 
-
     // Get a sensor property
     auto getPair = sensor.getInt32Property(ZenSensorProperty_TimeOffset);
     auto& timeError = getPair.first;
@@ -159,31 +158,15 @@ int main(int argc, char *argv[])
         return timeError;
     }
 
-    // Get an array property
-    std::array<int32_t, 3> version;
-    auto versionPair = sensor.getArrayProperty(ZenSensorProperty_FirmwareVersion, version.data(), version.size());
-    auto& versionError = versionPair.first;
-    auto& versionSize = versionPair.second;
-    if (versionError)
+    std::cout << "Time offset: " << getPair.second << std::endl;
+
+    // Enable sensor streaming
+    if (auto error = imu.setBoolProperty(ZenImuProperty_StreamData, true))
     {
         g_terminate = true;
         client.close();
         pollingThread.join();
-        return versionError;
-    }
-
-    std::cout << "Firmware version: " << version.at(0) << "." << version.at(1) << "." << version.at(2) << std::endl;
-
-    // Do something based on the sensor property
-    if (getPair.second)
-    {
-        if (auto error = imu.setBoolProperty(ZenImuProperty_StreamData, true))
-        {
-            g_terminate = true;
-            client.close();
-            pollingThread.join();
-            return error;
-        }
+        return error;
     }
 
     std::string line;
