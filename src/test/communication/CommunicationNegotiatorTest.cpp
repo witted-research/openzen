@@ -15,8 +15,10 @@ TEST(ConnectionNegotiator, connectLegacySensor) {
     MockbusCommunicator mockbus(negotiator,
       { // vector
         // entry 1: pair
-        {uint8_t(0), uint8_t(EDevicePropertyV0::GetDeviceName),
-          { util::stringToBuffer("LPMS-CU2") }
+        {uint8_t(0), uint8_t(EDevicePropertyV1::GetSensorModel),
+          // Legacy sensors will answer with NACK on this invalid command
+          uint8_t(1),
+          { }
         }
       }
       );
@@ -36,6 +38,7 @@ TEST(ConnectionNegotiator, connectIg1Sensor) {
       { // vector
         // entry 1: pair
         {uint8_t(0), uint8_t(EDevicePropertyV1::GetSensorModel),
+            uint8_t(EDevicePropertyV1::GetSensorModel),
           { util::stringToBuffer("LPMS-IG1-RS232") }
         }
       }

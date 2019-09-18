@@ -38,9 +38,10 @@ public:
     Entries of tuple have these meanings:
     1: address
     2: function
-    3: reply buffer to send back
+    3: response number (ACK, NACK, or function number)
+    4: reply buffer to send back
   */
-  typedef std::vector< std::tuple< uint8_t, uint8_t, std::vector<std::byte>>> RepliesVector;
+  typedef std::vector< std::tuple< uint8_t, uint8_t, uint8_t, std::vector<std::byte>>> RepliesVector;
 
   MockbusCommunicator(IModbusFrameSubscriber& subscriber, RepliesVector replies) noexcept :
   ModbusCommunicator( subscriber, std::make_unique<DummyFrameFactory>(),
@@ -58,16 +59,15 @@ public:
 
     if (itReply != m_replies.end()) {
       auto local_subscriber = m_subscriber;
-      std::vector<std::byte> reply_data = std::get<2>(*itReply);
-      m_futureReplies.emplace_back(std::async([local_subscriber, address, function, reply_data]()
+      auto reply_function = std::get<2>(*itReply);
+      auto reply_data = std::get<3>(*itReply);
+      m_futureReplies.emplace_back(std::async([local_subscriber, address, reply_function, reply_data]()
       {
         std::vector<std::byte> bb = reply_data;
         std::this_thread::sleep_for( std::chrono::milliseconds(100));
         gsl::span<std::byte> byteSpan(bb.data(), bb.size());
-        local_subscriber->processReceivedData(address, function, byteSpan );
+        local_subscriber->processReceivedData(address, reply_function, byteSpan );
       }));
-
-      //aa.set(23);
     } else {
       spdlog::error("Mock reply for address {} and function {} not found",
         address, function);
