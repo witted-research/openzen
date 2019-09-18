@@ -4,6 +4,7 @@
 
 #include "properties/BaseSensorPropertiesV0.h"
 #include "utility/Finally.h"
+#include "utility/StringView.h"
 
 namespace zen
 {
@@ -49,6 +50,13 @@ namespace zen
             if (property == ZenSensorProperty_SupportedBaudRates)
             {
                 return supportedBaudRates(buffer);
+            }
+            // older sensor don't support getting the sensor model, just
+            // output "legacy" instead
+            else if (property == ZenSensorProperty_SensorModel) {
+                const std::string sensorModelLegacy = "Legacy";
+                util::stringToSpan(sensorModelLegacy, buffer);
+                return std::make_pair(ZenError_None, sensorModelLegacy.size());
             }
             else
             {
@@ -254,6 +262,7 @@ namespace zen
         case ZenSensorProperty_FirmwareVersion:
         case ZenSensorProperty_SerialNumber:
         case ZenSensorProperty_SupportedBaudRates:
+        case ZenSensorProperty_SensorModel:
             return true;
 
         default:
@@ -299,6 +308,7 @@ namespace zen
         case ZenSensorProperty_DeviceName:
         case ZenSensorProperty_FirmwareInfo:
         case ZenSensorProperty_SerialNumber:
+        case ZenSensorProperty_SensorModel:
             return ZenPropertyType_Byte;
 
         case ZenSensorProperty_BatteryCharging:

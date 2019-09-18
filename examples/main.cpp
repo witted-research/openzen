@@ -160,6 +160,18 @@ int main(int argc, char *argv[])
 
     std::cout << "Time offset: " << getPair.second << std::endl;
 
+    // Get a string property
+    auto sensorModelPair = sensor.getStringProperty(ZenSensorProperty_SensorModel);
+    auto & sensorModelError = sensorModelPair.first;
+    auto & sensorModelName = sensorModelPair.second;
+    if (sensorModelError) {
+        g_terminate = true;
+        client.close();
+        pollingThread.join();
+        return timeError;
+    }
+    std::cout << "Sensor Model: " << sensorModelName << std::endl;
+
     // Enable sensor streaming
     if (auto error = imu.setBoolProperty(ZenImuProperty_StreamData, true))
     {

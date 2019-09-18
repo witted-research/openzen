@@ -116,7 +116,9 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
         }
 
         template <ZenProperty_t property>
-        ZenError setOutputDataFlag(Ig1ImuProperties& self, SyncedModbusCommunicator& communicator, std::atomic_uint32_t& outputDataBitset, std::function<void(ZenProperty_t,SensorPropertyValue)> notifyPropertyChange, bool streaming, bool value) noexcept
+        ZenError setOutputDataFlag(Ig1ImuProperties& self, SyncedModbusCommunicator& communicator,
+            std::atomic_uint32_t& outputDataBitset, std::function<void(ZenProperty_t,SensorPropertyValue)> notifyPropertyChange,
+            bool streaming, bool value) noexcept
         {
             if (streaming)
                 if (auto error = self.setBool(ZenImuProperty_StreamData, false))

@@ -254,6 +254,7 @@ namespace zen
         case ZenSensorProperty_FirmwareVersion:
         case ZenSensorProperty_SerialNumber:
         case ZenSensorProperty_SupportedBaudRates:
+        case ZenSensorProperty_SensorModel:
             return true;
 
         default:
@@ -299,6 +300,7 @@ namespace zen
         case ZenSensorProperty_DeviceName:
         case ZenSensorProperty_FirmwareInfo:
         case ZenSensorProperty_SerialNumber:
+        case ZenSensorProperty_SensorModel:
             return ZenPropertyType_Byte;
 
         case ZenSensorProperty_BatteryCharging:

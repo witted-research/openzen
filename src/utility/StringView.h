@@ -22,6 +22,16 @@ namespace util
         return output;
     }
 
+    /**
+    Caller must ensure that buffer has the size of str.size() + 1
+    */
+    inline void stringToSpan(std::string const& str, gsl::span<std::byte> buffer) {
+        for (size_t i = 0; i < str.size(); i++) {
+            buffer[i] = std::byte(str[i]);
+        }
+        buffer[str.size()] = std::byte(0);
+    }
+
     inline std::vector<std::byte> stringToBuffer(std::string const& str) {
       std::vector<std::byte> byteVector;
       byteVector.resize(str.size());

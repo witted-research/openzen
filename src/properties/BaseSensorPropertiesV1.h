@@ -59,6 +59,9 @@ namespace zen
             case ZenSensorProperty_SerialNumber:
                 return GET_OR_V1(EDevicePropertyV1::GetSerialNumber);
 
+            case ZenSensorProperty_SensorModel:
+                return GET_OR_V1(EDevicePropertyV1::GetSensorModel);
+
             default:
                 return EDevicePropertyV1::Ack;
             }
