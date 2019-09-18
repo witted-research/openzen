@@ -1,10 +1,15 @@
 #include "ImuComponentFactory.h"
 
+#include <spdlog/spdlog.h>
+
 #include "components/ImuComponent.h"
+#include "components/ImuIg1Component.h"
 
 #include "InternalTypes.h"
 #include "SensorProperties.h"
 #include "properties/ImuPropertyRulesV1.h"
+#include "properties/ImuPropertyRulesV2.h"
+#include "properties/Ig1ImuProperties.h"
 #include "properties/LegacyImuProperties.h"
 
 namespace zen
@@ -34,13 +39,38 @@ namespace zen
             auto properties = std::make_unique<LegacyImuProperties>(communicator);
 
             // Initialize to non-streaming to retrieve the config bitset
-            if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false))
+            if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false)) {
+                spdlog::debug("Cannot disable streaming of legacy sensor");
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
+            }
 
-            if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config), static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
+            if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config),
+                static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
             {
+                spdlog::debug("Loaded output bitset of legacy sensor: {}", bitset.value());
                 properties->setOutputDataBitset(*bitset);
                 return std::make_unique<ImuComponent>(std::move(properties), communicator, version);
+            }
+            else
+            {
+                return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
+            }
+        }
+        else if (version == 1) {
+            auto properties = std::make_unique<Ig1ImuProperties>(communicator);
+
+            // Initialize to non-streaming to retrieve the config bitset
+            if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false)) {
+                spdlog::debug("Cannot disable streaming of Ig1 sensor");
+                return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
+            }
+
+            if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyV1::GetTransmitData),
+                static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
+            {
+                spdlog::debug("Loaded output bitset of Ig1 sensor: {}", bitset.value());
+                properties->setOutputDataBitset(*bitset);
+                return std::make_unique<ImuIg1Component>(std::move(properties), communicator, version);
             }
             else
             {

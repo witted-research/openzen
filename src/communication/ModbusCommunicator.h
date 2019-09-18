@@ -10,16 +10,19 @@ namespace zen
 {
     class IModbusFrameSubscriber;
 
-    class ModbusCommunicator final : public IIoDataSubscriber
+    class ModbusCommunicator : public IIoDataSubscriber
     {
     public:
         friend class IModbusFrameSubscriber;
 
-        ModbusCommunicator(IModbusFrameSubscriber& subscriber, std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
+        ModbusCommunicator(IModbusFrameSubscriber& subscriber,
+          std::unique_ptr<modbus::IFrameFactory> factory, std::unique_ptr<modbus::IFrameParser> parser) noexcept;
+
+        virtual ~ModbusCommunicator() = default;
 
         void init(std::unique_ptr<IIoInterface> ioInterface) noexcept;
 
-        ZenError send(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept;
+        virtual ZenError send(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept;
 
         /** Returns whether the IO interface equals the sensor description */
         bool equals(const ZenSensorDesc& desc) const noexcept { return m_ioInterface->equals(desc); }
@@ -28,10 +31,11 @@ namespace zen
         nonstd::expected<int32_t, ZenError> baudRate() const noexcept { return m_ioInterface->baudRate(); }
 
         /** Set Baudrate of IO interface (bit/s) */
-        ZenError setBaudRate(unsigned int rate) noexcept { return m_ioInterface->setBaudRate(rate); }
+        virtual ZenError setBaudRate(unsigned int rate) noexcept { return m_ioInterface->setBaudRate(rate); }
 
         /** Returns the supported baudrates of the IO interface (bit/s) */
-        nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept { return m_ioInterface->supportedBaudRates(); }
+        nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept {
+           return m_ioInterface->supportedBaudRates(); }
 
         /** Returns the type of IO interface */
         std::string_view ioType() const noexcept { return m_ioInterface->type(); }
@@ -47,10 +51,12 @@ namespace zen
             m_parserBusy.clear(std::memory_order_release);
         }
 
+    protected:
+        IModbusFrameSubscriber* m_subscriber;
+
     private:
         ZenError processData(gsl::span<const std::byte> data) noexcept override;
 
-        IModbusFrameSubscriber* m_subscriber;
         std::unique_ptr<modbus::IFrameFactory> m_factory;
 
         /** Access to the parser is only allowed if the m_parserBusy flag is true, because the
@@ -64,7 +70,8 @@ namespace zen
     class IModbusFrameSubscriber
     {
     public:
-        virtual ZenError processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept = 0;
+        virtual ZenError processReceivedData(uint8_t address, uint8_t function,
+          gsl::span<const std::byte> data) noexcept = 0;
     };
 }
 

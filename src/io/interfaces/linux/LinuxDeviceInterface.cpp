@@ -187,9 +187,10 @@ namespace zen
                 return ZenError_Io_ReadFailed;
 
             const auto nBytesReceived = ::aio_return64(&m_readCB);
-            if (nBytesReceived > 0)
+            if (nBytesReceived > 0) {
                 if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nBytesReceived)))
                     return error;
+                }
         }
 
         return ZenError_None;

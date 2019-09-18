@@ -4,10 +4,11 @@
 #include <algorithm>
 #include <string_view>
 #include <vector>
+#include <sstream>
 
 namespace util
 {
-    std::vector<std::string_view> split(std::string_view s, std::string_view delim = " ")
+    inline std::vector<std::string_view> split(std::string_view s, std::string_view delim = " ")
     {
         std::vector<std::string_view> output;
 
@@ -19,6 +20,30 @@ namespace util
         }
 
         return output;
+    }
+
+    inline std::vector<std::byte> stringToBuffer(std::string const& str) {
+      std::vector<std::byte> byteVector;
+      byteVector.resize(str.size());
+      for (size_t i = 0; i < str.size() ; i++) {
+        byteVector[i] = std::byte( str[i] );
+      }
+      return byteVector;
+    }
+
+    inline std::string right_trim(std::string & strIn, char trimChar = '\0')
+    {
+        if (strIn.size() == 0)
+            return strIn;
+        auto endString = strIn.find_last_not_of(trimChar);
+        return strIn.substr(0, endString + 1);
+    }
+
+    inline std::string spanToString(gsl::span<const std::byte> const& data) {
+        std::stringstream rawOutput;
+        for (auto c : data)
+            rawOutput << std::to_integer<unsigned>(c) << ",";
+        return rawOutput.str();
     }
 }
 

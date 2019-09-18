@@ -33,8 +33,6 @@ namespace zen
         BluetoothDeviceHandler(std::string_view address) noexcept;
         ~BluetoothDeviceHandler();
 
-        BluetoothDeviceHandler(BluetoothDeviceHandler&&) = default;
-
         ZenSensorInitError initialize() noexcept;
 
         nonstd::expected<std::future<async_read_value_t>, ZenAsyncStatus> readAsync() noexcept;

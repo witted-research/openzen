@@ -78,7 +78,8 @@ namespace zen
             return nonstd::make_unexpected(ZenSensorInitError_UnsupportedIoType);
 
         ConnectionNegotiator negotiator;
-        auto communicator = std::make_unique<ModbusCommunicator>(negotiator, std::make_unique<modbus::RTUFrameFactory>(), std::make_unique<modbus::RTUFrameParser>());
+        auto communicator = std::make_unique<ModbusCommunicator>(negotiator,
+          std::make_unique<modbus::LpFrameFactory>(), std::make_unique<modbus::LpFrameParser>());
 
         // load the default baud rate, if needed
         if (desc.baudRate == 0) {

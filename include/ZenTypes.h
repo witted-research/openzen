@@ -122,6 +122,7 @@ typedef enum ZenSensorInitError : ZenError_t
     ZenSensorInitError_IncompatibleBaudRates,   // Unable to find a compatible BaudRate
     ZenSensorInitError_InvalidAddress,          // Provided remote address is invalid
     ZenSensorInitError_InvalidConfig,           // The configuration file is invalid
+    ZenSensorInitError_NoConfiguration,         // No configuration is available for this sensor type
 
     ZenSensorInitError_Max
 } ZenSensorInitError;
@@ -393,6 +394,16 @@ typedef enum EZenImuProperty : ZenProperty_t
     ZenImuProperty_OutputPressure,               // bool
     ZenImuProperty_OutputTemperature,            // bool
 
+    /* new Ig1 properties */
+    ZenImuProperty_OutputAccCalibrated,          // bool
+    ZenImuProperty_OutputRawGyr0,                // bool
+    ZenImuProperty_OutputRawGyr1,                // bool
+    ZenImuProperty_OutputGyr0BiasCalib,          // bool
+    ZenImuProperty_OutputGyr1BiasCalib,          // bool
+    ZenImuProperty_OutputGyr0AlignCalib,         // bool
+    ZenImuProperty_OutputGyr1AlignCalib,         // bool
+    ZenImuProperty_OutputMagCalib,               // bool
+
     ZenImuProperty_Max
 } EZenImuProperty;
 
@@ -419,5 +430,6 @@ typedef enum ZenPropertyType
 } ZenPropertyType;
 
 static const char g_zenSensorType_Imu[] = "imu";
+static const char g_zenSensorType_Gnss[] = "gnss";
 
 #endif

@@ -2,6 +2,8 @@
 
 #include "io/interfaces/linux/LinuxDeviceInterface.h"
 
+#include <spdlog/spdlog.h>
+
 #include <cstring>
 
 #include <fcntl.h>
@@ -53,9 +55,12 @@ namespace zen
 
     nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> LinuxDeviceSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
+        spdlog::info("Opening file {} for sensor communication", desc.identifier);
         const int fd = openFD(desc.identifier);
-        if (fd == -1)
+        if (fd == -1) {
+            spdlog::error("Error while opening file {} for sensor communication", desc.identifier);
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
+        }
 
         auto ioInterface = std::make_unique<LinuxDeviceInterface>(subscriber, desc.identifier, fd);
 
