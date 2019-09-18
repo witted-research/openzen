@@ -105,7 +105,7 @@ namespace zen
 
         if (itSensorConfig != m_sensorConfigs.end()) {
             spdlog::debug("Found specific device config for sensor name {} and using it",
-                *m_deviceName);
+                localDeviceName);
             return itSensorConfig->second;
         }
 
@@ -121,11 +121,11 @@ namespace zen
 
         if (itSensorConfigWildcard == m_sensorConfigs.end()) {
             spdlog::error("No specific configuration for sensor type {} and no fallback configuration found",
-                *m_deviceName);
+                localDeviceName);
             return nonstd::make_unexpected(ZenSensorInitError_NoConfiguration);
         } else {
             spdlog::debug("Using common device config for sensor name {}",
-                *m_deviceName);
+                localDeviceName);
             return itSensorConfigWildcard->second;
         }
     }
