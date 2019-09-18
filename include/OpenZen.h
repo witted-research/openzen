@@ -39,6 +39,7 @@ ZenEvents about sensor discovery results and incoming measurement data.
 #include <thread>
 #include <utility>
 #include <vector>
+#include <array>
 
 #ifdef OPENZEN_CXX17
 #include <optional>
@@ -266,6 +267,30 @@ namespace zen
             auto result = std::make_pair(ZenError_None, length);
             result.first = ZenSensorGetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type::value, array, &result.second);
             return result;
+        }
+
+        std::pair<ZenError, std::string> getStringProperty(ZenProperty_t property) noexcept
+        {
+            std::array<unsigned char, 255> arrayString;
+            size_t writtenBytes = 255;
+            auto error = ZenSensorGetArrayProperty(m_clientHandle, m_sensorHandle, property, ZenPropertyType_Byte,
+                arrayString.data(), &writtenBytes);
+            if (error)
+                return std::make_pair(error, "");
+
+            std::string outputString;
+            // make sure to honor the null termination
+            int i = 0;
+            for (auto ch : arrayString) {
+                if (ch == 0)
+                    break;
+                if (i == writtenBytes)
+                    break;
+                outputString = outputString + (char)ch;
+                i++;
+            }
+
+            return std::make_pair(error, outputString);
         }
 
         std::pair<ZenError, bool> getBoolProperty(ZenProperty_t property) noexcept

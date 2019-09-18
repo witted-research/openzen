@@ -332,6 +332,8 @@ typedef enum EZenSensorProperty : ZenProperty_t
     ZenSensorProperty_DataMode,                  // int (0: 32-bit float, 1: 16-bit fixed)
     ZenSensorProperty_TimeOffset,                // int
 
+    ZenSensorProperty_SensorModel,               // byte[24]
+
     // Sensors are free to expose private properties in this reserved region
     ZenSensorProperty_SensorSpecific_Start = 10000,
     ZenSensorProperty_SensorSpecific_End = 19999,
