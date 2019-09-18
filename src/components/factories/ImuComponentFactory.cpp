@@ -65,7 +65,7 @@ namespace zen
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
             }
 
-            if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyV1::GetTransmitData),
+            if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyV1::GetImuTransmitData),
                 static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
             {
                 spdlog::debug("Loaded output bitset of Ig1 sensor: {}", bitset.value());

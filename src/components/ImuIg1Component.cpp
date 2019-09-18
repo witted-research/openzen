@@ -153,40 +153,14 @@ namespace zen
         const auto property = static_cast<EDevicePropertyV1>(function);
         switch (property)
         {
-        case EDevicePropertyV1::GetLinearCompensationRate:
         case EDevicePropertyV1::GetFilterMode:
-        case EDevicePropertyV1::GetFilterPreset:
         case EDevicePropertyV1::GetAccRange:
         case EDevicePropertyV1::GetGyrRange:
         case EDevicePropertyV1::GetMagRange:
-        case EDevicePropertyV1::GetTransmitData:
+        case EDevicePropertyV1::GetImuTransmitData:
             if (data.size() != sizeof(uint32_t))
                 return ZenError_Io_MsgCorrupt;
             return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
-
-        case EDevicePropertyV1::GetCentricCompensationRate:
-        case EDevicePropertyV1::GetFieldRadius:
-            if (data.size() != sizeof(float))
-                return ZenError_Io_MsgCorrupt;
-            return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data.data()));
-
-        case EDevicePropertyV1::GetAccBias:
-        case EDevicePropertyV1::GetGyrBias:
-        case EDevicePropertyV1::GetMagBias:
-        case EDevicePropertyV1::GetMagReference:
-        case EDevicePropertyV1::GetMagHardIronOffset:
-            if (data.size() != sizeof(float) * 3)
-                return ZenError_Io_MsgCorrupt;
-            return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const float*>(data.data()), 3));
-
-        case EDevicePropertyV1::GetGyrAlignment:
-        case EDevicePropertyV1::GetMagAlignment:
-        case EDevicePropertyV1::GetMagSoftIronMatrix:
-            // Is this valid? Row-major? Column-major transmission?
-            if (data.size() != sizeof(float) * 9)
-                return ZenError_Io_MsgCorrupt;
-            return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const float*>(data.data()), 9));
-
         default:
             return ZenError_Io_UnsupportedFunction;
         }

@@ -39,74 +39,29 @@ namespace zen
             switch (property)
             {
             case ZenImuProperty_SamplingRate:
-                return SET_OR(EDevicePropertyV1::SetSamplingRate);
-
-            case ZenImuProperty_CentricCompensationRate:
-                return GET_SET(EDevicePropertyV1::GetCentricCompensationRate, EDevicePropertyV1::SetCentricCompensationRate);
-
-            case ZenImuProperty_LinearCompensationRate:
-                return GET_SET(EDevicePropertyV1::GetLinearCompensationRate, EDevicePropertyV1::SetLinearCompensationRate);
-
-            case ZenImuProperty_FieldRadius:
-                return GET_SET(EDevicePropertyV1::GetFieldRadius, EDevicePropertyV1::SetFieldRadius);
+                return SET_OR(EDevicePropertyV1::SetStreamFreq);
 
             case ZenImuProperty_FilterMode:
                 return GET_SET(EDevicePropertyV1::GetFilterMode, EDevicePropertyV1::SetFilterMode);
 
-            case ZenImuProperty_FilterPreset:
-                return GET_SET(EDevicePropertyV1::GetFilterPreset, EDevicePropertyV1::SetFilterPreset);
-
             case ZenImuProperty_OrientationOffsetMode:
                 return SET_OR(EDevicePropertyV1::SetOrientationOffsetMode);
-
-            case ZenImuProperty_AccBias:
-                return GET_SET(EDevicePropertyV1::GetAccBias, EDevicePropertyV1::SetAccBias);
-
-            case ZenImuProperty_GyrAlignment:
-                return GET_SET(EDevicePropertyV1::GetGyrAlignment, EDevicePropertyV1::SetGyrAlignment);
-
-            case ZenImuProperty_GyrBias:
-                return GET_SET(EDevicePropertyV1::GetGyrBias, EDevicePropertyV1::SetGyrBias);
 
             case ZenImuProperty_GyrRange:
                 return GET_SET(EDevicePropertyV1::GetGyrRange, EDevicePropertyV1::SetGyrRange);
 
             case ZenImuProperty_GyrUseAutoCalibration:
-                return SET_OR(EDevicePropertyV1::SetGyrUseAutoCalibration);
-
-            case ZenImuProperty_GyrUseThreshold:
-                return SET_OR(EDevicePropertyV1::SetGyrUseThreshold);
-
-            case ZenImuProperty_MagAlignment:
-                return GET_SET(EDevicePropertyV1::GetMagAlignment, EDevicePropertyV1::SetMagAlignment);
-
-            case ZenImuProperty_MagBias:
-                return GET_SET(EDevicePropertyV1::GetMagBias, EDevicePropertyV1::SetMagBias);
+                return GET_SET(EDevicePropertyV1::SetEnableGyrAutoCalibration, EDevicePropertyV1::GetEnableGyrAutoCalibration);
 
             case ZenImuProperty_MagRange:
                 return GET_SET(EDevicePropertyV1::GetMagRange, EDevicePropertyV1::SetMagRange);
 
-            case ZenImuProperty_MagReference:
-                return GET_SET(EDevicePropertyV1::GetMagReference, EDevicePropertyV1::SetMagReference);
-
-            case ZenImuProperty_MagHardIronOffset:
-                return GET_SET(EDevicePropertyV1::GetMagHardIronOffset, EDevicePropertyV1::SetMagHardIronOffset);
-
-            case ZenImuProperty_MagSoftIronMatrix:
-                return GET_SET(EDevicePropertyV1::GetMagSoftIronMatrix, EDevicePropertyV1::SetMagSoftIronMatrix);
-
             /* CAN bus properties */
-            case ZenImuProperty_CanChannelMode:
-                return GET_SET(EDevicePropertyV1::GetCanConfiguration, EDevicePropertyV1::SetCanChannelMode);
-
-            case ZenImuProperty_CanPointMode:
-                return GET_SET(EDevicePropertyV1::GetCanConfiguration, EDevicePropertyV1::SetCanPointMode);
-
             case ZenImuProperty_CanStartId:
-                return GET_SET(EDevicePropertyV1::GetCanConfiguration, EDevicePropertyV1::SetCanStartId);
+                return GET_SET(EDevicePropertyV1::GetCanStartId, EDevicePropertyV1::SetCanStartId);
 
-            /* case ZenImuProperty_CanBaudrate:
-                return GET_SET(EDevicePropertyV1::GetConfig, EDevicePropertyV1::SetCanBaudrate); */
+            case ZenImuProperty_CanBaudrate:
+                return GET_SET(EDevicePropertyV1::GetCanBaudRate, EDevicePropertyV1::SetCanBaudRate);
 
             case ZenImuProperty_CanMapping:
                 return GET_SET(EDevicePropertyV1::GetCanMapping, EDevicePropertyV1::SetCanMapping);

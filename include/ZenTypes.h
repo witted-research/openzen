@@ -404,6 +404,18 @@ typedef enum EZenImuProperty : ZenProperty_t
     ZenImuProperty_OutputGyr1AlignCalib,         // bool
     ZenImuProperty_OutputMagCalib,               // bool
 
+    /* CAN bus properties */
+    ZenImuProperty_CanChannelMode,
+    ZenImuProperty_CanPointMode,
+    ZenImuProperty_CanStartId,
+    ZenImuProperty_CanBaudrate,
+    ZenImuProperty_CanMapping,
+    ZenImuProperty_CanHeartbeat,
+
+    /* UART output properties */
+    ZenImuProperty_UartBaudRate,
+    ZenImuProperty_UartFormat,
+
     ZenImuProperty_Max
 } EZenImuProperty;
 

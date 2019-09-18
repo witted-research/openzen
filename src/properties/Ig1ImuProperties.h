@@ -65,7 +65,6 @@ namespace zen
         void setOutputDataBitset(uint32_t bitset) noexcept { m_cache.outputDataBitset = bitset; }
 
     private:
-        ZenError setPrecisionDataFlag(bool value) noexcept;
 
         struct IMUState
         {

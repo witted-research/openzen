@@ -21,7 +21,7 @@ namespace zen
             {
                 if (function <= static_cast<uint16_t>(EDevicePropertyInternal::Nack))
                     return static_cast<EDevicePropertyInternal>(function);
-                else if (function == static_cast<uint16_t>(EDevicePropertyV1::GetTransmitData))
+                else if (function == static_cast<uint16_t>(EDevicePropertyV1::GetImuTransmitData))
                     return EDevicePropertyInternal::Config;
 
                 return {};
@@ -54,22 +54,10 @@ namespace zen
                 return GET_OR_V1(EDevicePropertyV1::GetFirmwareInfo);
 
             case ZenSensorProperty_FirmwareVersion:
-                return GET_OR_V1(EDevicePropertyV1::GetFirmwareVersion);
+                return GET_OR_V1(EDevicePropertyV1::GetFirmwareInfo);
 
             case ZenSensorProperty_SerialNumber:
                 return GET_OR_V1(EDevicePropertyV1::GetSerialNumber);
-
-            case ZenSensorProperty_BatteryCharging:
-                return GET_OR_V1(EDevicePropertyV1::GetBatteryCharging);
-
-            case ZenSensorProperty_BatteryLevel:
-                return GET_OR_V1(EDevicePropertyV1::GetBatteryLevel);
-
-            case ZenSensorProperty_BatteryVoltage:
-                return GET_OR_V1(EDevicePropertyV1::GetBatteryVoltage);
-
-            case ZenSensorProperty_DataMode:
-                return SET_OR_V1(EDevicePropertyV1::SetDataMode);
 
             default:
                 return EDevicePropertyV1::Ack;

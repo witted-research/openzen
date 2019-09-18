@@ -369,22 +369,10 @@ namespace zen
                 const auto property = static_cast<EDevicePropertyV1>(function);
                 switch (property)
                 {
-                case EDevicePropertyV1::GetBatteryCharging:
-                case EDevicePropertyV1::GetBatteryLevel:
-                case EDevicePropertyV1::GetBatteryVoltage:
-                    if (data.size() != sizeof(float))
-                        return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data.data()));
-
                 case EDevicePropertyV1::GetSerialNumber:
                 case EDevicePropertyV1::GetSensorModel:
                 case EDevicePropertyV1::GetFirmwareInfo:
                     return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
-
-                case EDevicePropertyV1::GetFirmwareVersion:
-                    if (data.size() != sizeof(uint32_t) * 3)
-                        return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const uint32_t*>(data.data()), 3));
 
                 case EDevicePropertyV1::GetRawImuSensorData:
                     if (m_initialized)
