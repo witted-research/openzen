@@ -97,7 +97,7 @@ enum class EDevicePropertyV0 : DeviceProperty_t
     GetDeviceName = 91,                 // char[16]
     GetFirmwareInfo = 92,               // char[16]
     
-    GetPing = 98                        // uint32
+    GetPing = 98,                       // uint32
 
     SetCanBaudrate = 46,				// uint32
     SetCanMapping = 62,					// uint32
