@@ -7,6 +7,8 @@
 #include "io/can/CanManager.h"
 #include "utility/StringView.h"
 
+#include <spdlog/spdlog.h>
+
 namespace zen
 {
     namespace
@@ -74,8 +76,10 @@ namespace zen
         lock.unlock();
 
         auto ioSystem = IoManager::get().getIoSystem(desc.ioType);
-        if (!ioSystem)
+        if (!ioSystem) {
+            spdlog::error("IoType {0} not supported", desc.ioType);
             return nonstd::make_unexpected(ZenSensorInitError_UnsupportedIoType);
+        }
 
         ConnectionNegotiator negotiator;
         auto communicator = std::make_unique<ModbusCommunicator>(negotiator,
