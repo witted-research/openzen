@@ -15,12 +15,17 @@ TEST(ConnectionNegotiator, connectLegacySensor) {
     MockbusCommunicator mockbus(negotiator,
       { // vector
         // entry 1: pair
-        {uint8_t(0), uint8_t(EDevicePropertyV1::GetSensorModel),
-          // Legacy sensors will answer with NACK on this invalid command
-          uint8_t(1),
-          { }
+        {uint8_t(0), uint8_t(EDevicePropertyV1::GetFirmwareInfo),
+          // Legacy sensors will answer with the IMU id (32-bit) integer
+          // because idendifier 21 is GET_IMU_ID
+          uint8_t(EDevicePropertyV1::GetFirmwareInfo),
+          { std::byte(0), std::byte(0), std::byte(0), std::byte(23) }
+        },
+        {uint8_t(0), uint8_t(EDevicePropertyV0::SetCommandMode),
+            uint8_t(EDevicePropertyV0::Ack),
+            {}
         }
-      }
+       }
       );
 
     auto sensorConfig = negotiator.negotiate(mockbus, 57600);
@@ -40,6 +45,15 @@ TEST(ConnectionNegotiator, connectIg1Sensor) {
         {uint8_t(0), uint8_t(EDevicePropertyV1::GetSensorModel),
             uint8_t(EDevicePropertyV1::GetSensorModel),
           { util::stringToBuffer("LPMS-IG1-RS232") }
+        },
+        // new sensors will return 24-byte char
+        {uint8_t(0), uint8_t(EDevicePropertyV1::GetFirmwareInfo),
+            uint8_t(EDevicePropertyV1::GetFirmwareInfo),
+          { util::stringToBuffer("v-10-100-100-100-100-100") }
+        },
+        {uint8_t(0), uint8_t(EDevicePropertyV0::SetCommandMode),
+            uint8_t(EDevicePropertyV0::Ack),
+            {}
         }
       }
       );
