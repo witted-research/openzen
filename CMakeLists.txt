@@ -344,7 +344,7 @@ target_link_libraries(OpenZen
 add_executable(OpenZenTests
   ${zen_all_sources}
   src/test/ModbusTest.cpp
-  src/test/communication/CommunicationNegotiatorTest.cpp
+  src/test/communication/ConnectionNegotiatorTest.cpp
   src/test/OpenZenTests.cpp)
 
 target_include_directories(OpenZenTests
