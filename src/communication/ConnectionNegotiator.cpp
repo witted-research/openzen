@@ -45,27 +45,22 @@ namespace zen
         constexpr const auto IO_TIMEOUT = std::chrono::milliseconds(2000);
         communicator.setBaudRate(desiredBaudRate);
 
-        spdlog::debug("Requesting device name via Ig1 protocol");
-
-        // try to get the sensor's name
         m_terminated = false;
-
         // disable streaming during connection negotiation, command same for legacy and Ig1
         if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV0::SetCommandMode), gsl::span<std::byte>()))
         {
-            // command not supported by sensors except ig1, in this case assume its not an ig1
-            //return nonstd::make_unexpected(ZenSensorInitError_SendFailed);
             spdlog::info("Cannot set sensor in command mode");
+            return nonstd::make_unexpected(ZenSensorInitError_SendFailed);
         }
         {
             std::unique_lock<std::mutex> lock(m_mutex);
             m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; });
         }
 
-        // will send command 20, which is SET_IMU_ID for legacy sensors which should be
-        // ignored by the firmware because we don't provide the required parameter
-        // The reply will be NACK on this for a legacy sensor
-        if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV1::GetSensorModel), gsl::span<std::byte>()))
+        // will send command 21, which is GET_IMU_ID for legacy sensors. So legacy sensors will return one 32-bit
+        // result while its the GET_FIRMWARE_INFO for version 1 sensors, which is a 24-byte long string.
+        m_terminated = false;
+        if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV1::GetFirmwareInfo), gsl::span<std::byte>()))
         {
             // command not supported by sensors except ig1, in this case assume its not an ig1
             //return nonstd::make_unexpected(ZenSensorInitError_SendFailed);
@@ -74,6 +69,20 @@ namespace zen
         {
             std::unique_lock<std::mutex> lock(m_mutex);
             m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; });
+        }
+
+        m_terminated = false;
+        if (!m_isLegacy) {
+            if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV1::GetSensorModel), gsl::span<std::byte>()))
+            {
+                // command not supported by sensors except ig1, in this case assume its not an ig1
+                spdlog::error("Cannot load sensor model from IG1");
+                return nonstd::make_unexpected(ZenSensorInitError_SendFailed);
+            }
+            {
+                std::unique_lock<std::mutex> lock(m_mutex);
+                m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; });
+            }
         }
 
         if (m_deviceName) {
@@ -132,12 +141,9 @@ namespace zen
 
     ZenError ConnectionNegotiator::processReceivedData(uint8_t, uint8_t function, gsl::span<const std::byte> data) noexcept
     {
-/*        spdlog::debug("ConnectionNegotiator received data with function {} with data size {}",
-            function, data.size());*/
-
         if ((function == ZenProtocolFunction_Handshake) ||
-            (function == uint8_t(EDevicePropertyV1::GetSensorModel)) ||
-            (function == uint8_t(EDevicePropertyV0::GetDeviceName))) {
+            (function == uint8_t(EDevicePropertyV1::GetFirmwareInfo)) ||
+            (function == uint8_t(EDevicePropertyV1::GetSensorModel))) {
             // fine, thats a package we can use
         }
         else {
@@ -154,12 +160,25 @@ namespace zen
             m_cv.notify_one();
         });
 
-        if ((function == uint8_t(EDevicePropertyV1::GetSensorModel)) ||
-            (function == uint8_t(EDevicePropertyV0::GetDeviceName))) {
+        if (function == uint8_t(EDevicePropertyV1::GetFirmwareInfo)) {
+            // legacy sensor, providing just a 32-bit integer
+            spdlog::debug("ConnectionNegotiator received data size {} when loading the firmware version {0}", data.size());
+            if (data.size() == 4) {
+                m_isLegacy = true;
+                spdlog::debug("ConnectionNegotiator received 32-bit from legacy sensor");
+            }
+            else {
+                auto firmwareInfo = std::string(reinterpret_cast<char const*>(data.data()), data.size());
+                spdlog::debug("ConnectionNegotiator loaded firmware Info from Ig1 sensor {}", firmwareInfo);
+                m_isLegacy = false;
+            }
+        }
+
+        if (function == uint8_t(EDevicePropertyV1::GetSensorModel)) {
             auto name = std::string(reinterpret_cast<char const*>(data.data()), data.size());
             // device name can have some trailing zeros
             name = util::right_trim(name);
-            spdlog::debug("ConnectionNegotiator received device name {}", name);
+            spdlog::debug("ConnectionNegotiator received sensor model {}", name);
             m_deviceName = name;
             return ZenError_None;
         }
