@@ -86,7 +86,7 @@ namespace zen
         }
 
         if (m_deviceName) {
-            spdlog::debug("Device name from Ig1 protocol: {}", *m_deviceName);
+            spdlog::debug("Device name from Ig1 protocol: {0}", *m_deviceName);
         }
 
         return loadDeviceConfig();
@@ -113,7 +113,7 @@ namespace zen
             });
 
         if (itSensorConfig != m_sensorConfigs.end()) {
-            spdlog::debug("Found specific device config for sensor name {} and using it",
+            spdlog::debug("Found specific device config for sensor name {0} and using it",
                 localDeviceName);
             return itSensorConfig->second;
         }
@@ -129,11 +129,11 @@ namespace zen
             });
 
         if (itSensorConfigWildcard == m_sensorConfigs.end()) {
-            spdlog::error("No specific configuration for sensor type {} and no fallback configuration found",
+            spdlog::error("No specific configuration for sensor type {0} and no fallback configuration found",
                 localDeviceName);
             return nonstd::make_unexpected(ZenSensorInitError_NoConfiguration);
         } else {
-            spdlog::debug("Using common device config for sensor name {}",
+            spdlog::debug("Using common device config for sensor name {0}",
                 localDeviceName);
             return itSensorConfigWildcard->second;
         }
@@ -162,14 +162,14 @@ namespace zen
 
         if (function == uint8_t(EDevicePropertyV1::GetFirmwareInfo)) {
             // legacy sensor, providing just a 32-bit integer
-            spdlog::debug("ConnectionNegotiator received data size {} when loading the firmware version {0}", data.size());
+            spdlog::debug("ConnectionNegotiator received data size {0} when loading the firmware version", data.size());
             if (data.size() == 4) {
                 m_isLegacy = true;
                 spdlog::debug("ConnectionNegotiator received 32-bit from legacy sensor");
             }
             else {
                 auto firmwareInfo = std::string(reinterpret_cast<char const*>(data.data()), data.size());
-                spdlog::debug("ConnectionNegotiator loaded firmware Info from Ig1 sensor {}", firmwareInfo);
+                spdlog::debug("ConnectionNegotiator loaded firmware Info from Ig1 sensor {0}", firmwareInfo);
                 m_isLegacy = false;
             }
         }
@@ -178,7 +178,7 @@ namespace zen
             auto name = std::string(reinterpret_cast<char const*>(data.data()), data.size());
             // device name can have some trailing zeros
             name = util::right_trim(name);
-            spdlog::debug("ConnectionNegotiator received sensor model {}", name);
+            spdlog::debug("ConnectionNegotiator received sensor model {0}", name);
             m_deviceName = name;
             return ZenError_None;
         }
