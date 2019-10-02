@@ -81,27 +81,10 @@ namespace zen
             }
         }
 
-        constexpr uint32_t roundSamplingRate(int32_t value)
-        {
-            if (value <= 5)
-                return 5;
-            else if (value <= 10)
-                return 10;
-            else if (value <= 25)
-                return 25;
-            else if (value <= 50)
-                return 50;
-            else if (value <= 100)
-                return 100;
-            else if (value <= 200)
-                return 200;
-            else
-                return 400;
-        }
-
         inline std::pair<ZenError, size_t> supportedSamplingRates(gsl::span<int32_t> buffer)
         {
-            constexpr std::array<int32_t, 7> supported{ 5, 10, 25, 50, 100, 200, 400 };
+            // this list is directly from the IG1 documentation
+            constexpr std::array<int32_t, 7> supported{ 5, 10, 50, 100, 500 };
 
             if (static_cast<size_t>(buffer.size()) < supported.size())
                 return std::make_pair(ZenError_BufferTooSmall, supported.size());
@@ -111,6 +94,20 @@ namespace zen
 
             std::copy(supported.cbegin(), supported.cend(), buffer.begin());
             return std::make_pair(ZenError_None, supported.size());
+        }
+
+        constexpr uint32_t roundSamplingRate(int32_t value)
+        {
+            if (value <= 5)
+                return 5;
+            else if (value <= 10)
+                return 10;
+            else if (value <= 50)
+                return 50;
+            else if (value <= 100)
+                return 100;
+            else
+                return 500;
         }
 
         constexpr uint32_t mapAccRange(int32_t value)
