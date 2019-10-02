@@ -341,6 +341,7 @@ typedef struct ZenEventData_SensorListingProgress
 typedef union
 {
     ZenEventData_Imu imuData;
+    ZenEventData_Gnss gnssData;
     ZenEventData_SensorDisconnected sensorDisconnected;
     ZenEventData_SensorFound sensorFound;
     ZenEventData_SensorListingProgress sensorListingProgress;
