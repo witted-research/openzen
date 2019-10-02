@@ -142,7 +142,7 @@ namespace zen
                 return 400;
             else if (value <= 1000)
                 return 1000;
-            else (value <= 2000)
+            else
                 return 2000;
         }
 
