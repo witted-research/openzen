@@ -138,21 +138,17 @@ namespace zen
 
         constexpr uint32_t mapGyrRange(int32_t value)
         {
-            if (value <= 125)
-                return 125;
-            else if (value <= 245)
-                return 245;
-            else if (value <= 500)
-                return 500;
+            if (value <= 400)
+                return 400;
             else if (value <= 1000)
                 return 1000;
-            else
+            else (value <= 2000)
                 return 2000;
         }
 
         inline std::pair<ZenError, size_t> supportedGyrRanges(gsl::span<int32_t> buffer)
         {
-            constexpr std::array<int32_t, 5> supported{ 125, 245, 500, 1000, 2000 };
+            constexpr std::array<int32_t, 3> supported{ 400, 1000, 2000 };
 
             if (static_cast<size_t>(buffer.size()) < supported.size())
                 return std::make_pair(ZenError_BufferTooSmall, supported.size());
@@ -166,19 +162,15 @@ namespace zen
 
         constexpr uint32_t mapMagRange(int32_t value)
         {
-            if (value <= 4)
-                return 4;
-            else if (value <= 8)
-                return 8;
-            else if (value <= 12)
-                return 12;
+            if (value <= 2)
+                return 2;
             else
-                return 16;
+                return 8;
         }
 
         inline std::pair<ZenError, size_t> supportedMagRanges(gsl::span<int32_t> buffer)
         {
-            constexpr std::array<int32_t, 4> supported{ 4, 8, 12, 16 };
+            constexpr std::array<int32_t, 2> supported{ 2, 8 };
 
             if (static_cast<size_t>(buffer.size()) < supported.size())
                 return std::make_pair(ZenError_BufferTooSmall, supported.size());
