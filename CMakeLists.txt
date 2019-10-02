@@ -87,11 +87,15 @@ set(components_sources
     src/components/ImuComponent.h
     src/components/ImuIg1Component.cpp
     src/components/ImuIg1Component.h
+    src/components/GnssComponent.cpp
+    src/components/GnssComponent.h
 )
 
 set(components_factories_sources
     src/components/factories/ImuComponentFactory.cpp
     src/components/factories/ImuComponentFactory.h
+    src/components/factories/GnssComponentFactory.cpp
+    src/components/factories/GnssComponentFactory.h
 )
 
 set(io_sources
@@ -135,6 +139,8 @@ set(properties_sources
     src/properties/LegacyImuProperties.h
     src/properties/Ig1ImuProperties.cpp
     src/properties/Ig1ImuProperties.h
+    src/properties/Ig1GnssProperties.cpp
+    src/properties/Ig1GnssProperties.h
 )
 
 set(utility_sources

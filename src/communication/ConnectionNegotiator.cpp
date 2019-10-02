@@ -21,13 +21,21 @@ namespace zen
         // add all supported sensor types and their configurations
         // only support IG1's Imu yet, second gyroscope and GNSS
         // comes later
-        m_sensorConfigs.push_back( { {"LPMS-IG1-CAN", "LPMS-IG1P-CAN",
-        "LPMS-IG1-RS232", "LPMS-IG1P-RS232"},
+        m_sensorConfigs.push_back( { {"LPMS-IG1-CAN", "LPMS-IG1-RS232"},
         {1,
           { ComponentConfig{1, g_zenSensorType_Imu}
           }
         }
       });
+
+      m_sensorConfigs.push_back( { {"LPMS-IG1P-CAN", "LPMS-IG1P-RS232"},
+      {1,
+        {
+            ComponentConfig{1, g_zenSensorType_Imu},
+            ComponentConfig{1, g_zenSensorType_Gnss}
+        }
+      }
+    });
 
       // match every other legacy sensor
       m_sensorConfigs.push_back( { {"*"},

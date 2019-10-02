@@ -22,6 +22,7 @@ namespace zen
 
     ZenError ModbusCommunicator::send(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept
     {
+        spdlog::debug("sending function {}", function);
         if (!data.empty() && data.data() == nullptr)
             return ZenError_IsNull;
 
@@ -35,6 +36,9 @@ namespace zen
 
     ZenError ModbusCommunicator::processData(gsl::span<const std::byte> data) noexcept
     {
+        // enable this for low-level communication debugging
+        //spdlog::debug("received: {0}", util::spanToString(data));
+
         while (!data.empty())
         {
             while (m_parserBusy.test_and_set(std::memory_order_acquire)) { /*spin lock*/ }
