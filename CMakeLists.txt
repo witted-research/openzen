@@ -289,7 +289,7 @@ if (MSVC)
 else()
     target_compile_options(OpenZen
         PRIVATE
-            -Wall -Wextra -pedantic -Werror
+            -Wall -Wextra -pedantic
     )
 
     # add linker options to statically compile in libstdc++
