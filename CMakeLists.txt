@@ -3,17 +3,11 @@ project(OpenZen VERSION 0.1.0 LANGUAGES CXX;C)
 
 add_subdirectory(external)
 
-# Check if OpenZen is being used directly or via add_subdirectory
-set(OPENZEN_MASTER_PROJECT OFF)
-if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-    set(OPENZEN_MASTER_PROJECT ON)
-endif()
-
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
 option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
 option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
-option(ZEN_INSTALL "Generate the install target." ${OPENZEN_MASTER_PROJECT})
+option(ZEN_INSTALL "Generate the install target for OpenZen." OFF)
 
 
 # Enable this line and set it to the correct Qt installation path if you want to compile
