@@ -25,6 +25,11 @@ namespace zen
          */
         virtual ZenSensorInitError init() noexcept = 0;
 
+        /**
+        Called before communication to the component is terminated
+        */
+        virtual ZenError close() noexcept { return ZenError_None; }
+
         virtual ZenError processData(uint8_t function, gsl::span<const std::byte> data) noexcept = 0;
         virtual nonstd::expected<ZenEventData, ZenError> processEventData(ZenEvent_t eventType, gsl::span<const std::byte> data) noexcept = 0;
 

@@ -19,6 +19,15 @@ pipelines:
             - make
             - ./OpenZenTests
       - step:
+          name: Linux x64 Build Gcc Static
+          script:
+            - git submodule update --init
+            - mkdir ../linux_x64_build && cd ../linux_x64_build
+            # disable most of optional components for now
+            - cmake -DZEN_USE_STATIC_LIBS=ON ../build
+            - make
+            - ./OpenZenTests            
+      - step:
           name: Linux x64 Build Clang
           script:
             - git submodule update --init

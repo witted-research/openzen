@@ -13,6 +13,7 @@
 #include "communication/ConnectionNegotiator.h"
 #include "components/ComponentFactoryManager.h"
 #include "components/factories/ImuComponentFactory.h"
+#include "components/factories/GnssComponentFactory.h"
 #include "io/IIoInterface.h"
 #include "io/IoManager.h"
 #include "properties/BaseSensorPropertiesV0.h"
@@ -98,6 +99,7 @@ namespace zen
     }
 
     static auto imuRegistry = make_registry<ImuComponentFactory>(g_zenSensorType_Imu);
+    static auto gnssRegistry = make_registry<GnssComponentFactory>(g_zenSensorType_Gnss);
 
     nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token) noexcept
     {
@@ -126,6 +128,12 @@ namespace zen
         // First we need to wait for the firmware/IAP upload to stop
         if (m_uploadThread.joinable())
             m_uploadThread.join();
+
+        // closing all sensor components, maybe some components want to
+        // download or store configuration before the sensor is closed.
+        for (auto & component : m_components) {
+            component->close();
+        }
 
         // Then the communicator needs to be destroyed before to guarantee that the
         // underlying IO interface does not call processReceivedData anymore
@@ -291,6 +299,8 @@ namespace zen
                 case EDevicePropertyInternal::Nack:
                     return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
 
+                // this entry is used to forward the OutputDataBitset for IMU and GPS while
+                // the component is not created yet.
                 case EDevicePropertyInternal::Config:
                     if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
@@ -354,10 +364,18 @@ namespace zen
                 case EDevicePropertyInternal::Nack:
                     return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
 
+                // this entry is used to forward the OutputDataBitset for IMU and GPS while
+                // the component is not created yet.
                 case EDevicePropertyInternal::Config:
                     if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
                     return m_communicator.publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::Config),
+                        ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
+
+                case EDevicePropertyInternal::ConfigGpsOutputDataBitset:
+                    if (data.size() != sizeof(uint32_t) * 2)
+                        return ZenError_Io_MsgCorrupt;
+                    return m_communicator.publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGpsOutputDataBitset),
                         ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
 
                 default:
@@ -389,8 +407,12 @@ namespace zen
                     return ZenError_None;
 
                 default:
-                    // the components have not been created at this point !
-                    return m_components[0]->processData(function, data);
+                    // check if the components have been created at this point !
+                    if (m_initialized) {
+                        return m_components[0]->processData(function, data);
+                    } else {
+                        return ZenError_None;
+                    }
                 }
             }
         }

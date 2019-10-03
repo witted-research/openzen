@@ -142,10 +142,10 @@ typedef enum ZenAsyncStatus
 typedef enum ZenLogLevel
 {
     ZenLogLevel_Off,
-    ZenLogLevel_Debug,
-    ZenLogLevel_Info,
-    ZenLogLevel_Warning,
     ZenLogLevel_Error,
+    ZenLogLevel_Warning,
+    ZenLogLevel_Info,
+    ZenLogLevel_Debug,
 
     ZenLogLevel_Max
 } ZenLogLevel;
@@ -216,6 +216,81 @@ typedef struct ZenImuData
 
 typedef ZenImuData ZenEventData_Imu;
 
+/**
+Type of the position fix provided by the global navigation satellite system (Gnss)
+*/
+typedef enum ZenGnssFixType
+{
+    /// No fix available
+    ZenGnssFixType_NoFix = 0,
+
+    /// Position estimation was done by using dead reckoning method because
+    /// not GNSS location fix is available
+    ZenGnssFixType_DeadReckoningOnly = 1,
+
+    /// Position fix on the surface of the WGS84 ellipsoid
+    ZenGnssFixType_2dFix = 2,
+
+    /// 3d fix in space with a valid height information
+    ZenGnssFixType_3dFix = 3,
+
+    /// Position estimation was done using a combination of an up-to-date
+    /// GNSS position measurement and dead reckoning
+    ZenGnssFixType_GnnsAndDeadReckoning = 4,
+
+    /// Only the time and date was obtained from the GNNS so far.
+    ZenGnssFixType_TimeOnlyFix = 5,
+
+    ZenGnssFixType_Max
+} ZenGnssFixType;
+
+/**
+Global position, velocity and heading information measured using
+a global navigation satellite system (GNSS) and dead reckoning methods with
+the IMU sensors.
+*/
+typedef struct ZenGnssData
+{
+    /// Latitude measurement provided by the GNSS
+    /// or the IMU/GNSS sensor fusion
+    float latitude;
+
+    /// Accuracy of the horizontal measurement in mm
+    float horizontalAccuracy;
+
+    /// Longitude measurement provided by the GNSS
+    /// or the IMU/GNSS sensor fusion
+    float longitude;
+
+    /// Accuracy of the vertical position measurement in mm
+    float verticalAccuracy;
+
+    /// height above WGS84 ellipsoid
+    float height;
+
+    /// Heading in degrees
+    float heading;
+
+    /// Heading Accuracy in degrees
+    float headingAccuracy;
+
+    /// velocity over ground in mm/s
+    float velocity;
+
+    /// velocity accuracy over ground in mm/s
+    float velocityAccuracy;
+
+    /// type of the GNSS fix and dead-reckoning mode
+    ZenGnssFixType fixType;
+
+    /// the number of satellites that have been used to
+    /// compute the position
+    uint8_t numberSatelliteUsed;
+
+} ZenGnssData;
+
+typedef ZenGnssData ZenEventData_Gnss;
+
 typedef struct ZenSensorDesc
 {
     /**
@@ -266,6 +341,7 @@ typedef struct ZenEventData_SensorListingProgress
 typedef union
 {
     ZenEventData_Imu imuData;
+    ZenEventData_Gnss gnssData;
     ZenEventData_SensorDisconnected sensorDisconnected;
     ZenEventData_SensorFound sensorFound;
     ZenEventData_SensorListingProgress sensorListingProgress;
@@ -308,6 +384,22 @@ typedef enum ZenImuEvent : ZenEvent_t
 
     ZenImuEvent_Max
 } ZenImuEvent;
+
+/**
+Measurement event of the Global navigation satellite system
+*/
+typedef enum ZenGnssEvent : ZenEvent_t
+{
+    ZenGnssEvent_None = 0,
+
+    ZenGnssEvent_Sample = 1,
+
+    // Components are free to expose private events in this reserved region
+    ZenGnssEvent_ComponentSpecific_Start = 10000,
+    ZenGnssEvent_ComponentSpecific_End = 19999,
+
+    ZenGnssEvent_Max
+} ZenGnssEvent;
 
 typedef uint32_t ZenProperty_t;
 
@@ -420,6 +512,60 @@ typedef enum EZenImuProperty : ZenProperty_t
 
     ZenImuProperty_Max
 } EZenImuProperty;
+
+typedef enum EZenGnssProperty : ZenProperty_t
+{
+    ZenGnssProperty_Invalid = 0,
+
+    ZenGnnsProperty_OutputNavPvtiTOW,
+    ZenGnnsProperty_OutputNavPvtyear,
+    ZenGnnsProperty_OutputNavPvtmonth,
+    ZenGnnsProperty_OutputNavPvtday,
+    ZenGnnsProperty_OutputNavPvthour,
+    ZenGnnsProperty_OutputNavPvtmin,
+    ZenGnnsProperty_OutputNavPvtsec,
+    ZenGnnsProperty_OutputNavPvtvalid,
+    ZenGnnsProperty_OutputNavPvttAcc,
+    ZenGnnsProperty_OutputNavPvtnano,
+    ZenGnnsProperty_OutputNavPvtfixType,
+    ZenGnnsProperty_OutputNavPvtflags,
+    ZenGnnsProperty_OutputNavPvtflags2,
+    ZenGnnsProperty_OutputNavPvtnumSV,
+    ZenGnnsProperty_OutputNavPvtlongitude,
+    ZenGnnsProperty_OutputNavPvtlatitude,
+    ZenGnnsProperty_OutputNavPvtheight,
+    ZenGnnsProperty_OutputNavPvthMSL,
+    ZenGnnsProperty_OutputNavPvthAcc,
+    ZenGnnsProperty_OutputNavPvtvAcc,
+    ZenGnnsProperty_OutputNavPvtvelN,
+    ZenGnnsProperty_OutputNavPvtvelE,
+    ZenGnnsProperty_OutputNavPvtvelD,
+    ZenGnnsProperty_OutputNavPvtgSpeed,
+    ZenGnnsProperty_OutputNavPvtheadMot,
+    ZenGnnsProperty_OutputNavPvtsAcc,
+    ZenGnnsProperty_OutputNavPvtheadAcc,
+    ZenGnnsProperty_OutputNavPvtpDOP,
+    ZenGnnsProperty_OutputNavPvtheadVeh,
+
+    ZenGnnsProperty_OutputNavAttiTOW,
+    ZenGnnsProperty_OutputNavAttVersion,
+    ZenGnnsProperty_OutputNavAttRoll,
+    ZenGnnsProperty_OutputNavAttPitch,
+    ZenGnnsProperty_OutputNavAttHeading,
+    ZenGnnsProperty_OutputNavAttAccRoll,
+    ZenGnnsProperty_OutputNavAttAccPitch,
+    ZenGnnsProperty_OutputNavAttAccHeading,
+
+    ZenGnnsProperty_OutputEsfStatusiTOW,
+    ZenGnnsProperty_OutputEsfStatusVersion,
+    ZenGnnsProperty_OutputEsfStatusInitStatus1,
+    ZenGnnsProperty_OutputEsfStatusInitStatus2,
+    ZenGnnsProperty_OutputEsfStatusFusionMode,
+    ZenGnnsProperty_OutputEsfStatusNumSens,
+    ZenGnnsProperty_OutputEsfStatusSensStatus,
+
+    ZenGnssProperty_Max
+} EZenGnssProperty;
 
 typedef enum ZenOrientationOffsetMode
 {

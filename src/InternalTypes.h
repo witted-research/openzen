@@ -12,7 +12,11 @@ enum class EDevicePropertyInternal : DeviceProperty_t
     Nack = 1,
     UpdateFirmware = 2,
     UpdateIAP = 3,
+    // this id is used for the OutputDataBitset when loading the initial
+    // sensor configuration
     Config = 4,
+    // this id is used for the GPS OutputDataBitset
+    ConfigGpsOutputDataBitset = 5,
 
     Max
 };

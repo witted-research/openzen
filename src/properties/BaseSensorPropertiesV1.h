@@ -23,6 +23,8 @@ namespace zen
                     return static_cast<EDevicePropertyInternal>(function);
                 else if (function == static_cast<uint16_t>(EDevicePropertyV1::GetImuTransmitData))
                     return EDevicePropertyInternal::Config;
+                else if (function == static_cast<uint16_t>( EDevicePropertyV1::GetGpsTransmitData))
+                    return EDevicePropertyInternal::ConfigGpsOutputDataBitset;
 
                 return {};
             }
