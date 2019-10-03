@@ -71,6 +71,11 @@ namespace
 
     uint16_t lrcLp(uint8_t address, uint8_t function, const std::byte* data, uint8_t length) noexcept
     {
+        // TODO:
+        // LP Sensor firmware computes the additions for
+        // the checksum on a byte-level and not using address
+        // and function 2-byte integers, check this is working
+        // here
         uint16_t total = address;
         total += function;
         total += length;
