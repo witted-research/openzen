@@ -279,9 +279,15 @@ endif()
 
 target_compile_definitions(OpenZen
     PRIVATE
-        $<IF:$<BOOL:${ZEN_USE_STATIC_LIBS}>,ZEN_API_STATIC,ZEN_API_EXPORT>
         ${zen_optional_compile_definitions_private}
 )
+
+# publish the static usage flag of OpenZen to all libraries linking to us
+if (ZEN_USE_STATIC_LIBS)
+    target_compile_definitions(OpenZen PUBLIC ZEN_API_STATIC)
+else()
+    target_compile_definitions(OpenZen PRIVATE ZEN_API_EXPORT)
+endif()
 
 target_compile_features(OpenZen
     PRIVATE
