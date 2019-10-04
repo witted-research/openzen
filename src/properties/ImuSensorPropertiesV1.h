@@ -51,7 +51,10 @@ namespace zen
                 return GET_SET(EDevicePropertyV1::GetGyrRange, EDevicePropertyV1::SetGyrRange);
 
             case ZenImuProperty_GyrUseAutoCalibration:
-                return GET_SET(EDevicePropertyV1::SetEnableGyrAutoCalibration, EDevicePropertyV1::GetEnableGyrAutoCalibration);
+                return GET_SET(EDevicePropertyV1::GetEnableGyrAutoCalibration, EDevicePropertyV1::SetEnableGyrAutoCalibration);
+
+            case ZenImuProperty_GyrUseThreshold:
+                return GET_SET(EDevicePropertyV1::GetGyrThreshold, EDevicePropertyV1::SetGyrThreshold);
 
             case ZenImuProperty_MagRange:
                 return GET_SET(EDevicePropertyV1::GetMagRange, EDevicePropertyV1::SetMagRange);

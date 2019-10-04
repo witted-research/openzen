@@ -234,12 +234,12 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
     {
         if (property == ZenImuProperty_StreamData)
             return m_streaming;
+        // this is a Int32 on the device side but treated as a bool in OpenZen
+        // to simplify usage
         else if (property == ZenImuProperty_GyrUseAutoCalibration)
-            return m_cache.gyrAutoCalibration;
+            return getInt32AsBool(property);
         else if (property == ZenImuProperty_GyrUseThreshold)
-            return m_cache.gyrUseThreshold;
-/*        else if (property == ZenImuProperty_OutputLowPrecision)
-            return getOutputDataFlag<ZenImuProperty_OutputLowPrecision>(m_cache.outputDataBitset);*/
+            return getInt32AsBool(property);
         else if (property == ZenImuProperty_OutputLinearAcc)
             return getOutputDataFlag<ZenImuProperty_OutputLinearAcc>(m_cache.outputDataBitset);
         else if (property == ZenImuProperty_OutputAltitude)
@@ -250,8 +250,6 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
             return getOutputDataFlag<ZenImuProperty_OutputEuler>(m_cache.outputDataBitset);
         else if (property == ZenImuProperty_OutputAngularVel)
             return getOutputDataFlag<ZenImuProperty_OutputAngularVel>(m_cache.outputDataBitset);
-/*        else if (property == ZenImuProperty_OutputHeaveMotion)
-            return getOutputDataFlag<ZenImuProperty_OutputHeaveMotion>(m_cache.outputDataBitset);*/
         else if (property == ZenImuProperty_OutputTemperature)
             return getOutputDataFlag<ZenImuProperty_OutputTemperature>(m_cache.outputDataBitset);
         
@@ -392,7 +390,7 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
                 if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0),
                     static_cast<ZenProperty_t>(propertyV0),
                     gsl::span<std::byte>()
-                    )) {
+                )) {
                     return error;
                 }
                 m_streaming = value;
@@ -401,32 +399,9 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
             return ZenError_None;
         }
         else if (property == ZenImuProperty_GyrUseAutoCalibration)
-        {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
-                        return error;
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                    });
-
-                uint32_t iValue = value ? 1 : 0;
-                const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV1::SetEnableGyrAutoCalibration);
-                if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
-                    return error;
-
-                m_cache.gyrAutoCalibration = value;
-                notifyPropertyChange(property, value);
-                return ZenError_None;
-            }
-            else
-            {
-                return streaming.error();
-            }
-        }
+            return setInt32AsBool(ZenImuProperty_GyrUseAutoCalibration, value);
+        else if (property == ZenImuProperty_GyrUseThreshold)
+            return setInt32AsBool(ZenImuProperty_GyrUseThreshold, value);
         else if (property == ZenImuProperty_OutputLinearAcc)
             return setOutputDataFlag<ZenImuProperty_OutputLinearAcc>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputAltitude)
@@ -656,4 +631,56 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
             return ZenPropertyType_Invalid;
         }
     }
+
+    nonstd::expected<bool, ZenError> Ig1ImuProperties::getInt32AsBool(ZenProperty_t property) {
+        if (auto streaming = getBool(ZenImuProperty_StreamData))
+        {
+            if (*streaming)
+                if (auto error = setBool(ZenImuProperty_StreamData, false))
+                    return error;
+
+            auto guard = finally([&]() {
+                if (*streaming)
+                    setBool(ZenImuProperty_StreamData, true);
+                });
+
+            const auto function = static_cast<DeviceProperty_t>(imu::v1::map(property, true));
+            if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
+                return static_cast<int32_t>(*result) > 0;
+            else
+                return result.error();
+        }
+        else
+        {
+            return streaming.error();
+        }
+    }
+
+    ZenError Ig1ImuProperties::setInt32AsBool(ZenProperty_t property, bool value) {
+        if (auto streaming = getBool(ZenImuProperty_StreamData))
+        {
+            if (*streaming)
+                if (auto error = setBool(ZenImuProperty_StreamData, false))
+                    return error;
+
+            auto guard = finally([&]() {
+                if (*streaming)
+                    setBool(ZenImuProperty_StreamData, true);
+                });
+
+            uint32_t iValue = value ? 1 : 0;
+            const auto function = static_cast<DeviceProperty_t>(imu::v1::map(property, false));
+            if (auto error = m_communicator.sendAndWaitForAck(0, function, function,
+                gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
+                return error;
+
+            notifyPropertyChange(property, value);
+            return ZenError_None;
+        }
+        else
+        {
+            return streaming.error();
+        }
+    }
+
 }

@@ -157,6 +157,8 @@ namespace zen
         case EDevicePropertyV1::GetAccRange:
         case EDevicePropertyV1::GetGyrRange:
         case EDevicePropertyV1::GetMagRange:
+        case EDevicePropertyV1::GetGyrThreshold:
+        case EDevicePropertyV1::GetEnableGyrAutoCalibration:
         case EDevicePropertyV1::GetImuTransmitData:
             if (data.size() != sizeof(uint32_t))
                 return ZenError_Io_MsgCorrupt;
