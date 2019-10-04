@@ -70,7 +70,7 @@ namespace zen
         nonstd::expected<bool, ZenError> getInt32AsBool(ZenProperty_t property);
 
         /** set a propery which is Int32 on the sensor but treated as bool by OpenZen */
-        ZenError Ig1ImuProperties::setInt32AsBool(ZenProperty_t property, bool value);
+        ZenError setInt32AsBool(ZenProperty_t property, bool value);
 
         struct IMUState
         {
