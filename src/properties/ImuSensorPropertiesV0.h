@@ -80,9 +80,6 @@ namespace zen
             case ZenImuProperty_GyrUseAutoCalibration:
                 return SET_OR(EDevicePropertyV0::SetGyrUseAutoCalibration);
 
-            case ZenImuProperty_GyrUseThreshold:
-                return SET_OR(EDevicePropertyV0::SetGyrUseThreshold);
-
             case ZenImuProperty_MagAlignment:
                 return GET_SET(EDevicePropertyV0::GetMagAlignment, EDevicePropertyV0::SetMagAlignment);
 

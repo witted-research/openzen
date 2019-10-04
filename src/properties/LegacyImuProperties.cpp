@@ -74,6 +74,11 @@ namespace zen
             using index = std::integral_constant<unsigned int, 9>;
         };
 
+        template <> struct OutputDataFlag<ZenImuProperty_GyrUseAutoCalibration>
+        {
+            using index = std::integral_constant<unsigned int, 30>;
+        };
+
         template <ZenProperty_t property>
         constexpr bool getOutputDataFlag(std::atomic_uint32_t& outputDataBitset) noexcept
         {
@@ -113,6 +118,14 @@ namespace zen
         , m_streaming(true)
     {
         m_cache.samplingRate = 200;
+    }
+
+    void LegacyImuProperties::setConfigBitset(uint32_t bitset) noexcept {
+        m_cache.configBitset = bitset;
+
+        // extract additional configurations, they are read from the
+        // config bitset but set via their own command call
+        m_cache.gyrAutoCalibration = getOutputDataFlag< ZenImuProperty_GyrUseAutoCalibration>(m_cache.configBitset);
     }
 
     ZenError LegacyImuProperties::execute(ZenProperty_t command) noexcept
@@ -203,32 +216,30 @@ namespace zen
             return m_streaming;
         else if (property == ZenImuProperty_GyrUseAutoCalibration)
             return m_cache.gyrAutoCalibration;
-        else if (property == ZenImuProperty_GyrUseThreshold)
-            return m_cache.gyrUseThreshold;
         else if (property == ZenImuProperty_OutputLowPrecision)
-            return getOutputDataFlag<ZenImuProperty_OutputLowPrecision>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputLowPrecision>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputLinearAcc)
-            return getOutputDataFlag<ZenImuProperty_OutputLinearAcc>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputLinearAcc>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputAltitude)
-            return getOutputDataFlag<ZenImuProperty_OutputAltitude>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputAltitude>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputQuat)
-            return getOutputDataFlag<ZenImuProperty_OutputQuat>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputQuat>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputEuler)
-            return getOutputDataFlag<ZenImuProperty_OutputEuler>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputEuler>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputAngularVel)
-            return getOutputDataFlag<ZenImuProperty_OutputAngularVel>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputAngularVel>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputHeaveMotion)
-            return getOutputDataFlag<ZenImuProperty_OutputHeaveMotion>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputHeaveMotion>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputTemperature)
-            return getOutputDataFlag<ZenImuProperty_OutputTemperature>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputTemperature>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputRawGyr)
-            return getOutputDataFlag<ZenImuProperty_OutputRawGyr>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputRawGyr>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputRawAcc)
-            return getOutputDataFlag<ZenImuProperty_OutputRawAcc>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputRawAcc>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputRawMag)
-            return getOutputDataFlag<ZenImuProperty_OutputRawMag>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputRawMag>(m_cache.configBitset);
         else if (property == ZenImuProperty_OutputPressure)
-            return getOutputDataFlag<ZenImuProperty_OutputPressure>(m_cache.outputDataBitset);
+            return getOutputDataFlag<ZenImuProperty_OutputPressure>(m_cache.configBitset);
 
         return nonstd::make_unexpected(ZenError_UnknownProperty);
 
@@ -501,57 +512,30 @@ namespace zen
                 return streaming.error();
             }
         }
-        else if (property == ZenImuProperty_GyrUseThreshold)
-        {
-            if (auto streaming = getBool(ZenImuProperty_StreamData))
-            {
-                if (*streaming)
-                    if (auto error = setBool(ZenImuProperty_StreamData, false))
-                        return error;
-
-                auto guard = finally([&]() {
-                    if (*streaming)
-                        setBool(ZenImuProperty_StreamData, true);
-                    });
-
-                uint32_t iValue = value ? 1 : 0;
-                const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetGyrUseThreshold);
-                if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
-                    return error;
-
-                m_cache.gyrUseThreshold = value;
-                notifyPropertyChange(property, value);
-                return ZenError_None;
-            }
-            else
-            {
-                return streaming.error();
-            }
-        }
         else if (property == ZenImuProperty_OutputLowPrecision)
             return setPrecisionDataFlag(value);
         else if (property == ZenImuProperty_OutputLinearAcc)
-            return setOutputDataFlag<ZenImuProperty_OutputLinearAcc>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputLinearAcc>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputAltitude)
-            return setOutputDataFlag<ZenImuProperty_OutputAltitude>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputAltitude>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputQuat)
-            return setOutputDataFlag<ZenImuProperty_OutputQuat>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputQuat>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputEuler)
-            return setOutputDataFlag<ZenImuProperty_OutputEuler>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputEuler>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputAngularVel)
-            return setOutputDataFlag<ZenImuProperty_OutputAngularVel>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputAngularVel>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputHeaveMotion)
-            return setOutputDataFlag<ZenImuProperty_OutputHeaveMotion>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputHeaveMotion>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputTemperature)
-            return setOutputDataFlag<ZenImuProperty_OutputTemperature>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputTemperature>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputRawGyr)
-            return setOutputDataFlag<ZenImuProperty_OutputRawGyr>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputRawGyr>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputRawAcc)
-            return setOutputDataFlag<ZenImuProperty_OutputRawAcc>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputRawAcc>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputRawMag)
-            return setOutputDataFlag<ZenImuProperty_OutputRawMag>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputRawMag>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
         else if (property == ZenImuProperty_OutputPressure)
-            return setOutputDataFlag<ZenImuProperty_OutputPressure>(*this, m_communicator, m_cache.outputDataBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
+            return setOutputDataFlag<ZenImuProperty_OutputPressure>(*this, m_communicator, m_cache.configBitset, [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); }, m_streaming, value);
 
         return ZenError_UnknownProperty;
     }
@@ -832,7 +816,6 @@ namespace zen
 
         case ZenImuProperty_StreamData:
         case ZenImuProperty_GyrUseAutoCalibration:
-        case ZenImuProperty_GyrUseThreshold:
         case ZenImuProperty_OutputLowPrecision:
         case ZenImuProperty_OutputRawAcc:
         case ZenImuProperty_OutputRawGyr:
@@ -902,15 +885,15 @@ namespace zen
 
         uint32_t newBitset;
         if (value)
-            newBitset = m_cache.outputDataBitset | (1 << 22);
+            newBitset = m_cache.configBitset | (1 << 22);
         else
-            newBitset = m_cache.outputDataBitset & ~(1 << 22);
+            newBitset = m_cache.configBitset & ~(1 << 22);
 
         const uint32_t iValue = value ? 1 : 0;
         if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(EDevicePropertyV0::SetDataMode), static_cast<ZenProperty_t>(EDevicePropertyV0::SetDataMode), gsl::make_span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
             return error;
 
-        m_cache.outputDataBitset = newBitset;
+        m_cache.configBitset = newBitset;
         notifyPropertyChange(ZenImuProperty_OutputLowPrecision, value);
         return ZenError_None;
     }

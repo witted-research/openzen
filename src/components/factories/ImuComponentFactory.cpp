@@ -47,8 +47,8 @@ namespace zen
             if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config),
                 static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
             {
-                spdlog::debug("Loaded output bitset of legacy sensor: {}", bitset.value());
-                properties->setOutputDataBitset(*bitset);
+                spdlog::debug("Loaded config bitset of legacy sensor: {}", bitset.value());
+                properties->setConfigBitset(*bitset);
                 return std::make_unique<ImuComponent>(std::move(properties), communicator, version);
             }
             else

@@ -71,7 +71,6 @@ namespace zen
 
             case ZenImuProperty_StreamData:
             case ZenImuProperty_GyrUseAutoCalibration:
-            case ZenImuProperty_GyrUseThreshold:
             case ZenImuProperty_OutputLowPrecision:
             case ZenImuProperty_OutputRawAcc:
             case ZenImuProperty_OutputRawGyr:

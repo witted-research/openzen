@@ -61,8 +61,9 @@ namespace zen
         /** Returns the type of the property */
         ZenPropertyType type(ZenProperty_t property) const noexcept override;
 
-        /** Manually initializes the output-data bitset */
-        void setOutputDataBitset(uint32_t bitset) noexcept { m_cache.outputDataBitset = bitset; }
+        /** Manually initializes the config bitset from the sensor's config call. Will also
+           initialize other variables like the gyro autocalibration setting. */
+        void setConfigBitset(uint32_t bitset) noexcept;
 
     private:
         ZenError setPrecisionDataFlag(bool value) noexcept;
@@ -70,9 +71,8 @@ namespace zen
         struct IMUState
         {
             std::atomic_uint32_t samplingRate;
-            std::atomic_uint32_t outputDataBitset;
+            std::atomic_uint32_t configBitset;
             std::atomic_bool gyrAutoCalibration;
-            std::atomic_bool gyrUseThreshold;
         } m_cache;
 
         SyncedModbusCommunicator& m_communicator;

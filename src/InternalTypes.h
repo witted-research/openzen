@@ -47,7 +47,6 @@ enum class EDevicePropertyV0 : DeviceProperty_t
 
     StartGyroCalibration = 22,          // void
     SetGyrUseAutoCalibration = 23,      // bool
-    SetGyrUseThreshold = 24,            // uint32?
     SetGyrRange = 25,                   // uint32
     GetGyrRange = 26,                   // uint32
     SetAccBias = 27,                    // float[3]
