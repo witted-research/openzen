@@ -22,7 +22,7 @@ namespace zen
 
     ZenError ModbusCommunicator::send(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept
     {
-        spdlog::debug("sending function {}", function);
+        spdlog::debug("sending address {0} function {1} data {2}", address, function, util::spanToString(data));
         if (!data.empty() && data.data() == nullptr)
             return ZenError_IsNull;
 
