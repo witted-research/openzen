@@ -5,7 +5,7 @@
 #include <string>
 #include <iostream>
 
-#include "ImuHelpers.h"
+#include "ZenTypesHelpers.h"
 #include "SensorManager.h"
 #include "properties/ImuSensorPropertiesV0.h"
 
@@ -33,7 +33,7 @@ namespace zen
         auto enabled = m_properties->getBool(checkProperty);
         if (!enabled)
             return enabled;
-        
+
         if (*enabled) {
             targetArray[0] = parseFloat32(data);
         }
@@ -198,14 +198,14 @@ namespace zen
         // Internal sampling rate is fixed to 500Hz
         imuData.timestamp = (double)*reinterpret_cast<const uint32_t*>(data.data()) / static_cast<float>(m_cache.borrow()->samplingRate);
         data = data.subspan(sizeof(uint32_t));
-        
+
+        // to store sensor values which are not forwaded to the ImuData class for Ig1
         float unusedValue[3];
-        // not used for Ig1 atm
         if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputRawAcc, data, &imuData.aRaw[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
-        
+
         if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputAccCalibrated, data, &imuData.a[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
@@ -230,7 +230,7 @@ namespace zen
         else {
             return nonstd::make_unexpected(enabled.error());
         }
-        
+
         // alignment calibration also contains the static calibration correction
         if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputGyr0AlignCalib, data, &imuData.g[0])) {}
         else {

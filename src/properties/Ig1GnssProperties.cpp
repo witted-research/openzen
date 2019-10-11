@@ -28,38 +28,39 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
 
         static std::map< ZenProperty_t, unsigned int> outputGpsDataFlagMapping = {
             {ZenGnnsProperty_OutputNavPvtiTOW,0},
-            {ZenGnnsProperty_OutputNavPvtyear,1},
-            {ZenGnnsProperty_OutputNavPvtmonth,2},
+            {ZenGnnsProperty_OutputNavPvtYear,1},
+            {ZenGnnsProperty_OutputNavPvtMonth,2},
 
-            {ZenGnnsProperty_OutputNavPvtday,3},
-            {ZenGnnsProperty_OutputNavPvthour,4},
-            {ZenGnnsProperty_OutputNavPvtmin,5},
-            {ZenGnnsProperty_OutputNavPvtsec,6},
-            {ZenGnnsProperty_OutputNavPvtvalid,7},
+            {ZenGnnsProperty_OutputNavPvtDay,3},
+            {ZenGnnsProperty_OutputNavPvtHour,4},
+            {ZenGnnsProperty_OutputNavPvtMinute,5},
+            {ZenGnnsProperty_OutputNavPvtSecond,6},
+            {ZenGnnsProperty_OutputNavPvtValid,7},
             {ZenGnnsProperty_OutputNavPvttAcc,8},
 
-            {ZenGnnsProperty_OutputNavPvtnano,9},
-            {ZenGnnsProperty_OutputNavPvtfixType,10},
-            {ZenGnnsProperty_OutputNavPvtflags,11},
-            {ZenGnnsProperty_OutputNavPvtflags2,12},
-            {ZenGnnsProperty_OutputNavPvtnumSV,13},
+            {ZenGnnsProperty_OutputNavPvtNano,9},
+            {ZenGnnsProperty_OutputNavPvtFixType,10},
+            {ZenGnnsProperty_OutputNavPvtFlags,11},
+            {ZenGnnsProperty_OutputNavPvtFlags2,12},
+            {ZenGnnsProperty_OutputNavPvtNumSV,13},
 
-            {ZenGnnsProperty_OutputNavPvtlongitude,14},
-            {ZenGnnsProperty_OutputNavPvtlatitude,15},
-            {ZenGnnsProperty_OutputNavPvtheight,16},
+            {ZenGnnsProperty_OutputNavPvtLongitude,14},
+            {ZenGnnsProperty_OutputNavPvtLatitude,15},
+            {ZenGnnsProperty_OutputNavPvtHeight,16},
             {ZenGnnsProperty_OutputNavPvthMSL,17},
             {ZenGnnsProperty_OutputNavPvthAcc,18},
             {ZenGnnsProperty_OutputNavPvtvAcc,19},
-            {ZenGnnsProperty_OutputNavPvtvelN,20},
-            {ZenGnnsProperty_OutputNavPvtvelE,21},
-            {ZenGnnsProperty_OutputNavPvtvelD,22},
+            {ZenGnnsProperty_OutputNavPvtVelN,20},
+            {ZenGnnsProperty_OutputNavPvtVelE,21},
+            {ZenGnnsProperty_OutputNavPvtVelD,22},
             {ZenGnnsProperty_OutputNavPvtgSpeed,23},
-            {ZenGnnsProperty_OutputNavPvtheadMot,24},
+            {ZenGnnsProperty_OutputNavPvtHeadMot,24},
             {ZenGnnsProperty_OutputNavPvtsAcc,25},
-            {ZenGnnsProperty_OutputNavPvtheadAcc,26},
+            {ZenGnnsProperty_OutputNavPvtHeadAcc,26},
             {ZenGnnsProperty_OutputNavPvtpDOP,27},
-            {ZenGnnsProperty_OutputNavPvtheadVeh,28},
+            {ZenGnnsProperty_OutputNavPvtHeadVeh,28},
 
+            // these ones are in the second 32-bit part of the 64-bit
             {ZenGnnsProperty_OutputNavAttiTOW, 32 + 0},
             {ZenGnnsProperty_OutputNavAttVersion,32 + 1},
             {ZenGnnsProperty_OutputNavAttRoll,32 + 2},
@@ -77,12 +78,12 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
             {ZenGnnsProperty_OutputEsfStatusSensStatus,32 + 14}
         };
 
-        std::optional<bool> getOutputDataFlag(ZenProperty_t property, std::atomic_uint32_t& outputDataBitset) noexcept
+        std::optional<bool> getOutputDataFlag(ZenProperty_t property, std::atomic_uint64_t& outputDataBitset) noexcept
         {
             try {
                 auto flag_position = outputGpsDataFlagMapping.at(property);
 
-                return (outputDataBitset & (1 << flag_position)) != 0;
+                return (outputDataBitset & (uint64_t(1) << flag_position)) != 0;
             } catch (std::out_of_range &) {
                 spdlog::error("ZenProperty {0} not known for OutputGpsFlag", property);
                 return std::nullopt;
@@ -91,7 +92,7 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
 
         ZenError setAndSendGpsOutputDataBitset(Ig1GnssProperties& self, SyncedModbusCommunicator& communicator,
             ZenProperty_t property,
-            std::atomic_uint32_t& outputDataBitset, std::function<void(ZenProperty_t,SensorPropertyValue)> notifyPropertyChange,
+            std::atomic_uint64_t& outputDataBitset, std::function<void(ZenProperty_t,SensorPropertyValue)> notifyPropertyChange,
             bool streaming, bool value) noexcept
         {
             if (streaming)
@@ -105,15 +106,21 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
 
                 try {
                     unsigned int flag_location = outputGpsDataFlagMapping.at(property);
-                    uint32_t newBitset;
+                    uint64_t newBitset;
                     if (value)
-                        newBitset = outputDataBitset | (1 << flag_location);
+                        newBitset = outputDataBitset | (uint64_t(1) << flag_location);
                     else
-                        newBitset = outputDataBitset & ~(1 << flag_location);
+                        newBitset = outputDataBitset & ~(uint64_t(1) << flag_location);
+
+                    // split the 64-bit set onto 2 32-bit sets
+                    uint32_t newBitsetArray[2] = {
+                        uint32_t(newBitset),
+                        uint32_t(newBitset >> 32)
+                    };
 
                     if (auto error = communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(EDevicePropertyV1::SetGpsTransmitData),
                         static_cast<ZenProperty_t>(EDevicePropertyV1::SetGpsTransmitData),
-                        gsl::make_span(reinterpret_cast<const std::byte*>(&newBitset), sizeof(newBitset))))
+                        gsl::make_span(reinterpret_cast<const std::byte*>(&newBitsetArray), sizeof(newBitsetArray))))
                         return error;
 
                     outputDataBitset = newBitset;
@@ -166,7 +173,7 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
 
         auto outputFlag = getOutputDataFlag(property, m_cache.outputGpsDataBitset);
 
-        if (outputFlag) {
+        if (!outputFlag.has_value()) {
             return nonstd::make_unexpected(ZenError_UnknownProperty);
         } else {
             return *outputFlag;
@@ -191,12 +198,10 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
             }
             return ZenError_None;
         } else {
-            setAndSendGpsOutputDataBitset(*this, m_communicator, property,  m_cache.outputGpsDataBitset,
+            return setAndSendGpsOutputDataBitset(*this, m_communicator, property,  m_cache.outputGpsDataBitset,
                 [=](ZenProperty_t property, SensorPropertyValue value) { notifyPropertyChange(property, value); },
                     m_streaming, value);
-         }
-
-        return ZenError_UnknownProperty;
+        }
     }
 
     ZenPropertyType Ig1GnssProperties::type(ZenProperty_t property) const noexcept

@@ -27,16 +27,29 @@ namespace zen
          */
         ZenSensorInitError init() noexcept override;
 
+        /**
+        Will send the command to store the GNSS navigation data to the Ig1
+        */
         ZenError close() noexcept override;
 
+        /**
+        Not implemented for GNSS Component
+        */
         ZenError processData(uint8_t function, gsl::span<const std::byte> data) noexcept override;
 
+        /**
+        Parses and publishes incomping sensor data
+        */
         nonstd::expected<ZenEventData, ZenError> processEventData(ZenEvent_t eventType,
             gsl::span<const std::byte> data) noexcept override;
 
         std::string_view type() const noexcept override { return g_zenSensorType_Gnss; }
 
     private:
+        /**
+        Important for IG1 to store the downloaded satellite GNSS data. Otherwise the GPS will always have
+        a cold start and it takes > 30 minutes to get a good fix.
+        */
         ZenError storeGnssState() noexcept;
         nonstd::expected<ZenEventData, ZenError> parseSensorData(gsl::span<const std::byte> data) const noexcept;
         SyncedModbusCommunicator & m_communicator;

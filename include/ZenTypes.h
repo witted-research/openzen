@@ -208,7 +208,7 @@ typedef struct ZenImuData
     /// Temperature.
     float temperature;
 
-    /// Sampling time of the data.
+    /// Sampling time of the data in seconds
     double timestamp;
 
     ZenHeaveMotionData hm;
@@ -251,33 +251,37 @@ the IMU sensors.
 */
 typedef struct ZenGnssData
 {
+    /// Sampling time of the data in seconds
+    double timestamp;
+
     /// Latitude measurement provided by the GNSS
     /// or the IMU/GNSS sensor fusion
     float latitude;
 
-    /// Accuracy of the horizontal measurement in mm
+    /// Accuracy of the horizontal measurement in m
     float horizontalAccuracy;
 
     /// Longitude measurement provided by the GNSS
     /// or the IMU/GNSS sensor fusion
     float longitude;
 
-    /// Accuracy of the vertical position measurement in mm
+    /// Accuracy of the vertical position measurement in m
     float verticalAccuracy;
 
-    /// height above WGS84 ellipsoid
+    /// height above WGS84 ellipsoid in m
     float height;
 
-    /// Heading in degrees
+    /// Heading in degrees in clockwise counting
+    /// and 0 degree being north
     float heading;
 
     /// Heading Accuracy in degrees
     float headingAccuracy;
 
-    /// velocity over ground in mm/s
+    /// velocity over ground in m/s
     float velocity;
 
-    /// velocity accuracy over ground in mm/s
+    /// velocity accuracy over ground in m/s
     float velocityAccuracy;
 
     /// type of the GNSS fix and dead-reckoning mode
@@ -285,7 +289,31 @@ typedef struct ZenGnssData
 
     /// the number of satellites that have been used to
     /// compute the position
-    uint8_t numberSatelliteUsed;
+    uint8_t numberSatellitesUsed;
+
+    /// Year in UTC
+    uint16_t year;
+
+    /// Month in UTC
+    uint8_t month;
+
+    /// Day in UTC
+    uint8_t day;
+
+    /// Hour in UTC
+    uint8_t hour;
+
+    /// Minute in UTC
+    uint8_t minute;
+
+    /// Second in UTC, exact time rounded to the nearest second. See below.
+    uint8_t second;
+
+    /// All the date and time values above are rounded
+    /// so they can be represented as integeres. This
+    /// is the time in nanoseconds that the above date & time values need
+    /// to be shifted to give to exact time measured by the GNSS receiver.
+    int32_t nanoSecondCorrection;
 
 } ZenGnssData;
 
@@ -518,34 +546,34 @@ typedef enum EZenGnssProperty : ZenProperty_t
     ZenGnssProperty_Invalid = 0,
 
     ZenGnnsProperty_OutputNavPvtiTOW,
-    ZenGnnsProperty_OutputNavPvtyear,
-    ZenGnnsProperty_OutputNavPvtmonth,
-    ZenGnnsProperty_OutputNavPvtday,
-    ZenGnnsProperty_OutputNavPvthour,
-    ZenGnnsProperty_OutputNavPvtmin,
-    ZenGnnsProperty_OutputNavPvtsec,
-    ZenGnnsProperty_OutputNavPvtvalid,
+    ZenGnnsProperty_OutputNavPvtYear,
+    ZenGnnsProperty_OutputNavPvtMonth,
+    ZenGnnsProperty_OutputNavPvtDay,
+    ZenGnnsProperty_OutputNavPvtHour,
+    ZenGnnsProperty_OutputNavPvtMinute,
+    ZenGnnsProperty_OutputNavPvtSecond,
+    ZenGnnsProperty_OutputNavPvtValid,
     ZenGnnsProperty_OutputNavPvttAcc,
-    ZenGnnsProperty_OutputNavPvtnano,
-    ZenGnnsProperty_OutputNavPvtfixType,
-    ZenGnnsProperty_OutputNavPvtflags,
-    ZenGnnsProperty_OutputNavPvtflags2,
-    ZenGnnsProperty_OutputNavPvtnumSV,
-    ZenGnnsProperty_OutputNavPvtlongitude,
-    ZenGnnsProperty_OutputNavPvtlatitude,
-    ZenGnnsProperty_OutputNavPvtheight,
+    ZenGnnsProperty_OutputNavPvtNano,
+    ZenGnnsProperty_OutputNavPvtFixType,
+    ZenGnnsProperty_OutputNavPvtFlags,
+    ZenGnnsProperty_OutputNavPvtFlags2,
+    ZenGnnsProperty_OutputNavPvtNumSV,
+    ZenGnnsProperty_OutputNavPvtLongitude,
+    ZenGnnsProperty_OutputNavPvtLatitude,
+    ZenGnnsProperty_OutputNavPvtHeight,
     ZenGnnsProperty_OutputNavPvthMSL,
     ZenGnnsProperty_OutputNavPvthAcc,
     ZenGnnsProperty_OutputNavPvtvAcc,
-    ZenGnnsProperty_OutputNavPvtvelN,
-    ZenGnnsProperty_OutputNavPvtvelE,
-    ZenGnnsProperty_OutputNavPvtvelD,
+    ZenGnnsProperty_OutputNavPvtVelN,
+    ZenGnnsProperty_OutputNavPvtVelE,
+    ZenGnnsProperty_OutputNavPvtVelD,
     ZenGnnsProperty_OutputNavPvtgSpeed,
-    ZenGnnsProperty_OutputNavPvtheadMot,
+    ZenGnnsProperty_OutputNavPvtHeadMot,
     ZenGnnsProperty_OutputNavPvtsAcc,
-    ZenGnnsProperty_OutputNavPvtheadAcc,
+    ZenGnnsProperty_OutputNavPvtHeadAcc,
     ZenGnnsProperty_OutputNavPvtpDOP,
-    ZenGnnsProperty_OutputNavPvtheadVeh,
+    ZenGnnsProperty_OutputNavPvtHeadVeh,
 
     ZenGnnsProperty_OutputNavAttiTOW,
     ZenGnnsProperty_OutputNavAttVersion,

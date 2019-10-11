@@ -4,8 +4,8 @@
 #include <math.h>
 #include <string>
 
-#include "ImuHelpers.h"
 #include "SensorManager.h"
+#include "ZenTypesHelpers.h"
 #include "properties/ImuSensorPropertiesV0.h"
 
 namespace zen

@@ -90,6 +90,7 @@ set(components_sources
     src/components/ImuIg1Component.h
     src/components/GnssComponent.cpp
     src/components/GnssComponent.h
+    src/components/SensorParsingUtil.h
 )
 
 set(components_factories_sources

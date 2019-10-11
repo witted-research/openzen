@@ -27,13 +27,13 @@ namespace zen
         ZenPropertyType type(ZenProperty_t property) const noexcept override;
 
         /** Manually initializes the output-data bitset */
-        void setGpsOutputDataBitset(uint32_t bitset) noexcept { m_cache.outputGpsDataBitset = bitset; }
+        void setGpsOutputDataBitset(uint64_t bitset) noexcept { m_cache.outputGpsDataBitset = bitset; }
 
     private:
 
         struct GnssState
         {
-            std::atomic_uint32_t outputGpsDataBitset;
+            std::atomic_uint64_t outputGpsDataBitset;
         } m_cache;
 
         SyncedModbusCommunicator& m_communicator;
