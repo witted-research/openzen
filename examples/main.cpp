@@ -55,7 +55,7 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
                     break;
                 }
             }
-            else
+            else if (event.component.handle == 1)
             {
                 switch (event.eventType)
                 {
@@ -71,6 +71,25 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
                             << "\t z = " << event.data.imuData.g[2] << std::endl;
                     }
                     break;
+                }
+            }
+            else if (event.component.handle == 2)
+            {
+                switch (event.eventType)
+                {
+                case ZenGnssEvent_Sample:
+                        std::cout << "Event type: " << event.eventType << std::endl;
+                        std::cout << "> Event component: " << uint32_t(event.component.handle) << std::endl;
+                        std::cout << "> GPS Fix: \t = " << event.data.gnssData.fixType << std::endl;
+                        std::cout << "> Longitude: \t = " << event.data.gnssData.longitude
+                            << "   Latitude: \t = " << event.data.gnssData.latitude << std::endl;
+                        std::cout << " > GPS Time " << int(event.data.gnssData.year) << "/"
+                            << int(event.data.gnssData.month) << "/"
+                            << int(event.data.gnssData.day) << " "
+                            << int(event.data.gnssData.hour) << ":"
+                            << int(event.data.gnssData.minute) << ":"
+                            << int(event.data.gnssData.second) << " UTC" << std::endl;
+                        break;
                 }
             }
         }
