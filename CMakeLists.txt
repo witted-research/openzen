@@ -38,7 +38,6 @@ set(zen_includes
 )
 
 set(zen_sources
-    src/ImuHelpers.h
     src/InternalTypes.h
     src/ISensorProperties.cpp
     src/ISensorProperties.h
