@@ -1,5 +1,5 @@
-#ifndef ZEN_API_IMUHELPERS_H_
-#define ZEN_API_IMUHELPERS_H_
+#ifndef ZEN_ZENTYPESHELPER_H_
+#define ZEN_ZENTYPESHELPER_H_
 
 #include "ZenTypes.h"
 
@@ -23,6 +23,9 @@ namespace zen
                 m[i * 3 + j] = i == j ? 1.f : 0.f;
     }
 
+    /**
+    Set all data fields of the imu data class to zero or sensible values
+    */
     inline void imuDataReset(ZenImuData& imuData)
     {
         vec3Zero(imuData.a);
@@ -43,6 +46,24 @@ namespace zen
         imuData.temperature = 0.f;
         imuData.timestamp = 0.;
         imuData.hm.yHeave = 0.f;
+    }
+
+    /**
+    Set all data fields of the gnss data class to zero or sensible values
+    */
+    inline void gnssDataReset(ZenGnssData& gnssData)
+    {
+        gnssData.latitude = 0.0f;
+        gnssData.horizontalAccuracy = 0.0f;
+        gnssData.longitude = 0.0f;
+        gnssData.verticalAccuracy = 0.0f;
+        gnssData.height = 0.0f;
+        gnssData.heading = 0.0f;
+        gnssData.headingAccuracy = 0.0f;
+        gnssData.velocity = 0.0f;
+        gnssData.velocityAccuracy = 0.0f;
+        gnssData.fixType = ZenGnssFixType_NoFix;
+        gnssData.numberSatellitesUsed = 0;
     }
 }
 

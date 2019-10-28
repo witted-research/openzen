@@ -27,12 +27,15 @@ namespace zen
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
             }
 
-            if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u,
+            uint32_t gpsBitset[2];
+            auto sendResult = communicator.sendAndWaitForArray(0u,
                 static_cast<DeviceProperty_t>(EDevicePropertyV1::GetGpsTransmitData),
-                static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGpsOutputDataBitset), {}))
+                static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGpsOutputDataBitset), {},
+                gsl::make_span(gpsBitset, sizeof(uint32_t) * 2));
+            if (sendResult.first == ZenError_None)
             {
-                spdlog::debug("Loaded GPS output bitset of Ig1 sensor: {}", bitset.value());
-                properties->setGpsOutputDataBitset(*bitset);
+                const uint64_t gpsBitsetOut = (uint64_t(gpsBitset[1]) << 32) | uint64_t(gpsBitset[0]);
+                properties->setGpsOutputDataBitset(gpsBitsetOut);
                 return std::make_unique<GnssComponent>(std::move(properties), communicator, version);
             }
             else

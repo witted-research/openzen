@@ -5,10 +5,9 @@
 #include <string>
 #include <spdlog/spdlog.h>
 
-#include "ImuHelpers.h"
-///#include "GnssHelpers.h"
-#include "SensorManager.h"
+#include "ZenTypesHelpers.h"
 #include "properties/ImuSensorPropertiesV0.h"
+#include "components/SensorParsingUtil.h"
 
 #include <iostream>
 
@@ -59,50 +58,159 @@ namespace zen
         return storeGnssState();
     }
 
-    nonstd::expected<ZenEventData, ZenError> GnssComponent::parseSensorData(gsl::span<const std::byte> /*data*/) const noexcept
+    nonstd::expected<ZenEventData, ZenError> GnssComponent::parseSensorData(gsl::span<const std::byte> data) const noexcept
     {
-        // Any properties that are retrieved here should be cached locally, because it
-        // will take too much time to retrieve from the sensor!
-        ZenEventData eventData;
-
-/*
         ZenEventData eventData;
         ZenGnssData& gnssData = eventData.gnssData;
         gnssDataReset(gnssData);
 
-        const auto begin = data.begin();
-
-        const auto size = data.size();
-        const auto structSize = sizeof(Ig1RawGnss::IG1GpsData);
-        if (size != structSize) {
-            spdlog::warn("GNSS data packet size does not match with C struct");
+        // check consistency of data package size
+        if (data.size() < sizeof(uint32_t)) {
+            spdlog::error("GPS data package size {0} too small, should at least contain the timestamp", data.size());
             return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
         }
-        if (std::distance(begin, data.begin() + structSize) != size) {
-            std::cout << " data packages to small or too large for a GNSS packet" << std::endl;
-            return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+
+        uint32_t timestamp;
+        sensor_parsing_util::parseAndStoreScalar(data, &timestamp);
+        gnssData.timestamp = double(timestamp) * 0.002;
+
+        // most of the read out data are not transferred to the OpenZen data structure. Still we need to parse
+        // the data buffer to end up at the right positions to read out the values we want.
+        int32_t int32_not_used;
+        uint32_t uint32_not_used;
+        uint16_t uint16_not_used;
+        uint8_t uint8_not_used;
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtiTOW),
+            m_properties, data, &uint32_not_used);
+
+        // date and time information
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtYear),
+            m_properties, data, &gnssData.year);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtMonth),
+            m_properties, data, &gnssData.month);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtDay),
+            m_properties, data, &gnssData.day);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHour),
+            m_properties, data, &gnssData.hour);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtMinute),
+            m_properties, data, &gnssData.minute);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtSecond),
+            m_properties, data, &gnssData.second);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtValid),
+            m_properties, data, &uint8_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvttAcc),
+            m_properties, data, &uint32_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtNano),
+            m_properties, data, &gnssData.nanoSecondCorrection);
+
+        uint8_t fixType;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtFixType),
+            m_properties, data, &fixType)) {
+            eventData.gnssData.fixType = ZenGnssFixType(fixType);
         }
-        Ig1RawGnss::IG1GpsData rawGnssData;
-        // raw copy the content
-        memcpy(&rawGnssData, data.data(), data.size());
 
-        // convert
-        gnssData.latitude = integerToScaledFloat(rawGnssData.pvt.latitude, -7);
-        gnssData.longitude = integerToScaledFloat(rawGnssData.pvt.longitude, -7);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtFlags),
+            m_properties, data, &uint8_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtFlags2),
+            m_properties, data, &uint8_not_used);
 
-        gnssData.horizontalAccuracy = float(rawGnssData.pvt.hAcc);
-        gnssData.verticalAccuracy = float(rawGnssData.pvt.vAcc);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtNumSV),
+            m_properties, data, &gnssData.numberSatellitesUsed);
 
-        gnssData.height = float( rawGnssData.pvt.height );
+        int32_t longitude;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtLongitude),
+            m_properties, data, &longitude)) {
+            gnssData.longitude = sensor_parsing_util::integerToScaledFloat(longitude, -7);
+        }
 
-        gnssData.heading = integerToScaledFloat(rawGnssData.pvt.headVeh, -5);
-        gnssData.headingAccuracy = integerToScaledFloat(rawGnssData.pvt.headAcc, -5);
+        int32_t latitude;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtLatitude),
+            m_properties, data, &latitude))
+        {
+            gnssData.latitude = sensor_parsing_util::integerToScaledFloat(latitude, -7);
+        }
 
-        gnssData.velocity = float(rawGnssData.pvt.gSpeed);
-        gnssData.velocityAccuracy = float(rawGnssData.pvt.vAcc);
-        gnssData.fixType = (ZenGnssFixType) rawGnssData.pvt.fixType;
-        gnssData.numberSatelliteUsed = rawGnssData.pvt.numSV;
-*/
+        int32_t height;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeight),
+            m_properties, data, &height)) {
+            gnssData.height = sensor_parsing_util::integerToScaledFloat(height, -3);
+        }
+
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvthMSL),
+            m_properties, data, &int32_not_used );
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvthAcc),
+            m_properties, data, &uint32_not_used );
+        
+        uint32_t velocityAccuracy;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtvAcc),
+            m_properties, data, &velocityAccuracy)) {
+            gnssData.velocityAccuracy = sensor_parsing_util::integerToScaledFloat(velocityAccuracy, -3);
+        }
+
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtVelN),
+            m_properties, data, &int32_not_used );
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtVelE),
+            m_properties, data, &int32_not_used );
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtVelD),
+            m_properties, data, &int32_not_used );
+
+        int32_t velocity;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtgSpeed),
+            m_properties, data, &velocity)) {
+            gnssData.velocity = sensor_parsing_util::integerToScaledFloat(velocity, -3);
+        }
+
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadMot),
+            m_properties, data, &int32_not_used );
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtsAcc),
+            m_properties, data, &uint32_not_used );
+
+        int32_t headingAcc;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadAcc),
+            m_properties, data, &headingAcc)) {
+            gnssData.headingAccuracy = sensor_parsing_util::integerToScaledFloat(headingAcc, -5);
+        }
+
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtpDOP),
+            m_properties, data, &uint16_not_used);
+        
+        int32_t heading;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadVeh),
+            m_properties, data, &heading)) {
+            gnssData.heading = sensor_parsing_util::integerToScaledFloat(heading, -5);
+        }
+
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttiTOW),
+            m_properties, data, &uint32_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttVersion),
+            m_properties, data, &uint8_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttRoll),
+            m_properties, data, &int32_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttPitch),
+            m_properties, data, &int32_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttHeading),
+            m_properties, data, &int32_not_used);
+
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttAccRoll),
+            m_properties, data, &uint32_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttAccPitch),
+            m_properties, data, &uint32_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttAccHeading),
+            m_properties, data, &uint32_not_used);
+
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputEsfStatusiTOW),
+            m_properties, data, &uint32_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputEsfStatusVersion),
+            m_properties, data, &uint8_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputEsfStatusInitStatus1),
+            m_properties, data, &uint8_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputEsfStatusInitStatus2),
+            m_properties, data, &uint8_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputEsfStatusFusionMode),
+            m_properties, data, &uint8_not_used);
+        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputEsfStatusNumSens),
+            m_properties, data, &uint8_not_used);
+
         return eventData;
     }
 }

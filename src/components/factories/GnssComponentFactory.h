@@ -5,6 +5,10 @@
 
 namespace zen
 {
+    /**
+    Initializes the GNSS component for an LPMS-IG1 sensor by loading the GPS output data flags
+    and setting them in the newly create GnssComponent.
+    */
     class GnssComponentFactory : public IComponentFactory
     {
     public:

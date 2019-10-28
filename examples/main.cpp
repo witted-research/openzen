@@ -17,6 +17,9 @@ std::condition_variable g_discoverCv;
 std::mutex g_discoverMutex;
 std::atomic_bool g_terminate(false);
 
+std::atomic<uintptr_t> g_imuHandle;
+std::atomic<uintptr_t> g_gnssHandle;
+
 using namespace zen;
 
 namespace
@@ -55,7 +58,7 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
                     break;
                 }
             }
-            else
+            else if (( g_imuHandle > 0) && (event.component.handle == g_imuHandle))
             {
                 switch (event.eventType)
                 {
@@ -73,6 +76,25 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
                     break;
                 }
             }
+            else if (( g_gnssHandle > 0) && (event.component.handle == g_gnssHandle))
+            {
+                switch (event.eventType)
+                {
+                case ZenGnssEvent_Sample:
+                        std::cout << "Event type: " << event.eventType << std::endl;
+                        std::cout << "> Event component: " << uint32_t(event.component.handle) << std::endl;
+                        std::cout << "> GPS Fix: \t = " << event.data.gnssData.fixType << std::endl;
+                        std::cout << "> Longitude: \t = " << event.data.gnssData.longitude
+                            << "   Latitude: \t = " << event.data.gnssData.latitude << std::endl;
+                        std::cout << " > GPS Time " << int(event.data.gnssData.year) << "/"
+                            << int(event.data.gnssData.month) << "/"
+                            << int(event.data.gnssData.day) << " "
+                            << int(event.data.gnssData.hour) << ":"
+                            << int(event.data.gnssData.minute) << ":"
+                            << int(event.data.gnssData.second) << " UTC" << std::endl;
+                        break;
+                }
+            }
         }
     }
 
@@ -82,6 +104,9 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
 int main(int argc, char *argv[])
 {
     ZenSetLogLevel(ZenLogLevel_Info);
+
+    g_imuHandle = 0;
+    g_gnssHandle = 0;
 
     auto clientPair = make_client();
     auto& clientError = clientPair.first;
@@ -147,6 +172,10 @@ int main(int argc, char *argv[])
         return ZenError_WrongSensorType;
     }
 
+    // store the handle to the IMU to identify data coming from the imu
+    // in our data processing thread
+    g_imuHandle = imu.component().handle;
+
     // Get a sensor property
     auto getPair = sensor.getInt32Property(ZenSensorProperty_TimeOffset);
     auto& timeError = getPair.first;
@@ -171,6 +200,19 @@ int main(int argc, char *argv[])
         return timeError;
     }
     std::cout << "Sensor Model: " << sensorModelName << std::endl;
+
+    // check if a Gnss component is present on this sensor
+    auto gnssPair = sensor.getAnyComponentOfType(g_zenSensorType_Gnss);
+    auto& hasGnss = gnssPair.first;
+    auto gnss = gnssPair.second;
+
+    if (hasGnss)
+    {
+        // store the handle to the Gnss to identify data coming from the Gnss
+        // in our data processing thread
+        g_gnssHandle = gnss.component().handle;
+        std::cout << "Gnss Component present on sensor" << std::endl;
+    }
 
     // Enable sensor streaming
     if (auto error = imu.setBoolProperty(ZenImuProperty_StreamData, true))

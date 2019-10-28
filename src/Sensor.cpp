@@ -375,8 +375,8 @@ namespace zen
                 case EDevicePropertyInternal::ConfigGpsOutputDataBitset:
                     if (data.size() != sizeof(uint32_t) * 2)
                         return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGpsOutputDataBitset),
-                        ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
+                    return m_communicator.publishArray(static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGpsOutputDataBitset),
+                        ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
 
                 default:
                     return ZenError_Io_UnsupportedFunction;
@@ -403,7 +403,13 @@ namespace zen
                     return ZenError_None;
 
                 case EDevicePropertyV1::GetRawGpsSensorData:
-                    // ignore for now
+                    if (m_initialized)
+                    {
+                        if (auto eventData = m_components[1]->processEventData(ZenGnssEvent_Sample, data))
+                            publishEvent({ ZenGnssEvent_Sample, {m_token}, {2}, std::move(*eventData) });
+                        else
+                            return eventData.error();
+                    }
                     return ZenError_None;
 
                 default:
