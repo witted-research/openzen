@@ -157,57 +157,43 @@ namespace zen
 
     std::pair<ZenError, size_t> LegacyImuProperties::getArray(ZenProperty_t property, ZenPropertyType propertyType, gsl::span<std::byte> buffer) noexcept
     {
-        if (isArray(property))
-        {
-            if (propertyType != type(property))
-            {
-                return std::make_pair(ZenError_WrongDataType, buffer.size());
-            }
+        if (!isArray(property))
+            return std::make_pair(ZenError_UnknownProperty, buffer.size());
 
-            if (property == ZenImuProperty_SupportedSamplingRates)
-                return imu::v0::supportedSamplingRates(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
-            else if (property == ZenImuProperty_SupportedFilterModes)
-                return imu::v0::supportedFilterModes(buffer);
-            else if (property == ZenImuProperty_AccSupportedRanges)
-                return imu::v0::supportedAccRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
-            else if (property == ZenImuProperty_GyrSupportedRanges)
-                return imu::v0::supportedGyrRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
-            else if (property == ZenImuProperty_MagSupportedRanges)
-                return imu::v0::supportedMagRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
-            else
-            {
-                if (auto streaming = getBool(ZenImuProperty_StreamData))
-                {
-                    if (*streaming)
-                        if (auto error = setBool(ZenImuProperty_StreamData, false))
-                            return std::make_pair(error, buffer.size());
+        if (propertyType != type(property))
+            return std::make_pair(ZenError_WrongDataType, buffer.size());
 
-                    auto guard = finally([&]() {
-                        if (*streaming)
-                            setBool(ZenImuProperty_StreamData, true);
-                    });
+        if (property == ZenImuProperty_SupportedSamplingRates)
+            return imu::v0::supportedSamplingRates(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+        else if (property == ZenImuProperty_SupportedFilterModes)
+            return imu::v0::supportedFilterModes(buffer);
+        else if (property == ZenImuProperty_AccSupportedRanges)
+            return imu::v0::supportedAccRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+        else if (property == ZenImuProperty_GyrSupportedRanges)
+            return imu::v0::supportedGyrRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+        else if (property == ZenImuProperty_MagSupportedRanges)
+            return imu::v0::supportedMagRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
 
-                    const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, true));
-                    switch (propertyType)
-                    {
-                    case ZenPropertyType_Float:
-                        return m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(reinterpret_cast<float*>(buffer.data()), buffer.size()));
+        auto streaming = getBool(ZenImuProperty_StreamData);
+        if (!streaming)
+            return std::make_pair(streaming.error(), buffer.size());
 
-                    case ZenPropertyType_Int32:
-                        return m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+        if (*streaming)
+            if (auto error = setBool(ZenImuProperty_StreamData, false))
+                return std::make_pair(error, buffer.size());
 
-                    default:
-                        return std::make_pair(ZenError_WrongDataType, buffer.size());
-                    }
-                }
-                else
-                {
-                    return std::make_pair(streaming.error(), buffer.size());
-                }
-            }
-        }
+        auto guard = finally([&]() {
+            if (*streaming)
+                setBool(ZenImuProperty_StreamData, true);
+            });
 
-        return std::make_pair(ZenError_UnknownProperty, buffer.size());
+        const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, true));
+        if (propertyType == ZenPropertyType_Float)
+            return m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(reinterpret_cast<float*>(buffer.data()), buffer.size()));
+        else if (propertyType == ZenPropertyType_Int32)
+            return m_communicator.sendAndWaitForArray(0, function, function, {}, gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+
+        return std::make_pair(ZenError_WrongDataType, buffer.size());
     }
 
     nonstd::expected<bool, ZenError> LegacyImuProperties::getBool(ZenProperty_t property) noexcept
