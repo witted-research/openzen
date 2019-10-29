@@ -9,6 +9,7 @@
 #include <spdlog/sinks/stdout_sinks.h>
 
 #include "SensorClient.h"
+#include "components/GnssComponent.h"
 
 namespace
 {
@@ -1068,3 +1069,34 @@ ZEN_API ZenPropertyType ZenSensorComponentPropertyType(ZenClientHandle_t clientH
         return ZenPropertyType_Invalid;
     }
 }
+
+
+ZEN_API ZenError ZenSensorComponentGnnsForwardRtkCorrections(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle,
+    const char* const /*rtkCorrectionSource*/,
+    const char* const hostname,
+    uint16_t port)
+{
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+        {
+            if (auto component = getComponent(sensor, componentHandle))
+            {
+                auto gnssComponent = static_cast<zen::GnssComponent *>(component);
+                return gnssComponent->forwardRtkCorrections(zen::RtkCorrectionSource::RTCM3NetworkStream,
+                    hostname, port);
+            }
+            else
+                return ZenError_InvalidComponentHandle;
+        }
+        else
+        {
+            return ZenError_InvalidSensorHandle;
+        }
+    }
+    else
+    {
+        return ZenError_InvalidClientHandle;
+    }
+}
+

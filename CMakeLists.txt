@@ -196,7 +196,6 @@ else()
     set(io_bluetooth_sources)
 endif()
 
-
 if(WIN32)
 
     set(io_can_sources ${io_can_sources}
@@ -340,6 +339,7 @@ set (zen_libs
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
         spdlog
+        librtk
         ${zen_optional_libs}
 )
 

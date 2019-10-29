@@ -245,6 +245,22 @@ typedef enum ZenGnssFixType
 } ZenGnssFixType;
 
 /**
+Types of RTK carrier phase correction methods used for the
+navigation solution.
+*/
+typedef enum ZenGnssFixCarrierPhaseSolution
+{
+    /// No carrier phase method used
+    ZenGnssFixCarrierPhaseSolution_None = 0,
+
+    /// Carrier phase method using floating ambiguities for solution
+    ZenGnssFixCarrierPhaseSolution_FloatAmbiguities = 1,
+
+    /// Carrier phase method using fixed ambiguities for solution
+    ZenGnssFixCarrierPhaseSolution_FixedAmbiguities = 2,
+} ZenGnssFixDifferientialCorrection;
+
+/**
 Global position, velocity and heading information measured using
 a global navigation satellite system (GNSS) and dead reckoning methods with
 the IMU sensors.
@@ -286,6 +302,10 @@ typedef struct ZenGnssData
 
     /// type of the GNSS fix and dead-reckoning mode
     ZenGnssFixType fixType;
+
+    /// Additional RTK carrier phase correction applied
+    /// to improve the position solution
+    ZenGnssFixCarrierPhaseSolution carrierPhaseSolution;
 
     /// the number of satellites that have been used to
     /// compute the position

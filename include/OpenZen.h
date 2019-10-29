@@ -195,6 +195,12 @@ namespace zen
         {
             return ZenSensorComponentSetUInt64Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
+
+        ZenError forwardRtkCorrections(const char* const rtkCorrectionSource,
+            const char* const hostname,
+            uint16_t port) noexcept {
+            return ZenSensorComponentGnnsForwardRtkCorrections(m_clientHandle, m_sensorHandle, m_componentHandle, rtkCorrectionSource, hostname, port);
+        }
     };
 
     /**

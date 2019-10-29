@@ -204,5 +204,11 @@ extern "C" {
     /** Returns the type of the property */
     ZEN_API ZenPropertyType ZenSensorComponentPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property);
 
+    /** Enable forwarding of RTK corrections from a RTK correction source to an RTK-enabled IG1 */
+    ZEN_API ZenError ZenSensorComponentGnnsForwardRtkCorrections(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle,
+        const char* const rtkCorrectionSource,
+        const char* const hostname,
+        uint16_t port);
+
 }
 #endif

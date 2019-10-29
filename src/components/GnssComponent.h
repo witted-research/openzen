@@ -4,6 +4,9 @@
 #include <atomic>
 #include <chrono>
 #include <optional>
+#include <memory>
+
+#include <librtk/RTCM3NetworkSource.h>
 
 #include "SensorComponent.h"
 #include "communication/SyncedModbusCommunicator.h"
@@ -13,6 +16,10 @@
 
 namespace zen
 {
+   enum class RtkCorrectionSource {
+      RTCM3NetworkStream
+   };
+
     /**
     This component parses the GNSS data provided by an Ig1 sensor
     */
@@ -38,6 +45,14 @@ namespace zen
         ZenError processData(uint8_t function, gsl::span<const std::byte> data) noexcept override;
 
         /**
+        Call this to start forwarding RTK corrections
+        */
+        ZenError forwardRtkCorrections(RtkCorrectionSource correction,
+            std::string const& hostname, unsigned short port ) noexcept;
+
+        ZenError stopRtkCorrections() noexcept;
+
+        /**
         Parses and publishes incomping sensor data
         */
         nonstd::expected<ZenEventData, ZenError> processEventData(ZenEvent_t eventType,
@@ -53,6 +68,7 @@ namespace zen
         ZenError storeGnssState() noexcept;
         nonstd::expected<ZenEventData, ZenError> parseSensorData(gsl::span<const std::byte> data) const noexcept;
         SyncedModbusCommunicator & m_communicator;
+        std::unique_ptr<RTCM3NetworkSource> m_rtcm3network;
     };
 }
 #endif

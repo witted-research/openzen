@@ -92,6 +92,17 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
                             << int(event.data.gnssData.hour) << ":"
                             << int(event.data.gnssData.minute) << ":"
                             << int(event.data.gnssData.second) << " UTC" << std::endl;
+
+                        if (event.data.gnssData.carrierPhaseSolution == ZenGnssFixCarrierPhaseSolution_None) {
+                            std::cout << " > RTK not used" << std::endl;
+                        }
+                        else if (event.data.gnssData.carrierPhaseSolution == ZenGnssFixCarrierPhaseSolution_FloatAmbiguities) {
+                            std::cout << " > RTK used with float ambiguities" << std::endl;
+                        }
+                        else if (event.data.gnssData.carrierPhaseSolution == ZenGnssFixCarrierPhaseSolution_FixedAmbiguities) {
+                            std::cout << " > RTK used with fixed ambiguities" << std::endl;
+                        }
+
                         break;
                 }
             }
@@ -212,6 +223,14 @@ int main(int argc, char *argv[])
         // in our data processing thread
         g_gnssHandle = gnss.component().handle;
         std::cout << "Gnss Component present on sensor" << std::endl;
+
+        // enable RTK forwarding
+        if (gnss.forwardRtkCorrections("RTCM3", "192.168.1.117", 9000) != ZenError_None) {
+            std::cout << "Cannot set RTK correction forwarding" << std::endl;
+        }
+        else {
+            std::cout << "RTK correction forwarding started" << std::endl;
+        }
     }
 
     // Enable sensor streaming

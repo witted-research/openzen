@@ -14,6 +14,7 @@ add_subdirectory(nlohmann-json EXCLUDE_FROM_ALL)
 
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
+add_subdirectory(librtk)
 
 # in case OpenZen includes the install target, spdlog also
 # needs to be forced to generate its install target. Normally

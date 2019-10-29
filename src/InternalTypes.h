@@ -214,6 +214,8 @@ enum class EDevicePropertyV1 : DeviceProperty_t
 
     SaveGpsState = 162,                 // void
     ClearGpsState = 163,                // void
+
+    SetRtkCorrection = 166,                // void
 };
 
 #endif

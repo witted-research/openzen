@@ -64,6 +64,7 @@ namespace zen
         gnssData.velocityAccuracy = 0.0f;
         gnssData.fixType = ZenGnssFixType_NoFix;
         gnssData.numberSatellitesUsed = 0;
+        gnssData.carrierPhaseSolution = ZenGnssFixCarrierPhaseSolution_None;
     }
 }
 
