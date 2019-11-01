@@ -138,13 +138,17 @@ namespace zen
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvthMSL),
             m_properties, data, &int32_not_used );
-        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvthAcc),
-            m_properties, data, &uint32_not_used );
+
+        uint32_t horizontalAccuracy;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvthAcc),
+            m_properties, data, &horizontalAccuracy)) {
+            gnssData.horizontalAccuracy = sensor_parsing_util::integerToScaledFloat(horizontalAccuracy, -3);
+        }
         
-        uint32_t velocityAccuracy;
+        uint32_t verticalAccuracy;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtvAcc),
-            m_properties, data, &velocityAccuracy)) {
-            gnssData.velocityAccuracy = sensor_parsing_util::integerToScaledFloat(velocityAccuracy, -3);
+            m_properties, data, &verticalAccuracy)) {
+            gnssData.verticalAccuracy = sensor_parsing_util::integerToScaledFloat(verticalAccuracy, -3);
         }
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtVelN),
@@ -162,8 +166,11 @@ namespace zen
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadMot),
             m_properties, data, &int32_not_used );
-        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtsAcc),
-            m_properties, data, &uint32_not_used );
+        uint32_t velocityAccuracy;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtsAcc),
+            m_properties, data, &velocityAccuracy)) {
+            gnssData.velocityAccuracy = sensor_parsing_util::integerToScaledFloat(velocityAccuracy, -3);
+        }
 
         int32_t headingAcc;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadAcc),
