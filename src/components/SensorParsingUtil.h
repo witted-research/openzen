@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cstddef>
 #include <nonstd/expected.hpp>
+#include <cmath>
 
 namespace zen {
     namespace sensor_parsing_util {
