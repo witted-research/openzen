@@ -256,33 +256,33 @@ typedef struct ZenGnssData
 
     /// Latitude measurement provided by the GNSS
     /// or the IMU/GNSS sensor fusion
-    float latitude;
+    double latitude;
 
     /// Accuracy of the horizontal measurement in m
-    float horizontalAccuracy;
+    double horizontalAccuracy;
 
     /// Longitude measurement provided by the GNSS
     /// or the IMU/GNSS sensor fusion
-    float longitude;
+    double longitude;
 
     /// Accuracy of the vertical position measurement in m
-    float verticalAccuracy;
+    double verticalAccuracy;
 
     /// height above WGS84 ellipsoid in m
-    float height;
+    double height;
 
     /// Heading in degrees in clockwise counting
     /// and 0 degree being north
-    float heading;
+    double heading;
 
     /// Heading Accuracy in degrees
-    float headingAccuracy;
+    double headingAccuracy;
 
     /// velocity over ground in m/s
-    float velocity;
+    double velocity;
 
     /// velocity accuracy over ground in m/s
-    float velocityAccuracy;
+    double velocityAccuracy;
 
     /// type of the GNSS fix and dead-reckoning mode
     ZenGnssFixType fixType;

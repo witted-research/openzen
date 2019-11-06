@@ -120,20 +120,20 @@ namespace zen
         int32_t longitude;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtLongitude),
             m_properties, data, &longitude)) {
-            gnssData.longitude = sensor_parsing_util::integerToScaledFloat(longitude, -7);
+            gnssData.longitude = sensor_parsing_util::integerToScaledDouble(longitude, -7);
         }
 
         int32_t latitude;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtLatitude),
             m_properties, data, &latitude))
         {
-            gnssData.latitude = sensor_parsing_util::integerToScaledFloat(latitude, -7);
+            gnssData.latitude = sensor_parsing_util::integerToScaledDouble(latitude, -7);
         }
 
         int32_t height;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeight),
             m_properties, data, &height)) {
-            gnssData.height = sensor_parsing_util::integerToScaledFloat(height, -3);
+            gnssData.height = sensor_parsing_util::integerToScaledDouble(height, -3);
         }
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvthMSL),
@@ -142,13 +142,13 @@ namespace zen
         uint32_t horizontalAccuracy;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvthAcc),
             m_properties, data, &horizontalAccuracy)) {
-            gnssData.horizontalAccuracy = sensor_parsing_util::integerToScaledFloat(horizontalAccuracy, -3);
+            gnssData.horizontalAccuracy = sensor_parsing_util::integerToScaledDouble(horizontalAccuracy, -3);
         }
         
         uint32_t verticalAccuracy;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtvAcc),
             m_properties, data, &verticalAccuracy)) {
-            gnssData.verticalAccuracy = sensor_parsing_util::integerToScaledFloat(verticalAccuracy, -3);
+            gnssData.verticalAccuracy = sensor_parsing_util::integerToScaledDouble(verticalAccuracy, -3);
         }
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtVelN),
@@ -161,7 +161,7 @@ namespace zen
         int32_t velocity;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtgSpeed),
             m_properties, data, &velocity)) {
-            gnssData.velocity = sensor_parsing_util::integerToScaledFloat(velocity, -3);
+            gnssData.velocity = sensor_parsing_util::integerToScaledDouble(velocity, -3);
         }
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadMot),
@@ -169,13 +169,13 @@ namespace zen
         uint32_t velocityAccuracy;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtsAcc),
             m_properties, data, &velocityAccuracy)) {
-            gnssData.velocityAccuracy = sensor_parsing_util::integerToScaledFloat(velocityAccuracy, -3);
+            gnssData.velocityAccuracy = sensor_parsing_util::integerToScaledDouble(velocityAccuracy, -3);
         }
 
         int32_t headingAcc;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadAcc),
             m_properties, data, &headingAcc)) {
-            gnssData.headingAccuracy = sensor_parsing_util::integerToScaledFloat(headingAcc, -5);
+            gnssData.headingAccuracy = sensor_parsing_util::integerToScaledDouble(headingAcc, -5);
         }
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtpDOP),
@@ -184,7 +184,7 @@ namespace zen
         int32_t heading;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadVeh),
             m_properties, data, &heading)) {
-            gnssData.heading = sensor_parsing_util::integerToScaledFloat(heading, -5);
+            gnssData.heading = sensor_parsing_util::integerToScaledDouble(heading, -5);
         }
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttiTOW),

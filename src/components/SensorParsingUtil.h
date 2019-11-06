@@ -23,8 +23,8 @@ namespace zen {
             float_out = int * 10^scaleExponent
         */
         template<class TIntegerType>
-        inline float integerToScaledFloat(TIntegerType it, int32_t scaleExponent) {
-            return float(it) * float(std::pow(10, scaleExponent));
+        inline double integerToScaledDouble(TIntegerType it, int32_t scaleExponent) {
+            return double(it) * std::pow(double(10.0), double(scaleExponent));
         }
 
         nonstd::expected<bool, ZenError> readVector3IfAvailable(ZenProperty_t checkProperty,
