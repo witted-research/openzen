@@ -1,6 +1,14 @@
 #ifndef ZEN_COMPONENTS_SENSORPARSING_UTIL_H_
 #define ZEN_COMPONENTS_SENSORPARSING_UTIL_H_
 
+#include "ZenTypes.h"
+#include "ISensorProperties.h"
+
+#include <gsl/span>
+#include <cstring>
+#include <cstddef>
+#include <nonstd/expected.hpp>
+
 namespace zen {
     namespace sensor_parsing_util {
 
