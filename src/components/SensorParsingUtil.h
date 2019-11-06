@@ -15,7 +15,7 @@ namespace zen {
         /**
         Parse a float32 froma byte stream and return the float
         */
-        float parseFloat32(gsl::span<const std::byte>& data) noexcept
+        inline float parseFloat32(gsl::span<const std::byte>& data) noexcept
         {
             const int32_t temp = ((int32_t(data[3]) * 256 + int32_t(data[2])) * 256 + int32_t(data[1])) * 256 + int32_t(data[0]);
             data = data.subspan(sizeof(int32_t));
@@ -35,7 +35,7 @@ namespace zen {
             return double(it) * std::pow(double(10.0), double(scaleExponent));
         }
 
-        nonstd::expected<bool, ZenError> readVector3IfAvailable(ZenProperty_t checkProperty,
+        inline nonstd::expected<bool, ZenError> readVector3IfAvailable(ZenProperty_t checkProperty,
             std::unique_ptr<ISensorProperties> & properties,
             gsl::span<const std::byte>& data, float * targetArray) {
             auto enabled = properties->getBool(checkProperty);
@@ -54,13 +54,13 @@ namespace zen {
         Templated function to read a scalar data type from a byte stream.
         */
         template <class TTypeToRead>
-        void parseAndStoreScalar(gsl::span<const std::byte>& data, TTypeToRead *target);
+        inline void parseAndStoreScalar(gsl::span<const std::byte>& data, TTypeToRead *target);
 
         /**
         Specialization for uint32_t
         */
         template <>
-        void parseAndStoreScalar(gsl::span<const std::byte>& data, uint32_t *target) {
+        inline void parseAndStoreScalar(gsl::span<const std::byte>& data, uint32_t *target) {
             (*target) = *reinterpret_cast<const uint32_t*>(data.data());
             data = data.subspan(sizeof(uint32_t));
         }
@@ -69,7 +69,7 @@ namespace zen {
         Specialization for uint16_t
         */
         template <>
-        void parseAndStoreScalar(gsl::span<const std::byte>& data, uint16_t *target) {
+        inline void parseAndStoreScalar(gsl::span<const std::byte>& data, uint16_t *target) {
             (*target) = *reinterpret_cast<const uint16_t*>(data.data());
             data = data.subspan(sizeof(uint16_t));
         }
@@ -78,7 +78,7 @@ namespace zen {
         Specialization for uint8_t
         */
         template <>
-        void parseAndStoreScalar(gsl::span<const std::byte>& data, uint8_t *target) {
+        inline void parseAndStoreScalar(gsl::span<const std::byte>& data, uint8_t *target) {
             (*target) = *reinterpret_cast<const uint8_t*>(data.data());
             data = data.subspan(sizeof(uint8_t));
         }
@@ -87,7 +87,7 @@ namespace zen {
         Specialization for int32_t
         */
         template <>
-        void parseAndStoreScalar(gsl::span<const std::byte>& data, int32_t *target) {
+        inline void parseAndStoreScalar(gsl::span<const std::byte>& data, int32_t *target) {
             (*target) = *reinterpret_cast<const int32_t*>(data.data());
             data = data.subspan(sizeof(int32_t));
         }
@@ -97,7 +97,7 @@ namespace zen {
         data type from the span byte buffer.
         */
         template <class TTypeToRead>
-        bool readScalarIfAvailable(ZenProperty_t checkProperty,
+        inline bool readScalarIfAvailable(ZenProperty_t checkProperty,
             std::unique_ptr<ISensorProperties> const& properties,
             gsl::span<const std::byte>& data, TTypeToRead * target) {
             auto enabled = properties->getBool(checkProperty);
