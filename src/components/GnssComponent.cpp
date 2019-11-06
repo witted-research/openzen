@@ -60,37 +60,25 @@ namespace zen
     }
 
     ZenError GnssComponent::forwardRtkCorrections(RtkCorrectionSource correction,
-      std::string const&  , unsigned short   ) noexcept {
-         if ( correction == RtkCorrectionSource::RTCM3NetworkStream) {
-/*             m_rtcm3network = std::make_unique<RTCM3NetworkSource>();
+        std::string const& hostname, unsigned short port) noexcept {
+        if (correction == RtkCorrectionSource::RTCM3NetworkStream) {
+            m_rtcm3network = std::make_unique<RTCM3NetworkSource>();
 
-             m_rtcm3network->addFrameCallback([&](uint16_t messageType, std::vector<std::byte> const& frame) {
-                 spdlog::info("message type {0} size {1}", messageType, frame.size());
+            m_rtcm3network->addFrameCallback([&](uint16_t messageType, std::vector<std::byte> const& frame) {
+                spdlog::info("RTCM3 message type {0} size {1} of size received", messageType, frame.size());
 
-                 // todo: test and make sure that behaves when other sensor data is coming in
-                 if (ZenError_None != m_communicator.sendAndWaitForAck(0, uint8_t(EDevicePropertyV1::SetRtkCorrection),
-                     ZenProperty_t(EDevicePropertyV1::SetRtkCorrection), frame))
-                 {
-                     spdlog::error("Could not send RTK correction to sensor");
-                 }
+                if (ZenError_None != m_communicator.sendAndWaitForAck(0, uint8_t(EDevicePropertyV1::SetRtkCorrection),
+                    ZenProperty_t(EDevicePropertyV1::SetRtkCorrection), frame))
+                {
+                    spdlog::error("Could not send RTK correction to sensor");
+                }
             });
 
-            m_rtcm3network->start(hostname, port);*/
-         }
-
-        std::vector<std::byte> someTrash;
-        someTrash.resize(120);
-        if (ZenError_None != m_communicator.sendAndWaitForAck(0, uint8_t(EDevicePropertyV1::SetRtkCorrection),
-            ZenProperty_t(EDevicePropertyV1::SetRtkCorrection), someTrash))
-        {
-            spdlog::error("Could not send RTK correction to sensor");
+            spdlog::info("Connecting to host {0}:{1} for RTK corrections", hostname, port);
+            m_rtcm3network->start(hostname, port);
         }
-        else {
-            spdlog::info("Send correction to sensor");
-        }
-        
 
-         return ZenError::ZenError_None;
+        return ZenError::ZenError_None;
     }
 
     ZenError GnssComponent::stopRtkCorrections() noexcept {

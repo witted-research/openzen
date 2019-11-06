@@ -14,7 +14,6 @@ add_subdirectory(nlohmann-json EXCLUDE_FROM_ALL)
 
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
-add_subdirectory(librtk)
 
 # in case OpenZen includes the install target, spdlog also
 # needs to be forced to generate its install target. Normally
@@ -23,3 +22,9 @@ if (ZEN_INSTALL)
     set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
 endif()
 add_subdirectory(spdlog)
+
+# expose the Asio headers as library
+add_library(openzen_asio INTERFACE)
+target_include_directories(openzen_asio INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/asio/asio/include
+    )

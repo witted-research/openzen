@@ -152,6 +152,9 @@ set(utility_sources
     src/utility/ReferenceCmp.h
     src/utility/StringView.h
     src/utility/ThreadFence.h
+    src/utility/gnss/RTCM3NetworkSource.h
+    src/utility/gnss/RTCM3NetworkSource.cpp
+    src/utility/gnss/RTCM3Parser.h
 )
 
 if(ZEN_BLUETOOTH)
@@ -339,7 +342,7 @@ set (zen_libs
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
         spdlog
-        librtk
+        openzen_asio
         ${zen_optional_libs}
 )
 

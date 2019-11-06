@@ -6,7 +6,7 @@
 #include <optional>
 #include <memory>
 
-#include <librtk/RTCM3NetworkSource.h>
+#include "utility/gnss/RTCM3NetworkSource.h"
 
 #include "SensorComponent.h"
 #include "communication/SyncedModbusCommunicator.h"
