@@ -358,6 +358,7 @@ add_executable(OpenZenTests
   ${zen_all_sources}
   src/test/ModbusTest.cpp
   src/test/communication/ConnectionNegotiatorTest.cpp
+  src/test/components/GnssComponentTest.cpp
   src/test/OpenZenTests.cpp)
 
 target_include_directories(OpenZenTests
