@@ -75,6 +75,9 @@ extern "C" {
     /** Returns true and fills the next event on the queue when there is a new one, otherwise returns false upon a call to ZenShutdown() */
     ZEN_API bool ZenWaitForNextEvent(ZenClientHandle_t handle, ZenEvent* const outEvent);
 
+    /** Publish all data events encountered by OpenZen over a network interface */
+    ZEN_API ZenError ZenPublishEvents(ZenClientHandle_t clientHandle, const char* const endpoint);
+
     /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength, otherwise, returns an error.
      * If the type variable points to a string, only components of that type are returned. If it is a nullptr, all components are returned, irrespective of type.
      */

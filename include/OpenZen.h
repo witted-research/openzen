@@ -487,6 +487,14 @@ namespace zen
             return std::make_pair(false, std::move(event));
 #endif
         }
+
+        /**
+        Publish all data events encountered by OpenZen over a network interface
+        */
+        ZenError publishEvents(std::string const& endpoint) noexcept {
+            return ZenPublishEvents(m_handle, endpoint.c_str());
+        }
+
     };
 
     /**
