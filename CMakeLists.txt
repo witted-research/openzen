@@ -345,6 +345,7 @@ set (zen_libs
         Threads::Threads
         spdlog
         openzen_asio
+        cereal
         ${zen_optional_libs}
 )
 
@@ -364,6 +365,7 @@ add_executable(OpenZenTests
   src/test/ModbusTest.cpp
   src/test/communication/ConnectionNegotiatorTest.cpp
   src/test/components/GnssComponentTest.cpp
+  src/test/streaming/SerializationTest.cpp
   src/test/OpenZenTests.cpp)
 
 target_include_directories(OpenZenTests

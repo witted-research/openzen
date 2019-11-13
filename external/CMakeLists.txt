@@ -14,6 +14,8 @@ add_subdirectory(nlohmann-json EXCLUDE_FROM_ALL)
 
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
+set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
+add_subdirectory(cereal)
 
 # in case OpenZen includes the install target, spdlog also
 # needs to be forced to generate its install target. Normally
