@@ -293,7 +293,7 @@ target_compile_features(OpenZen
 if (MSVC)
     target_compile_options(OpenZen
         PRIVATE
-            /W4 /WX
+            /W4
     )
 else()
     target_compile_options(OpenZen
