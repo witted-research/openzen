@@ -76,7 +76,7 @@ extern "C" {
     ZEN_API bool ZenWaitForNextEvent(ZenClientHandle_t handle, ZenEvent* const outEvent);
 
     /** Publish all data events encountered by OpenZen over a network interface */
-    ZEN_API ZenError ZenPublishEvents(ZenClientHandle_t clientHandle, const char* const endpoint);
+    ZEN_API ZenError ZenPublishEvents(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const char* endpoint);
 
     /** If successful, directs the outComponents pointer to a list of sensor components and sets its length to outLength, otherwise, returns an error.
      * If the type variable points to a string, only components of that type are returned. If it is a nullptr, all components are returned, irrespective of type.

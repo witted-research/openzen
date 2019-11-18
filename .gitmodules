@@ -19,3 +19,9 @@
 [submodule "external/cereal"]
 	path = external/cereal
 	url = https://github.com/USCiLab/cereal.git
+[submodule "external/libzmq"]
+	path = external/libzmq
+	url = https://github.com/zeromq/libzmq.git
+[submodule "external/cppzmq"]
+	path = external/cppzmq
+	url = https://github.com/zeromq/cppzmq.git

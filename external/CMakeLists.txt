@@ -30,3 +30,21 @@ add_library(openzen_asio INTERFACE)
 target_include_directories(openzen_asio INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/asio/asio/include
     )
+
+if (ZEN_NETWORK)
+    set(ENABLE_PRECOMPILED OFF CACHE BOOL "" FORCE)
+    set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(WITH_PERF_TOOL OFF CACHE BOOL "" FORCE)
+    set(BUILD_STATIC ON CACHE BOOL "" FORCE)
+    set(BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(ZMQ_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    add_subdirectory(libzmq)
+
+    # expose the cppzmq header as library because the cmake file coming
+    # with the library uses CMake's find to look up the system-installed
+    # zero mq
+    add_library(cppzmq INTERFACE)
+    target_include_directories(cppzmq INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/cppzmq
+        )
+endif()

@@ -16,6 +16,7 @@
 #include "SensorConfig.h"
 #include "SensorComponent.h"
 #include "communication/SyncedModbusCommunicator.h"
+#include "communication/EventCommunicator.h"
 #include "utility/LockingQueue.h"
 #include "utility/ReferenceCmp.h"
 
@@ -23,10 +24,18 @@ namespace zen
 {
     nonstd::expected<std::shared_ptr<class Sensor>, ZenSensorInitError> make_sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token) noexcept;
 
-    class Sensor final : private IModbusFrameSubscriber
+    nonstd::expected<std::shared_ptr<class Sensor>, ZenSensorInitError> make_high_level_sensor(SensorConfig config, std::unique_ptr<EventCommunicator> evCom, uintptr_t token) noexcept;
+
+    class Sensor final : private IModbusFrameSubscriber, IEventSubscriber
     {
     public:
         Sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token);
+
+        /**
+        creates a high-level sensor which receives events directly and needs to parsing
+        */
+        Sensor(SensorConfig config, std::unique_ptr<EventCommunicator> eventCommunicator, uintptr_t token);
+
         ~Sensor();
 
         /** Allow the sensor to initialize variables, that require an active IO interface */
@@ -57,7 +66,7 @@ namespace zen
         const std::vector<std::unique_ptr<SensorComponent>>& components() const noexcept { return m_components; }
 
         /** Returns the sensor's IO type */
-        std::string_view ioType() const noexcept { return m_communicator.ioType(); }
+        std::string_view ioType() const noexcept { return m_communicator->ioType(); }
 
         /** Returns whether the sensor is equal to the sensor description */
         bool equals(const ZenSensorDesc& desc) const;
@@ -74,6 +83,8 @@ namespace zen
     private:
         ZenError processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept override;
 
+        ZenError processReceivedEvent(ZenEvent) noexcept override;
+
         void publishEvent(const ZenEvent& event) noexcept;
 
         void upload(std::vector<std::byte> firmware);
@@ -88,7 +99,8 @@ namespace zen
 
         std::vector<std::unique_ptr<SensorComponent>> m_components;
         std::unique_ptr<ISensorProperties> m_properties;
-        SyncedModbusCommunicator m_communicator;
+        std::optional<SyncedModbusCommunicator> m_communicator;
+        std::unique_ptr<EventCommunicator> m_eventCommunicator;
 
         std::atomic_bool m_updatingFirmware;
         std::atomic_bool m_updatedFirmware;

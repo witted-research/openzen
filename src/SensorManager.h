@@ -17,7 +17,12 @@
 
 #include "Sensor.h"
 #include "SensorClient.h"
+#include "DataProcessor.h"
 #include "utility/ReferenceCmp.h"
+
+#include <memory>
+#include <set>
+#include <vector>
 
 namespace zen
 {
@@ -43,6 +48,8 @@ namespace zen
         /** Subscribe a client to sensor discovery */
         void subscribeToSensorDiscovery(SensorClient& client) noexcept;
 
+        void registerDataProcessor(std::unique_ptr<DataProcessor> processor) noexcept;
+
     private:
 
         SensorManager() noexcept;
@@ -57,6 +64,7 @@ namespace zen
         std::set<std::shared_ptr<Sensor>, SensorCmp> m_sensors;
         std::set<std::reference_wrapper<SensorClient>, ReferenceWrapperCmp<SensorClient>> m_discoverySubscribers;
 
+        std::vector<std::unique_ptr<DataProcessor>> m_processors;
         std::vector<ZenSensorDesc> m_devices;
 
         std::condition_variable m_discoveryCv;

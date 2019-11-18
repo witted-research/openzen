@@ -228,11 +228,6 @@ ZEN_API bool ZenWaitForNextEvent(ZenClientHandle_t handle, ZenEvent* const outEv
     }
 }
 
-ZEN_API ZenError ZenPublishEvents(ZenClientHandle_t, const char* const) {
-    // TODO: will be implemented in a future pull-request
-    return ZenError_None;
-}
-
 ZEN_API ZenError ZenSensorComponents(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const char* const type, ZenComponentHandle_t** outComponentHandles, size_t* const outLength)
 {
     if (outLength == nullptr)
@@ -351,6 +346,20 @@ ZEN_API ZenAsyncStatus ZenSensorUpdateIAPAsync(ZenClientHandle_t clientHandle, Z
     else
     {
         return ZenAsync_InvalidArgument;
+    }
+}
+
+ZEN_API ZenError ZenPublishEvents(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const char* endpoint) {
+    if (auto client = getClient(clientHandle))
+    {
+        if (auto sensor = client->findSensor(sensorHandle))
+            return client->publishEvents(sensor, endpoint);
+        else
+            return ZenError_InvalidSensorHandle;
+    }
+    else
+    {
+        return ZenError_InvalidClientHandle;
     }
 }
 

@@ -39,6 +39,11 @@ namespace zen
         /** Returns true and fills the next event on the queue when there is a new one, otherwise returns false upon a call to ZenShutdown() */
         std::optional<ZenEvent> waitForNextEvent() noexcept;
 
+        /** Open an OpenZen publisher socket and send all events there. This could be improved by
+        having a dedicated subscriber only for the ZeroMQ submission.
+        */
+        ZenError publishEvents(std::shared_ptr<Sensor> sensor, const std::string & endpoint);
+
         /** Pushes an event to the event queue */
         void notifyEvent(const ZenEvent& event) noexcept;
 

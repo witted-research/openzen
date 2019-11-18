@@ -262,6 +262,13 @@ namespace zen
             return ZenSensorEquals(m_clientHandle, m_sensorHandle, &desc);
         }
 
+        /**
+        Publish all data events from this sensor over a network interface
+        */
+        ZenError publishEvents(std::string const& endpoint) noexcept {
+            return ZenPublishEvents(m_clientHandle, m_sensorHandle, endpoint.c_str());
+        }
+
         ZenError executeProperty(ZenProperty_t property) noexcept
         {
             return ZenSensorExecuteProperty(m_clientHandle, m_sensorHandle, property);
@@ -425,7 +432,7 @@ namespace zen
         }
 
         std::pair<ZenSensorInitError, ZenSensor> obtainSensorByName(const std::string& ioType,
-            const std::string& identifier, uint32_t baudrate) noexcept
+            const std::string& identifier, uint32_t baudrate = 0) noexcept
         {
             ZenSensorHandle_t sensorHandle;
             const auto error = ZenObtainSensorByName(m_handle, ioType.c_str(), identifier.c_str(),
@@ -487,14 +494,6 @@ namespace zen
             return std::make_pair(false, std::move(event));
 #endif
         }
-
-        /**
-        Publish all data events encountered by OpenZen over a network interface
-        */
-        ZenError publishEvents(std::string const& endpoint) noexcept {
-            return ZenPublishEvents(m_handle, endpoint.c_str());
-        }
-
     };
 
     /**

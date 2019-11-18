@@ -6,7 +6,10 @@
 #include "io/systems/BleSystem.h"
 #include "io/systems/BluetoothSystem.h"
 #include "io/systems/FtdiUsbSystem.h"
-
+#include "io/systems/TestSensorSystem.h"
+#ifdef ZEN_NETWORK
+#include "io/systems/ZeroMQSystem.h"
+#endif
 #if WIN32
 #include "io/systems/PcanBasicSystem.h"
 #include "io/systems/SiUsbSystem.h"
@@ -20,6 +23,9 @@ namespace zen
 #ifdef ZEN_BLUETOOTH
     static auto bleRegistry = makeRegistry<BleSystem>();
     static auto bluetoothRegistry = makeRegistry<BluetoothSystem>();
+#endif
+#ifdef ZEN_NETWORK
+    static auto zmqRegistry = makeRegistry<ZeroMQSystem>();
 #endif
     static auto ftdiUsbRegistry = makeRegistry<FtdiUsbSystem>();
 

@@ -48,6 +48,18 @@ void serialize(Archive& ar, ZenHeaveMotionData& hmData)
 }
 
 template <class Archive>
+void serialize(Archive& ar, ZenSensorHandle_t& sensorHandle)
+{
+    ar(sensorHandle.handle);
+}
+
+template <class Archive>
+void serialize(Archive& ar, ZenComponentHandle_t& componentHandle)
+{
+    ar(componentHandle.handle);
+}
+
+template <class Archive>
 void serialize(Archive& ar, ZenImuData & imuData)
 {
     ar(imuData.a,

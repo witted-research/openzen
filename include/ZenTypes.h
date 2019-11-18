@@ -53,6 +53,8 @@ typedef enum ZenError : ZenError_t
     ZenError_WrongDataType = 12,             // Wrong data type
     ZenError_BufferTooSmall = 13,            // Provided buffer is too small for the return data
     ZenError_InvalidArgument = 14,           // An invalid argument was provided
+    ZenError_NotSupported = 15,              // The requested functionality is not supported by
+                                             // this build of OpenZen
 
     ZenError_AlreadyInitialized = 20,        // Already initialized
     ZenError_NotInitialized = 21,            // Not initialized
@@ -113,6 +115,7 @@ typedef enum ZenSensorInitError : ZenError_t
     ZenSensorInitError_UnsupportedDataFormat,   // Provided Modbus Format is not supported
     ZenSensorInitError_UnsupportedIoType,       // Provided IO type is not supported
     ZenSensorInitError_UnsupportedProtocol,     // The sensor's protocol version is not supported by the host
+    ZenSensorInitError_UnsupportedFunction,     // This function is not supported by the IO sytsem
 
     ZenSensorInitError_ConnectFailed,           // Failed to establish a connection with the sensor
     ZenSensorInitError_IoFailed,                // Low-level IO API returned an error

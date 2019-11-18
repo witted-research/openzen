@@ -2,6 +2,12 @@
 
 #include "SensorManager.h"
 
+#include <spdlog/spdlog.h>
+
+#ifdef ZEN_NETWORK
+#include "ZmqDataProcessor.h"
+#endif
+
 namespace {
     void safeStringToChar(std::string const& str, char * ch, size_t maxCharacter) {
         std::copy_n(str.begin(), std::min(size_t(maxCharacter), str.length()), ch);
@@ -24,6 +30,25 @@ namespace zen
     void SensorClient::listSensorsAsync() noexcept
     {
         SensorManager::get().subscribeToSensorDiscovery(*this);
+    }
+
+    ZenError SensorClient::publishEvents(std::shared_ptr<Sensor> sensor, const std::string & endpoint) {
+#ifdef ZEN_NETWORK
+        auto processor = std::make_unique<ZmqDataProcessor>();
+
+        if (!processor->connect(endpoint)) {
+            return ZenError_InvalidArgument;
+        }
+        sensor->subscribe(processor->getEventQueue());
+        //pro
+        // todo create a new queue and register it
+        SensorManager::get().registerDataProcessor(std::move(processor));
+        spdlog::info("Publishing events to endpoint {0}", endpoint);
+        return ZenError_None;
+#else
+        spdlog::error("ZeroMQ support not available in OpenZen build, cannot publish events");
+        return ZenError_NotSupported;
+#endif
     }
 
     std::shared_ptr<Sensor> SensorClient::findSensor(ZenSensorHandle_t handle) noexcept

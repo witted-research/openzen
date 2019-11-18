@@ -6,6 +6,7 @@ add_subdirectory(external)
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
 option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
+option(ZEN_NETWORK "Compile OpenZen with support for network streaming of measurement data" OFF)
 option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
 option(ZEN_INSTALL "Generate the install target for OpenZen." OFF)
 
@@ -67,6 +68,7 @@ if(ZEN_CSHARP)
 endif()
 
 set(zen_optional_libs)
+set(zen_optional_test_sources)
 
 set(communication_sources
     src/communication/ConnectionNegotiator.cpp
@@ -201,6 +203,34 @@ else()
     set(io_bluetooth_sources)
 endif()
 
+if(ZEN_NETWORK)
+    set(io_zeromq_sources
+        src/io/interfaces/ZeroMQInterface.h
+        src/io/interfaces/ZeroMQInterface.cpp
+    )
+
+    list (APPEND io_systems_sources
+        src/io/systems/ZeroMQSystem.h
+        src/io/systems/ZeroMQSystem.cpp
+    )
+
+    list (APPEND zen_optional_test_sources
+        src/test/streaming/ZeroMQStreamingTest.cpp
+    )
+
+    list (APPEND zen_optional_libs
+        libzmq-static
+        cppzmq
+    )
+
+    list (APPEND zen_optional_compile_definitions_private
+        ZEN_NETWORK
+    )
+
+else()
+    set(io_zeromq_sources)
+endif()
+
 if(WIN32)
 
     set(io_can_sources ${io_can_sources}
@@ -262,6 +292,7 @@ set(zen_all_sources
     ${io_sources}
     ${io_ble_sources}
     ${io_bluetooth_sources}
+    ${io_zeromq_sources}
     ${io_can_sources}
     ${io_interfaces_sources}
     ${io_systems_sources}
@@ -362,6 +393,7 @@ target_link_libraries(OpenZen
 # Windows DLL default visibility.
 add_executable(OpenZenTests
   ${zen_all_sources}
+  ${zen_optional_test_sources}
   src/test/ModbusTest.cpp
   src/test/communication/ConnectionNegotiatorTest.cpp
   src/test/components/GnssComponentTest.cpp

@@ -2,6 +2,7 @@
 
 #include "Sensor.h"
 #include "communication/ConnectionNegotiator.h"
+#include "communication/EventCommunicator.h"
 #include "components/ComponentFactoryManager.h"
 #include "io/IoManager.h"
 #include "io/can/CanManager.h"
@@ -81,37 +82,63 @@ namespace zen
             return nonstd::make_unexpected(ZenSensorInitError_UnsupportedIoType);
         }
 
-        ConnectionNegotiator negotiator;
-        auto communicator = std::make_unique<ModbusCommunicator>(negotiator,
-          std::make_unique<modbus::LpFrameFactory>(), std::make_unique<modbus::LpFrameParser>());
+        if (!ioSystem.value().get().isHighLevel()) {
+            ConnectionNegotiator negotiator;
+            auto communicator = std::make_unique<ModbusCommunicator>(negotiator,
+                std::make_unique<modbus::LpFrameFactory>(), std::make_unique<modbus::LpFrameParser>());
 
-        // load the default baud rate, if needed
-        if (desc.baudRate == 0) {
-            desc.baudRate = ioSystem->get().getDefaultBaudrate();
+            // load the default baud rate, if needed
+            if (desc.baudRate == 0) {
+                desc.baudRate = ioSystem->get().getDefaultBaudrate();
+            }
+
+            if (auto ioInterface = ioSystem->get().obtain(desc, *communicator.get()))
+                communicator->init(std::move(*ioInterface));
+            else
+                return nonstd::make_unexpected(ioInterface.error());
+
+            auto agreement = negotiator.negotiate(*communicator.get(), desc.baudRate);
+            if (!agreement)
+                return nonstd::make_unexpected(agreement.error());
+
+            lock.lock();
+            const auto token = m_nextToken++;
+            lock.unlock();
+
+            auto sensor = make_sensor(std::move(*agreement), std::move(communicator), token);
+            if (!sensor)
+                return nonstd::make_unexpected(sensor.error());
+
+            lock.lock();
+            m_sensors.insert(*sensor);
+            lock.unlock();
+
+            return std::move(*sensor);
         }
+        else {
+            lock.lock();
+            const auto token = m_nextToken++;
+            lock.unlock();
 
-        if (auto ioInterface = ioSystem->get().obtain(desc, *communicator.get()))
-            communicator->init(std::move(*ioInterface));
-        else
-            return nonstd::make_unexpected(ioInterface.error());
+            //auto evCom = std::make_unique<EventCommunicator>(std::move(*ioInterface));
+            auto eventCom = std::make_unique<EventCommunicator>();
+            auto ioInterface = ioSystem->get().obtainEventBased(desc, *(eventCom.get()));
 
-        auto agreement = negotiator.negotiate(*communicator.get(), desc.baudRate);
-        if (!agreement)
-            return nonstd::make_unexpected(agreement.error());
+            eventCom->init(std::move(*ioInterface));
 
-        lock.lock();
-        const auto token = m_nextToken++;
-        lock.unlock();
+            // high level sensors receive events directly and need no negogiators/communicators
+            SensorConfig conf;
+            conf.version = 1;
+            auto sensor = make_high_level_sensor(conf, std::move(eventCom), token);
+            if (!sensor)
+                return nonstd::make_unexpected(sensor.error());
 
-        auto sensor = make_sensor(std::move(*agreement), std::move(communicator), token);
-        if (!sensor)
-            return nonstd::make_unexpected(sensor.error());
+            lock.lock();
+            m_sensors.insert(*sensor);
+            lock.unlock();
 
-        lock.lock();
-        m_sensors.insert(*sensor);
-        lock.unlock();
-
-        return std::move(*sensor);
+            return std::move(*sensor);
+        }
     }
 
     std::shared_ptr<Sensor> SensorManager::release(ZenSensorHandle_t sensorHandle) noexcept
@@ -191,4 +218,9 @@ namespace zen
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
+
+    void SensorManager::registerDataProcessor(std::unique_ptr<DataProcessor> processor) noexcept {
+        m_processors.emplace_back(std::move(processor));
+    }
+
 }

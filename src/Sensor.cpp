@@ -110,6 +110,17 @@ namespace zen
         return std::move(sensor);
     }
 
+    nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> make_high_level_sensor(SensorConfig config,
+        std::unique_ptr<EventCommunicator> evCom,
+        uintptr_t token) noexcept
+    {
+        auto sensor = std::make_shared<Sensor>(std::move(config), std::move(evCom), token);
+        if (auto error = sensor->init())
+            return nonstd::make_unexpected(error);
+
+        return std::move(sensor);
+    }
+
     Sensor::Sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token)
         : m_config(std::move(config))
         , m_token(token)
@@ -121,6 +132,19 @@ namespace zen
         , m_updatedIAP(false)
     {
         m_components.reserve(m_config.components.size());
+    }
+
+    Sensor::Sensor(SensorConfig config, std::unique_ptr<EventCommunicator> eventCommunicator,
+        uintptr_t token) : m_config(std::move(config))
+        , m_token(token)
+        , m_initialized(false)
+        , m_eventCommunicator(std::move(eventCommunicator))
+        , m_updatingFirmware(false)
+        , m_updatedFirmware(false)
+        , m_updatingIAP(false)
+        , m_updatedIAP(false) {
+
+        m_eventCommunicator->setSubscriber(*this);
     }
 
     Sensor::~Sensor()
@@ -137,7 +161,7 @@ namespace zen
 
         // Then the communicator needs to be destroyed before to guarantee that the
         // underlying IO interface does not call processReceivedData anymore
-        m_communicator.close();
+        m_communicator->close();
 
         // After that we can guarantee to subscribers that the sensor has shut down
         ZenEventData eventData{};
@@ -150,48 +174,54 @@ namespace zen
 
     ZenSensorInitError Sensor::init()
     {
-        auto& manager = ComponentFactoryManager::get();
-        uint8_t idx = 1;
-        for (const auto& config : m_config.components)
-        {
-            spdlog::debug("Creating component object for component {0} and version {1}", config.id, config.version);
-            auto factory = manager.getFactory(config.id);
-            if (!factory) {
-                spdlog::error("Cannot find factory for component {0}", config.id);
-                return ZenSensorInitError_UnsupportedComponent;
+        if (m_communicator) {
+            auto& manager = ComponentFactoryManager::get();
+            uint8_t idx = 1;
+            for (const auto& config : m_config.components)
+            {
+                spdlog::debug("Creating component object for component {0} and version {1}", config.id, config.version);
+                auto factory = manager.getFactory(config.id);
+                if (!factory) {
+                    spdlog::error("Cannot find factory for component {0}", config.id);
+                    return ZenSensorInitError_UnsupportedComponent;
+                }
+
+                auto component = factory.value()->make_component(config.version, idx++, *m_communicator);
+                if (!component) {
+                    spdlog::error("Cannot create object for component {0} and version {1}", config.id, config.version);
+                    return component.error();
+                }
+                spdlog::debug("Created component object for component {0} and version {1}", config.id, config.version);
+                m_components.push_back(std::move(*component));
             }
 
-            auto component = factory.value()->make_component(config.version, idx++, m_communicator);
-            if (!component) {
-                spdlog::error("Cannot create object for component {0} and version {1}", config.id, config.version);
-                return component.error();
+            if ((m_config.version == 0) || (m_config.version == 1)) {
+                m_initialized = true;
             }
-            spdlog::debug("Created component object for component {0} and version {1}", config.id, config.version);
-            m_components.push_back(std::move(*component));
+
+            for (auto& component : m_components)
+                if (auto error = component->init())
+                    return error;
+
+            spdlog::debug("Components created and initialized");
+
+            // [LEGACY] Fix for sensors that did not support negotiation yet
+            // [LEGACY] Swap the order of sensor-component initialization in the future
+            if (m_config.version == 0)
+                m_properties = std::make_unique<LegacyCoreProperties>(*m_communicator, *m_components[0]->properties());
+            else if (m_config.version == 1)
+                m_properties = std::make_unique<Ig1CoreProperties>(*m_communicator, *m_components[0]->properties());
+            else if (auto properties = make_properties(0, m_config.version, *m_communicator))
+                m_properties = std::move(properties);
+            else
+                return ZenSensorInitError_UnsupportedProtocol;
+
+            spdlog::debug("Sensor properties initialized");
         }
-
-        if ((m_config.version == 0) || (m_config.version == 1)) {
+        else {
+            // high-level sensor dont need initialization
             m_initialized = true;
         }
-
-        for (auto& component : m_components)
-            if (auto error = component->init())
-                return error;
-
-        spdlog::debug("Components created and initialized");
-
-        // [LEGACY] Fix for sensors that did not support negotiation yet
-        // [LEGACY] Swap the order of sensor-component initialization in the future
-        if (m_config.version == 0)
-            m_properties = std::make_unique<LegacyCoreProperties>(m_communicator, *m_components[0]->properties());
-        else if (m_config.version == 1)
-            m_properties = std::make_unique<Ig1CoreProperties>(m_communicator, *m_components[0]->properties());
-        else if (auto properties = make_properties(0, m_config.version, m_communicator))
-            m_properties = std::move(properties);
-        else
-            return ZenSensorInitError_UnsupportedProtocol;
-
-        spdlog::debug("Sensor properties initialized");
 
         return ZenSensorInitError_None;
     }
@@ -266,7 +296,7 @@ namespace zen
 
     bool Sensor::equals(const ZenSensorDesc& desc) const
     {
-        return m_communicator.equals(desc);
+        return m_communicator->equals(desc);
     }
 
     bool Sensor::subscribe(LockingQueue<ZenEvent>& queue) noexcept
@@ -294,17 +324,17 @@ namespace zen
                 switch (*optInternal)
                 {
                 case EDevicePropertyInternal::Ack:
-                    return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_None);
+                    return m_communicator->publishAck(ZenSensorProperty_Invalid, ZenError_None);
 
                 case EDevicePropertyInternal::Nack:
-                    return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
+                    return m_communicator->publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
 
                 // this entry is used to forward the OutputDataBitset for IMU and GPS while
                 // the component is not created yet.
                 case EDevicePropertyInternal::Config:
                     if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
+                    return m_communicator->publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
 
                 default:
                     return ZenError_Io_UnsupportedFunction;
@@ -319,23 +349,23 @@ namespace zen
                 case EDevicePropertyV0::GetPing:
                     if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
+                    return m_communicator->publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
 
                 case EDevicePropertyV0::GetBatteryLevel:
                 case EDevicePropertyV0::GetBatteryVoltage:
                     if (data.size() != sizeof(float))
                         return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data.data()));
+                    return m_communicator->publishResult(function, ZenError_None, *reinterpret_cast<const float*>(data.data()));
 
                 case EDevicePropertyV0::GetSerialNumber:
                 case EDevicePropertyV0::GetDeviceName:
                 case EDevicePropertyV0::GetFirmwareInfo:
-                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
+                    return m_communicator->publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
 
                 case EDevicePropertyV0::GetFirmwareVersion:
                     if (data.size() != sizeof(uint32_t) * 3)
                         return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const uint32_t*>(data.data()), 3));
+                    return m_communicator->publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const uint32_t*>(data.data()), 3));
 
                 case EDevicePropertyV0::GetRawSensorData:
                     if (m_initialized)
@@ -359,23 +389,23 @@ namespace zen
                 switch (*optInternal)
                 {
                 case EDevicePropertyInternal::Ack:
-                    return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_None);
+                    return m_communicator->publishAck(ZenSensorProperty_Invalid, ZenError_None);
 
                 case EDevicePropertyInternal::Nack:
-                    return m_communicator.publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
+                    return m_communicator->publishAck(ZenSensorProperty_Invalid, ZenError_FW_FunctionFailed);
 
                 // this entry is used to forward the OutputDataBitset for IMU and GPS while
                 // the component is not created yet.
                 case EDevicePropertyInternal::Config:
                     if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::Config),
+                    return m_communicator->publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::Config),
                         ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
 
                 case EDevicePropertyInternal::ConfigGpsOutputDataBitset:
                     if (data.size() != sizeof(uint32_t) * 2)
                         return ZenError_Io_MsgCorrupt;
-                    return m_communicator.publishArray(static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGpsOutputDataBitset),
+                    return m_communicator->publishArray(static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGpsOutputDataBitset),
                         ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
 
                 default:
@@ -390,7 +420,7 @@ namespace zen
                 case EDevicePropertyV1::GetSerialNumber:
                 case EDevicePropertyV1::GetSensorModel:
                 case EDevicePropertyV1::GetFirmwareInfo:
-                    return m_communicator.publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
+                    return m_communicator->publishArray(function, ZenError_None, gsl::make_span(reinterpret_cast<const std::byte*>(data.data()), data.size()));
 
                 case EDevicePropertyV1::GetRawImuSensorData:
                     if (m_initialized)
@@ -430,10 +460,10 @@ namespace zen
             switch (function)
             {
             case ZenProtocolFunction_Ack:
-                return properties::publishAck(getProperties(*this, m_components, address), m_communicator, parseProperty(data), parseError(data));
+                return properties::publishAck(getProperties(*this, m_components, address), *m_communicator, parseProperty(data), parseError(data));
 
             case ZenProtocolFunction_Result:
-                return properties::publishResult(getProperties(*this, m_components, address), m_communicator, parseProperty(data), parseError(data), data);
+                return properties::publishResult(getProperties(*this, m_components, address), *m_communicator, parseProperty(data), parseError(data), data);
 
             case ZenProtocolFunction_Event:
                 if (address)
@@ -478,7 +508,7 @@ namespace zen
         const uint32_t nFullPages = static_cast<uint32_t>(firmware.size() / PAGE_SIZE);
         const uint32_t remainder = firmware.size() % PAGE_SIZE;
         const uint32_t nPages = remainder > 0 ? nFullPages + 1 : nFullPages;
-        if (auto error = m_communicator.sendAndWaitForAck(0, function, property, gsl::make_span(reinterpret_cast<const std::byte*>(&nPages), sizeof(nPages))))
+        if (auto error = m_communicator->sendAndWaitForAck(0, function, property, gsl::make_span(reinterpret_cast<const std::byte*>(&nPages), sizeof(nPages))))
         {
             outError = error;
             return;
@@ -486,7 +516,7 @@ namespace zen
 
         for (unsigned idx = 0; idx < nPages; ++idx)
         {
-            if (auto error = m_communicator.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + idx * PAGE_SIZE, PAGE_SIZE)))
+            if (auto error = m_communicator->sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + idx * PAGE_SIZE, PAGE_SIZE)))
             {
                 outError = error;
                 return;
@@ -494,7 +524,13 @@ namespace zen
         }
 
         if (remainder > 0)
-            if (auto error = m_communicator.sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + nFullPages * PAGE_SIZE, remainder)))
+            if (auto error = m_communicator->sendAndWaitForAck(0, function, property, gsl::make_span(firmware.data() + nFullPages * PAGE_SIZE, remainder)))
                 outError = error;
+    }
+
+    ZenError Sensor::processReceivedEvent(ZenEvent evt) noexcept {
+        publishEvent(evt);
+
+        return ZenError_None;
     }
 }
