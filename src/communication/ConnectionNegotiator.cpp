@@ -153,9 +153,10 @@ namespace zen
     ZenError ConnectionNegotiator::processReceivedData(uint8_t, uint8_t function, gsl::span<const std::byte> data) noexcept
     {
         if ((function == ZenProtocolFunction_Handshake) ||
+            (function == uint8_t(EDevicePropertyV1::Ack)) ||
             (function == uint8_t(EDevicePropertyV1::GetFirmwareInfo)) ||
             (function == uint8_t(EDevicePropertyV1::GetSensorModel))) {
-            // fine, thats a package we can use
+            // fine, thats a package we can use during the connection negotiation
         }
         else {
             // don't give an error on unexpected packages to be more tolerant if the
