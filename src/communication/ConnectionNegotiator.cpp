@@ -62,7 +62,10 @@ namespace zen
         }
         {
             std::unique_lock<std::mutex> lock(m_mutex);
-            m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; });
+            if (m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; }) == false) {
+                spdlog::error("Timout when setting sensor to command mode before configuration.");
+                return nonstd::make_unexpected(ZenSensorInitError_Timeout);
+            }
         }
 
         // will send command 21, which is GET_IMU_ID for legacy sensors. So legacy sensors will return one 32-bit

@@ -119,6 +119,7 @@ typedef enum ZenSensorInitError : ZenError_t
     ZenSensorInitError_RetrieveFailed,          // Failed to retrieve a property from the sensor
     ZenSensorInitError_SetBaudRateFailed,       // Failed to change the BaudRate
     ZenSensorInitError_SendFailed,              // Failed to send data
+    ZenSensorInitError_Timeout,                 // Timeout when sending command to initialize sensor
     ZenSensorInitError_IncompatibleBaudRates,   // Unable to find a compatible BaudRate
     ZenSensorInitError_InvalidAddress,          // Provided remote address is invalid
     ZenSensorInitError_InvalidConfig,           // The configuration file is invalid
