@@ -187,19 +187,6 @@ int main(int argc, char *argv[])
     // in our data processing thread
     g_imuHandle = imu.component().handle;
 
-    // Get a sensor property
-    auto getPair = sensor.getInt32Property(ZenSensorProperty_TimeOffset);
-    auto& timeError = getPair.first;
-    if (timeError)
-    {
-        g_terminate = true;
-        client.close();
-        pollingThread.join();
-        return timeError;
-    }
-
-    std::cout << "Time offset: " << getPair.second << std::endl;
-
     // Get a string property
     auto sensorModelPair = sensor.getStringProperty(ZenSensorProperty_SensorModel);
     auto & sensorModelError = sensorModelPair.first;
@@ -208,7 +195,7 @@ int main(int argc, char *argv[])
         g_terminate = true;
         client.close();
         pollingThread.join();
-        return timeError;
+        return sensorModelError;
     }
     std::cout << "Sensor Model: " << sensorModelName << std::endl;
 
