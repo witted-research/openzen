@@ -5,6 +5,7 @@
 #include <string_view>
 #include <vector>
 #include <sstream>
+#include <gsl/span>
 
 namespace util
 {
