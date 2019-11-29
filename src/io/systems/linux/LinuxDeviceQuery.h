@@ -5,7 +5,18 @@
 
 #include <spdlog/spdlog.h>
 
-#include <filesystem>
+/*
+Older GCCs (for examle GCC 7, default on Ubunut 18.04) and clangs still provide
+C++ filesystem in an experimental namespace
+*/
+#if __GNUC__ > 8
+    #include <filesystem>
+    namespace fs = std::filesystem;
+#else
+    #include <experimental/filesystem>
+    namespace fs = std::experimental::filesystem;
+#endif
+
 #include <map>
 #include <vector>
 #include <fstream>
@@ -20,7 +31,7 @@ typedef std::map<std::string, std::vector<std::string>> SiLabsSerialDevices;
 /**
  * Returns the contents of a device in the sysfs tree
  */
-std::optional<std::string> sysFsGetDeviceProperty(std::filesystem::path const& devicePath,
+std::optional<std::string> sysFsGetDeviceProperty(fs::path const& devicePath,
     std::string const& propertyName) {
     std::ifstream propFile;
 
@@ -40,14 +51,14 @@ std::optional<std::string> sysFsGetDeviceProperty(std::filesystem::path const& d
  * Gets the topmost folder of a sysfs usb device and traverses it to find the name of
  * the tty device assicated.
  */
-std::optional<std::filesystem::path> sysFsGetDeviceTtyPath(std::filesystem::path const& devicePath) {
-    for (auto &p : std::filesystem::directory_iterator(devicePath))
+std::optional<fs::path> sysFsGetDeviceTtyPath(fs::path const& devicePath) {
+    for (auto &p : fs::directory_iterator(devicePath))
     {
         // p is something like /sys/bus/usb/devices/1-6/1-6:1.0
         if (util::endsWith(p.path(), ":1.0"))
         {
             // found device folder, look for tty* Folder inside
-            for (auto &deviceFolder : std::filesystem::directory_iterator(p.path()))
+            for (auto &deviceFolder : fs::directory_iterator(p.path()))
             {
                 auto lastFolder = deviceFolder.path().end();
                 if (deviceFolder.path().begin() != lastFolder)
@@ -56,7 +67,7 @@ std::optional<std::filesystem::path> sysFsGetDeviceTtyPath(std::filesystem::path
                     if (util::startsWith(*lastFolder, "tty"))
                     {
                         // generate the file name on the system /dev folder
-                        const auto deviceFileName = std::filesystem::path("/dev/") / std::string(*lastFolder);
+                        const auto deviceFileName = fs::path("/dev/") / std::string(*lastFolder);
                         return deviceFileName;
                     }
                 }
@@ -104,7 +115,7 @@ SiLabsSerialDevices getSiLabsDevices()
     SiLabsSerialDevices found_devices;
     const std::string sysfs_usb_path = "/sys/bus/usb/devices/";
     // list all connected usb devices
-    for (auto &usb_device : std::filesystem::directory_iterator(sysfs_usb_path))
+    for (auto &usb_device : fs::directory_iterator(sysfs_usb_path))
     {
         // check if SiLabs Device
         if (!isSiLabsDevice(usb_device.path()))
