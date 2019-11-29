@@ -1,0 +1,157 @@
+#ifndef LINUX_DEVICE_QUERY_H
+#define LINUX_DEVICE_QUERY_H
+
+#include "utility/StringView.h"
+
+#include <spdlog/spdlog.h>
+
+#include <filesystem>
+#include <map>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <optional>
+
+namespace LinuxDeviceQuery
+{
+
+typedef std::map<std::string, std::vector<std::string>> SiLabsSerialDevices;
+
+/**
+ * Returns the contents of a device in the sysfs tree
+ */
+std::optional<std::string> sysFsGetDeviceProperty(std::filesystem::path const& devicePath,
+    std::string const& propertyName) {
+    std::ifstream propFile;
+
+    propFile.open(devicePath / propertyName, std::ifstream::in);
+    if (!propFile) {
+        return std::nullopt;
+    }
+
+    std::string propLine;
+    std::getline(propFile, propLine);
+    propFile.close();
+
+    return propLine;
+}
+
+/**
+ * Gets the topmost folder of a sysfs usb device and traverses it to find the name of
+ * the tty device assicated.
+ */
+std::optional<std::filesystem::path> sysFsGetDeviceTtyPath(std::filesystem::path const& devicePath) {
+    for (auto &p : std::filesystem::directory_iterator(devicePath))
+    {
+        // p is something like /sys/bus/usb/devices/1-6/1-6:1.0
+        if (util::endsWith(p.path(), ":1.0"))
+        {
+            // found device folder, look for tty* Folder inside
+            for (auto &deviceFolder : std::filesystem::directory_iterator(p.path()))
+            {
+                auto lastFolder = deviceFolder.path().end();
+                if (deviceFolder.path().begin() != lastFolder)
+                {
+                    lastFolder = --lastFolder;
+                    if (util::startsWith(*lastFolder, "tty"))
+                    {
+                        // generate the file name on the system /dev folder
+                        const auto deviceFileName = std::filesystem::path("/dev/") / std::string(*lastFolder);
+                        return deviceFileName;
+                    }
+                }
+            }
+        }
+    }
+
+    return std::nullopt;
+}
+
+/**
+ * Returns true if a sysfs USB device is a SiLabs CP210x UART interface chip
+ */
+bool isSiLabsDevice(std::string const& devicePath ) {
+    auto vendor = sysFsGetDeviceProperty(devicePath, "idVendor");
+    auto product = sysFsGetDeviceProperty(devicePath, "idProduct");
+
+    if (!vendor)
+        return false;
+    if (!product)
+        return false;
+
+    // Check for SiLabs
+    if (*vendor != "10c4")
+    {
+        return false;
+    }
+
+    // Check for CP210x USB UART bridge product ids
+    if ((*product != "ea61") && (*product != "ea60"))
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Returns a list of all serial strings found of SiLabs UART chips
+ * and the serial devices (like "/dev/ttyUSB0") assicated with them.
+ * One serial string can in principle appear on multiple devices.
+ */
+SiLabsSerialDevices getSiLabsDevices()
+{
+    SiLabsSerialDevices found_devices;
+    const std::string sysfs_usb_path = "/sys/bus/usb/devices/";
+    // list all connected usb devices
+    for (auto &usb_device : std::filesystem::directory_iterator(sysfs_usb_path))
+    {
+        // check if SiLabs Device
+        if (!isSiLabsDevice(usb_device.path()))
+            continue;
+
+        // get serial string
+        auto serial_string = sysFsGetDeviceProperty(usb_device.path(), "serial");
+
+        if (!serial_string)
+            continue;
+
+        const auto ttyDevice = sysFsGetDeviceTtyPath(usb_device.path());
+        if (ttyDevice) {
+            spdlog::info("Found serial name {0} for device {1}", *serial_string, ttyDevice->u8string());
+            found_devices[*serial_string].push_back(*ttyDevice);
+        }
+    }
+
+    return found_devices;
+}
+
+/** Returns all serial devices ("/dev/ttyUSB") assicated with one
+ * specific serial string of SiLabs chip.
+ * One serial number can in principle appear on multiple devices.
+*/
+std::vector<std::string> getDeviceFileForSiLabsSerial(std::string const &serial_string)
+{
+    auto devices = getSiLabsDevices();
+
+    for (auto const &dev : devices)
+    {
+        spdlog::debug("Serial Number {0} found for these devices", dev.first);
+        for (auto const &devFileName : dev.second)
+        {
+            spdlog::debug("-> Device file name {0}", devFileName);
+        }
+    }
+
+    if (devices.find(serial_string) == devices.end())
+    {
+        spdlog::error("No SiLabs USB device with serial string {0} found on system", serial_string);
+        return std::vector<std::string>();
+    }
+
+    return devices[serial_string];
+}
+
+} // namespace LinuxDevices
+
+#endif
