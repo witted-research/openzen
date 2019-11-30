@@ -48,7 +48,7 @@ namespace zen
         Call this to start forwarding RTK corrections
         */
         ZenError forwardRtkCorrections(RtkCorrectionSource correction,
-            std::string const& hostname, unsigned short port ) noexcept;
+            std::string const& hostname, unsigned long port ) noexcept;
 
         ZenError stopRtkCorrections() noexcept;
 

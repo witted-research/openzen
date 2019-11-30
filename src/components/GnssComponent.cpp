@@ -60,7 +60,7 @@ namespace zen
     }
 
     ZenError GnssComponent::forwardRtkCorrections(RtkCorrectionSource correction,
-        std::string const& hostname, unsigned short port) noexcept {
+        std::string const& hostname, unsigned long port) noexcept {
         if (correction == RtkCorrectionSource::RTCM3NetworkStream) {
             m_rtcm3network = std::make_unique<RTCM3NetworkSource>();
 

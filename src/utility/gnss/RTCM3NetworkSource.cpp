@@ -63,7 +63,7 @@ RTCM3NetworkSource::RTCM3NetworkSource() : m_transferThread([](TransferThreadOpt
     }) {
 }
 
-void RTCM3NetworkSource::start(std::string const& networkHost, unsigned short networkPort) {
+void RTCM3NetworkSource::start(std::string const& networkHost, unsigned long networkPort) {
     m_socket = std::make_unique<asio::ip::tcp::socket>(m_ioContext);
 
     m_transferThread.start(
