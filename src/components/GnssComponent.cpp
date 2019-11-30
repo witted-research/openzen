@@ -76,9 +76,28 @@ namespace zen
 
             spdlog::info("Connecting to host {0}:{1} for RTK corrections", hostname, port);
             m_rtcm3network->start(hostname, port);
+            return ZenError::ZenError_None;
+        } else if(correction == RtkCorrectionSource::RTCM3SerialStream) {
+                m_rtcm3serial = std::make_unique<RTCM3SerialSource>();
+
+                m_rtcm3serial->addFrameCallback([&](uint16_t messageType, std::vector<std::byte> const& frame) {
+                spdlog::info("RTCM3 message type {0} size {1} of size received", messageType, frame.size());
+
+                if (ZenError_None != m_communicator.sendAndWaitForAck(0, uint8_t(EDevicePropertyV1::SetRtkCorrection),
+                    ZenProperty_t(EDevicePropertyV1::SetRtkCorrection), frame))
+                {
+                    spdlog::error("Could not send RTK correction to sensor");
+                }
+            });
+
+            spdlog::info("Connecting to serial {0}:{1} for RTK corrections", hostname, port);
+            m_rtcm3serial->start(hostname, port);
+            return ZenError::ZenError_None;
         }
 
-        return ZenError::ZenError_None;
+        spdlog::error("Selected RTK correction source not supported");
+
+        return ZenError::ZenError_InvalidArgument;
     }
 
     ZenError GnssComponent::stopRtkCorrections() noexcept {

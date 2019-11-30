@@ -1077,7 +1077,7 @@ ZEN_API ZenPropertyType ZenSensorComponentPropertyType(ZenClientHandle_t clientH
 
 
 ZEN_API ZenError ZenSensorComponentGnnsForwardRtkCorrections(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle,
-    const char* const /*rtkCorrectionSource*/,
+    const char* const rtkCorrectionSource,
     const char* const hostname,
     uint32_t port)
 {
@@ -1088,8 +1088,18 @@ ZEN_API ZenError ZenSensorComponentGnnsForwardRtkCorrections(ZenClientHandle_t c
             if (auto component = getComponent(sensor, componentHandle))
             {
                 auto gnssComponent = static_cast<zen::GnssComponent *>(component);
-                return gnssComponent->forwardRtkCorrections(zen::RtkCorrectionSource::RTCM3NetworkStream,
-                    hostname, port);
+                if (strcmp(rtkCorrectionSource, "RTCM3Network") == 0) {
+                    return gnssComponent->forwardRtkCorrections(zen::RtkCorrectionSource::RTCM3NetworkStream,
+                        hostname, port);
+                }
+                else if (strcmp(rtkCorrectionSource, "RTCM3Serial") == 0) {
+                    return gnssComponent->forwardRtkCorrections(zen::RtkCorrectionSource::RTCM3SerialStream,
+                        // in this case port name and baud rate
+                        hostname, port);
+                }
+                else {
+                    return ZenError_InvalidArgument;
+                }
             }
             else
                 return ZenError_InvalidComponentHandle;
