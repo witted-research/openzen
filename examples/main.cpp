@@ -211,14 +211,25 @@ int main(int argc, char *argv[])
         g_gnssHandle = gnss.component().handle;
         std::cout << "Gnss Component present on sensor" << std::endl;
 
-        // enable this code for RTK forwarding
+        // enable this code for RTK forwarding from network
         /*
-        if (gnss.forwardRtkCorrections("RTCM3", "192.168.1.117", 9000) != ZenError_None) {
+        if (gnss.forwardRtkCorrections("RTCM3Network", "192.168.1.117", 9000) != ZenError_None) {
             std::cout << "Cannot set RTK correction forwarding" << std::endl;
         }
         else {
             std::cout << "RTK correction forwarding started" << std::endl;
-        }*/
+        }
+        */
+
+        // enable this code for RTK forwarding from serial port
+        /*
+        if (gnss.forwardRtkCorrections("RTCM3Serial", "COM11", 57600) != ZenError_None) {
+            std::cout << "Cannot set RTK correction forwarding" << std::endl;
+        }
+        else {
+            std::cout << "RTK correction forwarding started" << std::endl;
+        }
+        */
     }
 
     // Enable sensor streaming
