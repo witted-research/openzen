@@ -17,18 +17,22 @@ void RTCM3SerialSource::handle_read(const asio::error_code& error,
     // will be true if there was en error
     if (error)
     {
-        spdlog::error("Encountered error while reading from RTCM3SerialSource: {0}", error.message());
-        // wait a moment and try to read again
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-    }
-    else {
+        // only report as problem if we want to continue reading
+        if (m_continueReading) {
+            spdlog::error("Encountered error while reading from RTCM3SerialSource: {0}", error.message());
 
+            // wait a moment and try to read again
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    } else {
         std::string s_in(m_buffer_read_some.begin(), m_buffer_read_some.begin() + bytes_transferred);
 
         for (int i = 0; i < s_in.size(); i++) {
             m_parserBuffer.push_back(std::byte(s_in[i]));
         }
-        m_parser.next(m_parserBuffer);
+        // parse until parser has nothing left to parse
+        while (m_parser.next(m_parserBuffer) == true) {
+        }
     }
 
     // continue reading
