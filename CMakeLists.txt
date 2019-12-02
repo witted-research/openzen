@@ -119,11 +119,15 @@ set(io_interfaces_sources
     src/io/interfaces/CanInterface.h
     src/io/interfaces/FtdiUsbInterface.cpp
     src/io/interfaces/FtdiUsbInterface.h
+    src/io/interfaces/TestSensorInterface.cpp
+    src/io/interfaces/TestSensorInterface.h
 )
 
 set(io_systems_sources
     src/io/systems/FtdiUsbSystem.cpp
     src/io/systems/FtdiUsbSystem.h
+    src/io/systems/TestSensorSystem.cpp
+    src/io/systems/TestSensorSystem.h
 )
 
 set(properties_sources
