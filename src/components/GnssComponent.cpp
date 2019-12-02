@@ -105,7 +105,10 @@ namespace zen
             m_rtcm3network->stop();
             m_rtcm3network = nullptr;
         }
-
+        if (m_rtcm3serial) {
+            m_rtcm3serial->stop();
+            m_rtcm3serial = nullptr;
+        }
       return ZenError::ZenError_None;
    }
 
