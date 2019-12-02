@@ -98,6 +98,7 @@ void RTCM3SerialSource::start(std::string const& comPort, unsigned long baudrate
 }
 
 void RTCM3SerialSource::stop() {
+    spdlog::info("RTCMSerialStream transfer stopping");
     m_continueReading = false;
     if (m_serial) {
         m_serial->cancel();
@@ -107,6 +108,7 @@ void RTCM3SerialSource::stop() {
     m_io.stop();
     // actually make sure the worker thread is joined
     m_transferThread.stop();
+    spdlog::info("RTCMSerialStream transfer stopped");
 }
 
 void RTCM3SerialSource::addFrameCallback(RTCM3Parser::OnFrameCallback const& fc) {
