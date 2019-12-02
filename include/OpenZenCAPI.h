@@ -211,7 +211,7 @@ extern "C" {
     ZEN_API ZenError ZenSensorComponentGnnsForwardRtkCorrections(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle,
         const char* const rtkCorrectionSource,
         const char* const hostname,
-        uint16_t port);
+        uint32_t port);
 
 }
 #endif

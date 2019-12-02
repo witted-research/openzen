@@ -22,7 +22,7 @@ namespace zen {
 
         RTCM3NetworkSource();
 
-        void start(std::string const& networkHost, unsigned short networkPort);
+        void start(std::string const& networkHost, unsigned long networkPort);
 
         void stop();
 
@@ -37,11 +37,10 @@ namespace zen {
         std::unique_ptr<asio::ip::tcp::socket> m_socket;
         RTCM3Parser m_parser;
 
-
         class TransferThreadOptions {
         public:
             const std::string m_networkHost;
-            const unsigned short m_networkPort;
+            const unsigned long m_networkPort;
             asio::io_context& m_ioContext;
             std::unique_ptr<asio::ip::tcp::socket>& m_socket;
             RTCM3Parser& m_parser;

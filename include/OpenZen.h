@@ -198,7 +198,7 @@ namespace zen
 
         ZenError forwardRtkCorrections(const char* const rtkCorrectionSource,
             const char* const hostname,
-            uint16_t port) noexcept {
+            uint32_t port) noexcept {
             return ZenSensorComponentGnnsForwardRtkCorrections(m_clientHandle, m_sensorHandle, m_componentHandle, rtkCorrectionSource, hostname, port);
         }
     };

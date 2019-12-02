@@ -154,6 +154,8 @@ set(utility_sources
     src/utility/ThreadFence.h
     src/utility/gnss/RTCM3NetworkSource.h
     src/utility/gnss/RTCM3NetworkSource.cpp
+    src/utility/gnss/RTCM3SerialSource.h
+    src/utility/gnss/RTCM3SerialSource.cpp
     src/utility/gnss/RTCM3Parser.h
 )
 

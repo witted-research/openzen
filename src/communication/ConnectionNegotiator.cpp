@@ -53,19 +53,32 @@ namespace zen
         constexpr const auto IO_TIMEOUT = std::chrono::milliseconds(2000);
         communicator.setBaudRate(desiredBaudRate);
 
-        m_terminated = false;
-        // disable streaming during connection negotiation, command same for legacy and Ig1
-        if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV0::SetCommandMode), gsl::span<std::byte>()))
-        {
-            spdlog::info("Cannot set sensor in command mode");
-            return nonstd::make_unexpected(ZenSensorInitError_SendFailed);
-        }
-        {
-            std::unique_lock<std::mutex> lock(m_mutex);
-            if (m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; }) == false) {
-                spdlog::error("Timout when setting sensor to command mode before configuration.");
-                return nonstd::make_unexpected(ZenSensorInitError_Timeout);
+        bool commandModeReply = false;
+
+        // try two times because in some cases, the reply of the first command send to the sensor
+        // will not be in the input buffer.
+        for (size_t retries = 0; retries < 2; retries++) {
+            m_terminated = false;
+            // disable streaming during connection negotiation, command same for legacy and Ig1
+            if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV0::SetCommandMode), gsl::span<std::byte>()))
+            {
+                spdlog::info("Cannot set sensor in command mode");
+                return nonstd::make_unexpected(ZenSensorInitError_SendFailed);
             }
+            {
+                std::unique_lock<std::mutex> lock(m_mutex);
+                if (m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; }) == false) {
+                    // hit timeout, will retry
+                } else {
+                    commandModeReply = true;
+                    break;
+                }
+            }
+        }
+
+        if (commandModeReply == false) {
+            spdlog::error("Timout when setting sensor to command mode before configuration.");
+            return nonstd::make_unexpected(ZenSensorInitError_Timeout);
         }
 
         // will send command 21, which is GET_IMU_ID for legacy sensors. So legacy sensors will return one 32-bit

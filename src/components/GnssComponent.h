@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "utility/gnss/RTCM3NetworkSource.h"
+#include "utility/gnss/RTCM3SerialSource.h"
 
 #include "SensorComponent.h"
 #include "communication/SyncedModbusCommunicator.h"
@@ -16,8 +17,12 @@
 
 namespace zen
 {
+    /**
+    Source type for the RTK corrections
+    */
    enum class RtkCorrectionSource {
-      RTCM3NetworkStream
+      RTCM3NetworkStream,
+      RTCM3SerialStream
    };
 
     /**
@@ -48,7 +53,7 @@ namespace zen
         Call this to start forwarding RTK corrections
         */
         ZenError forwardRtkCorrections(RtkCorrectionSource correction,
-            std::string const& hostname, unsigned short port ) noexcept;
+            std::string const& hostname, unsigned long port ) noexcept;
 
         ZenError stopRtkCorrections() noexcept;
 
@@ -69,6 +74,7 @@ namespace zen
         nonstd::expected<ZenEventData, ZenError> parseSensorData(gsl::span<const std::byte> data) const noexcept;
         SyncedModbusCommunicator & m_communicator;
         std::unique_ptr<RTCM3NetworkSource> m_rtcm3network;
+        std::unique_ptr<RTCM3SerialSource> m_rtcm3serial;
     };
 }
 #endif

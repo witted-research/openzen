@@ -2,7 +2,7 @@
 # -----
 # Custom Docker image which brings C++ compiler and boost libraries
 image:
-  name: thauth/buildbox-multi-platform:6
+  name: thauth/buildbox-multi-platform:10
   username: $DOCKER_HUB_USERNAME
   password: $DOCKER_HUB_PASSWORD
   email: $DOCKER_HUB_EMAIL
@@ -33,7 +33,7 @@ pipelines:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
             # disable most of optional components for now
-            - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_CC_COMPILER=clang-6.0 ../build
+            - cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CC_COMPILER=clang ../build
             - make
             - ./OpenZenTests
       - step:
