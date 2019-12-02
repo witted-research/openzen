@@ -38,6 +38,10 @@ public:
                 buffer.pop_front();
                 m_state = ParserState::Length;
             }
+            else {
+                // pop this element and look for preamble in the next package
+                buffer.pop_front();
+            }
         }
 
         if (m_state == ParserState::Length) {
