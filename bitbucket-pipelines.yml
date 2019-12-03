@@ -37,6 +37,15 @@ pipelines:
             - make
             - ./OpenZenTests
       - step:
+          name: Linux x64 Build Gcc ZeroMQ support
+          script:
+            - git submodule update --init
+            - mkdir ../linux_x64_build && cd ../linux_x64_build
+            # disable most of optional components for now
+            - cmake -ZEN_NETWORK ../build
+            - make
+            - ./OpenZenTests
+      - step:
           name: Linux x64 Build no Bluetooth
           script:
             - git submodule update --init
