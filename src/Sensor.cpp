@@ -161,7 +161,13 @@ namespace zen
 
         // Then the communicator needs to be destroyed before to guarantee that the
         // underlying IO interface does not call processReceivedData anymore
-        m_communicator->close();
+        if (m_communicator) {
+            m_communicator->close();
+        }
+        if (m_eventCommunicator) {
+            m_eventCommunicator->close();
+            m_eventCommunicator = nullptr;
+        }
 
         // After that we can guarantee to subscribers that the sensor has shut down
         ZenEventData eventData{};
@@ -296,7 +302,15 @@ namespace zen
 
     bool Sensor::equals(const ZenSensorDesc& desc) const
     {
-        return m_communicator->equals(desc);
+        if (m_communicator) {
+            return m_communicator->equals(desc);
+        }
+        else if (m_eventCommunicator) {
+            return m_eventCommunicator->equals(desc);
+        }
+        else {
+            return false;
+        }
     }
 
     bool Sensor::subscribe(LockingQueue<ZenEvent>& queue) noexcept

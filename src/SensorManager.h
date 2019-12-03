@@ -17,7 +17,6 @@
 
 #include "Sensor.h"
 #include "SensorClient.h"
-#include "DataProcessor.h"
 #include "utility/ReferenceCmp.h"
 
 #include <memory>
@@ -64,7 +63,10 @@ namespace zen
         std::set<std::shared_ptr<Sensor>, SensorCmp> m_sensors;
         std::set<std::reference_wrapper<SensorClient>, ReferenceWrapperCmp<SensorClient>> m_discoverySubscribers;
 
-        std::vector<std::unique_ptr<DataProcessor>> m_processors;
+        /**
+        This mutex needs to be held to access or modify the m_processors vector
+         */
+        std::mutex m_processorsMutex;
         std::vector<ZenSensorDesc> m_devices;
 
         std::condition_variable m_discoveryCv;

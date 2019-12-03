@@ -9,6 +9,7 @@
 
 #include "Sensor.h"
 #include "utility/LockingQueue.h"
+#include "processors/DataProcessor.h"
 
 namespace zen
 {
@@ -51,6 +52,7 @@ namespace zen
         LockingQueue<ZenEvent> m_eventQueue;
 
         std::unordered_map<uintptr_t, std::weak_ptr<Sensor>> m_sensors;
+        std::vector<std::unique_ptr<DataProcessor>> m_processors;
     };
 }
 

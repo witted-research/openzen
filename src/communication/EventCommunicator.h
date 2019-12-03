@@ -36,7 +36,12 @@ namespace zen
            return ZenError_None;
         }
 
+        /** Returns whether the IO interface equals the sensor description */
+        bool equals(const ZenSensorDesc& desc) const noexcept { return m_interface->equals(desc); }
+
         void setSubscriber(IEventSubscriber& subscriber) noexcept { m_subscriber = &subscriber; }
+
+        void close() {}
 
     protected:
         /** Publish received data to the subscriber */

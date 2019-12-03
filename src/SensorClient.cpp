@@ -5,7 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #ifdef ZEN_NETWORK
-#include "ZmqDataProcessor.h"
+#include "processors/ZmqDataProcessor.h"
 #endif
 
 namespace {
@@ -25,6 +25,12 @@ namespace zen
         for (auto& pair : m_sensors)
             if (auto sensor = pair.second.lock())
                 sensor->unsubscribe(m_eventQueue);
+
+        // shutdown all processors of this client
+        for (auto& processor : m_processors) {
+            processor->release();
+        }
+        m_processors.clear();
     }
 
     void SensorClient::listSensorsAsync() noexcept
@@ -34,15 +40,13 @@ namespace zen
 
     ZenError SensorClient::publishEvents(std::shared_ptr<Sensor> sensor, const std::string & endpoint) {
 #ifdef ZEN_NETWORK
-        auto processor = std::make_unique<ZmqDataProcessor>();
+        auto processor = std::make_unique<ZmqDataProcessor>(sensor);
 
         if (!processor->connect(endpoint)) {
             return ZenError_InvalidArgument;
         }
         sensor->subscribe(processor->getEventQueue());
-        //pro
-        // todo create a new queue and register it
-        SensorManager::get().registerDataProcessor(std::move(processor));
+        m_processors.push_back(std::move(processor));
         spdlog::info("Publishing events to endpoint {0}", endpoint);
         return ZenError_None;
 #else

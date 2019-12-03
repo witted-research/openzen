@@ -120,11 +120,11 @@ namespace zen
             const auto token = m_nextToken++;
             lock.unlock();
 
-            //auto evCom = std::make_unique<EventCommunicator>(std::move(*ioInterface));
             auto eventCom = std::make_unique<EventCommunicator>();
-            auto ioInterface = ioSystem->get().obtainEventBased(desc, *(eventCom.get()));
-
-            eventCom->init(std::move(*ioInterface));
+            if (auto ioInterface = ioSystem->get().obtainEventBased(desc, *(eventCom.get())))
+                eventCom->init(std::move(*ioInterface));
+            else
+                return nonstd::make_unexpected(ioInterface.error());
 
             // high level sensors receive events directly and need no negogiators/communicators
             SensorConfig conf;
@@ -218,9 +218,4 @@ namespace zen
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
     }
-
-    void SensorManager::registerDataProcessor(std::unique_ptr<DataProcessor> processor) noexcept {
-        m_processors.emplace_back(std::move(processor));
-    }
-
 }
