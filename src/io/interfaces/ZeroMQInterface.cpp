@@ -86,11 +86,14 @@ namespace zen
                           auto zenEvent = zen::Streaming::streamingMessageToZenEvent(*unpackedMessage);
                           if (zenEvent) {
                               publishReceivedData(*zenEvent);
+                          } else {
+                              spdlog::error("Cannot convert streaming message of type {0} to ZenEvent",
+                                  unpackedMessage->type);
                           }
                       }
                   }
                   else {
-                      spdlog::critical("Cannot unpack ZeroMQ message of size {0}", zmqMessage.size());
+                      spdlog::error("Cannot unpack ZeroMQ message of size {0}", zmqMessage.size());
                   }
               }
           }
