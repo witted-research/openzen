@@ -199,6 +199,11 @@ int main(int argc, char *argv[])
     }
     std::cout << "Sensor Model: " << sensorModelName << std::endl;
 
+    // enable this to stream the sensor data to a network address
+    // the ZEN_NETWORK build option needs to be enabled for this feature
+    // to work.
+    //sensor.publishEvents("tcp://*:8877");
+
     // check if a Gnss component is present on this sensor
     auto gnssPair = sensor.getAnyComponentOfType(g_zenSensorType_Gnss);
     auto& hasGnss = gnssPair.first;
