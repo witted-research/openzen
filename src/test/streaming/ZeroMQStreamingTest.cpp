@@ -60,22 +60,31 @@ TEST(ZeroMQStreming, wrongPublishUrl) {
 
 TEST(ZeroMQStreaming, sendAndReceive) {
     // create high-level sensor
-    const std::string obtainUrl = "tcp://localhost:8899";
+    const std::string obtainUrl = "tcp://127.0.0.1:8899";
     const std::string publishUrl = "tcp://*:8899";
     auto remoteClient = zen::make_client();
-    auto remoteSensor = remoteClient.second.obtainSensorByName("ZeroMQ", obtainUrl).second;
+    auto remoteSensor = remoteClient.second.obtainSensorByName("ZeroMQ", obtainUrl);
+    ASSERT_EQ(ZenError_None, remoteSensor.first);
 
     // create a test sensor to publish
     auto localClient = zen::make_client();
-    auto localTestSensor = localClient.second.obtainSensorByName("TestSensor", "").second;
+    auto localTestSensor = localClient.second.obtainSensorByName("TestSensor", "");
+    ASSERT_EQ(ZenError_None, localTestSensor.first);
 
-    localTestSensor.publishEvents(publishUrl);
+    localTestSensor.second.publishEvents(publishUrl);
 
     // wait for some events to arrive
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(4));
     // check if something arrived at the remote sensor via network
     auto sensorData = remoteClient.second.pollNextEvent();
     ASSERT_TRUE(sensorData.has_value());
+
+    // We know what the TestSensor sends, check it
+    ASSERT_EQ(sensorData->component.handle, 1);
+    ASSERT_EQ(sensorData->eventType, ZenImuEvent_Sample);
+    ASSERT_EQ(sensorData->data.imuData.g[0], 23.0f );
+    ASSERT_EQ(sensorData->data.imuData.g[1], 24.0f);
+    ASSERT_EQ(sensorData->data.imuData.g[2], 25.0f);
 }
 
 TEST(ZeroMQStreaming, parseImuMessage) {
