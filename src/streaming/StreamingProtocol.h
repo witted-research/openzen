@@ -31,7 +31,7 @@ namespace zen {
             StreamingMessageType type;
         };
 
-        inline ZenEvent StreamingMessageToZenEvent(StreamingMessage const& msg) {
+        inline std::optional<ZenEvent> streamingMessageToZenEvent(StreamingMessage const& msg) {
             ZenEvent evt;
             if (msg.type == StreamingMessageType_ZenEventImu) {
                 evt.component.handle = msg.payload.imuData.component;
@@ -47,6 +47,7 @@ namespace zen {
             }
             else {
                 spdlog::error("Streaming Message not supported");
+                return std::nullopt;
             }
 
             return evt;

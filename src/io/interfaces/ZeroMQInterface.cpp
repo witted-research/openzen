@@ -83,8 +83,10 @@ namespace zen
                   auto unpackedMessage = zen::Streaming::fromZmqMessage(zmqMessage);
                   if (unpackedMessage.has_value()) {
                       if (!m_terminate) {
-                          auto zenEvent = zen::Streaming::StreamingMessageToZenEvent(*unpackedMessage);
-                          publishReceivedData(zenEvent);
+                          auto zenEvent = zen::Streaming::streamingMessageToZenEvent(*unpackedMessage);
+                          if (zenEvent) {
+                              publishReceivedData(*zenEvent);
+                          }
                       }
                   }
                   else {
