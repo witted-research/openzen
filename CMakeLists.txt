@@ -70,6 +70,12 @@ endif()
 set(zen_optional_libs)
 set(zen_optional_test_sources)
 
+set(processors_sources
+    src/processors/DataProcessor.h
+    src/processors/ZmqDataProcessor.h
+    src/processors/ZmqDataProcessor.cpp
+)
+
 set(communication_sources
     src/communication/ConnectionNegotiator.cpp
     src/communication/ConnectionNegotiator.h
@@ -290,6 +296,7 @@ endif()
 set(zen_all_sources
     ${zen_includes}
     ${zen_sources}
+    ${processors_sources}
     ${communication_sources}
     ${components_sources}
     ${components_factories_sources}

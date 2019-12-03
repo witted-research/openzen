@@ -10,6 +10,7 @@ namespace zen
     */
     class DataProcessor {
     public:
+        virtual void release() = 0;
 
     };
 
