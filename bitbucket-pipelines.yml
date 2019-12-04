@@ -42,7 +42,7 @@ pipelines:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
             # disable most of optional components for now
-            - cmake -ZEN_NETWORK ../build
+            - cmake -DZEN_NETWORK=ON ../build
             - make
             - ./OpenZenTests
       - step:
