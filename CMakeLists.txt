@@ -72,8 +72,6 @@ set(zen_optional_test_sources)
 
 set(processors_sources
     src/processors/DataProcessor.h
-    src/processors/ZmqDataProcessor.h
-    src/processors/ZmqDataProcessor.cpp
 )
 
 set(communication_sources
@@ -226,6 +224,11 @@ if(ZEN_NETWORK)
 
     list (APPEND zen_optional_test_sources
         src/test/streaming/ZeroMQStreamingTest.cpp
+    )
+
+    list (APPEND processors_sources
+        src/processors/ZmqDataProcessor.h
+        src/processors/ZmqDataProcessor.cpp
     )
 
     list (APPEND zen_optional_libs
