@@ -5,6 +5,7 @@
 #include <string_view>
 #include <vector>
 #include <sstream>
+#include <gsl/span>
 
 namespace util
 {
@@ -54,6 +55,30 @@ namespace util
         for (auto c : data)
             rawOutput << std::to_integer<unsigned>(c) << ",";
         return rawOutput.str();
+    }
+
+    inline bool endsWith(std::string const &fullString, std::string const &ending)
+    {
+        if (fullString.length() >= ending.length())
+        {
+            return (0 == fullString.compare(fullString.length() - ending.length(), ending.length(), ending));
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    inline bool startsWith(std::string const &fullString, std::string const &start)
+    {
+        if (fullString.length() >= start.length())
+        {
+            return (0 == fullString.compare(0, start.length(), start));
+        }
+        else
+        {
+            return false;
+        }
     }
 }
 

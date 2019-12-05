@@ -1,3 +1,5 @@
+
+#include "io/systems/linux/LinuxDeviceQuery.h"
 #include "io/systems/linux/LinuxDeviceSystem.h"
 
 #include "io/interfaces/linux/LinuxDeviceInterface.h"
@@ -22,27 +24,27 @@ namespace zen
 
     ZenError LinuxDeviceSystem::listDevices(std::vector<ZenSensorDesc>& outDevices)
     {
-        constexpr int MAX_USB_PORTS = 100;
-        for (unsigned int i = 0; i <= MAX_USB_PORTS; ++i)
-        {
-            const std::string filename("/dev/ttyUSB" + std::to_string(i));
+        // LPMS sensors use SiLabs UART interface chips, this call will list them
+        // with all their serial names coming directly from the USB SiLabs driver
+        const auto siLabsDevices = LinuxDeviceQuery::getSiLabsDevices();
 
-            const int fd = openFD(filename);
-            if (fd != -1)
-            {
-                ::close(fd);
-
-                const std::string name("USB PORT #" + std::to_string(i));
-
+        for (const auto siLabsSerialDevs : siLabsDevices ) {
+            // one serial name can be on multiple ports
+            for (const auto siLabsDevs: siLabsSerialDevs.second) {
                 ZenSensorDesc desc;
-                std::memcpy(desc.name, name.c_str(), name.size());
-                desc.name[name.size()] = '\0';
+                auto const siLabsSerialNumber = siLabsSerialDevs.first;
 
-                desc.serialNumber[0] = '\0';
+                std::memcpy(desc.name, siLabsSerialNumber.c_str(), siLabsSerialNumber.size());
+                desc.name[siLabsSerialNumber.size()] = '\0';
+
+                std::memcpy(desc.serialNumber, siLabsSerialNumber.c_str(), siLabsSerialNumber.size());
+                desc.serialNumber[siLabsSerialNumber.size()] = '\0';
+
                 std::memcpy(desc.ioType, LinuxDeviceSystem::KEY, sizeof(LinuxDeviceSystem::KEY));
 
-                std::memcpy(desc.identifier, filename.c_str(), filename.size());
-                desc.identifier[filename.size()] = '\0';
+                // output the device path (like "/dev/ttyUSB0") just for additional information
+                std::memcpy(desc.identifier, siLabsDevs.c_str(), siLabsDevs.size());
+                desc.identifier[siLabsDevs.size()] = '\0';
 
                 desc.baudRate = 921600;
 
@@ -53,16 +55,38 @@ namespace zen
         return ZenError_None;
     }
 
-    nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> LinuxDeviceSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
+    nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> LinuxDeviceSystem::obtain(
+        const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
-        spdlog::info("Opening file {} for sensor communication", desc.identifier);
-        const int fd = openFD(desc.identifier);
-        if (fd == -1) {
-            spdlog::error("Error while opening file {} for sensor communication", desc.identifier);
+        // use identifiert field to get the serial number in case
+        // no serial number is given. This can happen if the obtainSensorByName is used.
+        std::string serialNumberConnectTo(desc.serialNumber);
+        if (serialNumberConnectTo.size() == 0) {
+            serialNumberConnectTo = std::string(desc.identifier);
+        }
+
+        const auto ttyDevices = LinuxDeviceQuery::getDeviceFileForSiLabsSerial(serialNumberConnectTo);
+
+        if (ttyDevices.size() == 0) {
+            spdlog::error("Cannot find USB sensor with serial number {0}", serialNumberConnectTo);
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
         }
 
-        auto ioInterface = std::make_unique<LinuxDeviceInterface>(subscriber, desc.identifier, fd);
+        if (ttyDevices.size() > 1) {
+            spdlog::error("Found multiple sensors with serial number {0}. Cannot uniquely connect to sensor",
+                serialNumberConnectTo);
+        }
+
+        const auto ttyDevice = ttyDevices[0];
+
+        spdlog::info("Opening file {} for sensor communication", ttyDevice);
+        const int fd = openFD(ttyDevice);
+        if (fd == -1) {
+            spdlog::error("Error while opening file {} for sensor communication", ttyDevice);
+            return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
+        }
+
+        auto ioInterface = std::make_unique<LinuxDeviceInterface>(subscriber, ttyDevice, fd);
 
         struct termios config;
         if (-1 == ::tcgetattr(fd, &config))
