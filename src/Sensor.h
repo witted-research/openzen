@@ -19,6 +19,8 @@
 #include "communication/EventCommunicator.h"
 #include "utility/LockingQueue.h"
 #include "utility/ReferenceCmp.h"
+#include "processors/DataProcessor.h"
+
 
 namespace zen
 {
@@ -80,6 +82,15 @@ namespace zen
         /** Unsubscribe an event queue from the sensor */
         void unsubscribe(LockingQueue<ZenEvent>& queue) noexcept;
 
+        /** An data processor associated with this Sensor. It will be destroyed once the sensor
+            is destroyed */
+        void addProcessor(std::unique_ptr<DataProcessor> processor) noexcept;
+
+        /** Release all processors added to this sensor. This is done outside of the destructor
+            to not interfere with the teardown and unsubscribing process when the sensor is
+            destroyed */
+        void releaseProcessors() noexcept;
+
     private:
         ZenError processReceivedData(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept override;
 
@@ -112,6 +123,7 @@ namespace zen
 
         std::thread m_uploadThread;
 
+        std::vector<std::unique_ptr<DataProcessor>> m_processors;
     };
 
     struct SensorCmp

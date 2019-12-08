@@ -3,7 +3,7 @@
 namespace zen
 {
 
-ZmqDataProcessor::ZmqDataProcessor(std::shared_ptr<Sensor> sensor) : m_sensor(sensor),
+ZmqDataProcessor::ZmqDataProcessor() :
     m_senderThread([](SenderThreadParams& p ) {
     auto eventResult = p.m_queue.waitToPop();
 
@@ -60,8 +60,6 @@ LockingQueue<ZenEvent>& ZmqDataProcessor::getEventQueue() {
 
 void ZmqDataProcessor::release() {
     ZenEvent evt;
-
-    m_sensor->unsubscribe(m_queue);
 
     evt.eventType = ZenSensorEvent_SensorDisconnected;
     m_queue.push(evt);

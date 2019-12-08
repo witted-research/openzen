@@ -178,6 +178,22 @@ namespace zen
             subscriber.get().push(disconnected);
     }
 
+    void Sensor::addProcessor(std::unique_ptr<DataProcessor> processor) noexcept {
+        // subscribe to this sensors event queue
+        subscribe(processor->getEventQueue());
+
+        m_processors.emplace_back(std::move(processor));
+    }
+
+    void Sensor::releaseProcessors() noexcept {
+        // unsubscribe & destroy all processors
+        for (auto & proc : m_processors) {
+            unsubscribe(proc->getEventQueue());
+            proc->release();
+        }
+        m_processors.clear();
+    }
+
     ZenSensorInitError Sensor::init()
     {
         if (m_communicator) {

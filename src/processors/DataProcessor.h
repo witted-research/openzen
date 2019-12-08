@@ -1,6 +1,9 @@
 #ifndef ZEN_DATA_PROCESSOR_H_
 #define ZEN_DATA_PROCESSOR_H_
 
+#include "utility/LockingQueue.h"
+#include "ZenTypes.h"
+
 namespace zen
 {
     /**
@@ -10,6 +13,9 @@ namespace zen
     */
     class DataProcessor {
     public:
+
+        virtual LockingQueue<ZenEvent>& getEventQueue() = 0;
+
         virtual void release() = 0;
 
     };

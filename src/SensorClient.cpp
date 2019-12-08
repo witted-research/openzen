@@ -25,12 +25,6 @@ namespace zen
         for (auto& pair : m_sensors)
             if (auto sensor = pair.second.lock())
                 sensor->unsubscribe(m_eventQueue);
-
-        // shutdown all processors of this client
-        for (auto& processor : m_processors) {
-            processor->release();
-        }
-        m_processors.clear();
     }
 
     void SensorClient::listSensorsAsync() noexcept
@@ -40,13 +34,12 @@ namespace zen
 
     ZenError SensorClient::publishEvents(std::shared_ptr<Sensor> sensor, const std::string & endpoint) {
 #ifdef ZEN_NETWORK
-        auto processor = std::make_unique<ZmqDataProcessor>(sensor);
+        auto processor = std::make_unique<ZmqDataProcessor>();
 
         if (!processor->connect(endpoint)) {
             return ZenError_InvalidArgument;
         }
-        sensor->subscribe(processor->getEventQueue());
-        m_processors.push_back(std::move(processor));
+        sensor->addProcessor(std::move(processor));
         spdlog::info("Publishing events to endpoint {0}", endpoint);
         return ZenError_None;
 #else
@@ -98,6 +91,7 @@ namespace zen
 
     ZenError SensorClient::release(std::shared_ptr<Sensor> sensor) noexcept
     {
+        sensor->releaseProcessors();
         sensor->unsubscribe(m_eventQueue);
         m_sensors.erase(sensor->token());
         return ZenError_None;
