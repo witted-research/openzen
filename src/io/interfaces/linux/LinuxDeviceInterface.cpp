@@ -190,7 +190,7 @@ namespace zen
             if (nBytesReceived > 0) {
                 if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nBytesReceived)))
                     return error;
-                }
+            }
         }
 
         return ZenError_None;
