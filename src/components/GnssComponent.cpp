@@ -224,8 +224,12 @@ namespace zen
             gnssData.velocity = sensor_parsing_util::integerToScaledDouble(velocity, -3);
         }
 
-        sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadMot),
-            m_properties, data, &int32_not_used );
+        int32_t headingOfMotion;
+        if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadMot),
+            m_properties, data, &headingOfMotion)) {
+            gnssData.headingOfMotion = sensor_parsing_util::integerToScaledDouble(headingOfMotion, -5);
+        }
+
         uint32_t velocityAccuracy;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtsAcc),
             m_properties, data, &velocityAccuracy)) {
@@ -241,10 +245,10 @@ namespace zen
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtpDOP),
             m_properties, data, &uint16_not_used);
         
-        int32_t heading;
+        int32_t headingOfVehicle;
         if (sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavPvtHeadVeh),
-            m_properties, data, &heading)) {
-            gnssData.heading = sensor_parsing_util::integerToScaledDouble(heading, -5);
+            m_properties, data, &headingOfVehicle)) {
+            gnssData.headingOfVehicle = sensor_parsing_util::integerToScaledDouble(headingOfVehicle, -5);
         }
 
         sensor_parsing_util::readScalarIfAvailable(static_cast<ZenProperty_t>(ZenGnnsProperty_OutputNavAttiTOW),

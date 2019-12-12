@@ -58,7 +58,8 @@ namespace zen
         gnssData.longitude = 0.0f;
         gnssData.verticalAccuracy = 0.0f;
         gnssData.height = 0.0f;
-        gnssData.heading = 0.0f;
+        gnssData.headingOfMotion = 0.0f;
+        gnssData.headingOfVehicle = 0.0f;
         gnssData.headingAccuracy = 0.0f;
         gnssData.velocity = 0.0f;
         gnssData.velocityAccuracy = 0.0f;
