@@ -135,6 +135,9 @@ TEST(ZeroMQStreaming, parseGnssMessage) {
     gnssData.component = 4;
     gnssData.data.longitude = 23.0f;
     gnssData.data.latitude = 5.0f;
+    gnssData.data.headingOfMotion = 0.11f;
+    gnssData.data.headingOfVehicle = 0.12f;
+    gnssData.data.headingAccuracy = 0.22f;
 
     {
         cereal::BinaryOutputArchive imu_archive(buffer);
@@ -160,6 +163,11 @@ TEST(ZeroMQStreaming, parseGnssMessage) {
     ASSERT_EQ(unpackedMessage->type, zen::Streaming::StreamingMessageType_ZenEventGnss);
     ASSERT_EQ(unpackedMessage->payload.gnssData.data.longitude, 23.0f);
     ASSERT_EQ(unpackedMessage->payload.gnssData.data.latitude, 5.0f);
+
+    ASSERT_EQ(unpackedMessage->payload.gnssData.data.headingOfMotion, 0.11f);
+    ASSERT_EQ(unpackedMessage->payload.gnssData.data.headingOfVehicle, 0.12f);
+    ASSERT_EQ(unpackedMessage->payload.gnssData.data.headingAccuracy, 0.22f);
+
     ASSERT_EQ(unpackedMessage->payload.gnssData.sensor, 3);
     ASSERT_EQ(unpackedMessage->payload.gnssData.component, 4);
 }
