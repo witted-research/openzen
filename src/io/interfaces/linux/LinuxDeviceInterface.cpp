@@ -71,10 +71,6 @@ namespace zen
         , m_terminate(false)
         , m_pollingThread(&LinuxDeviceInterface::run, this)
     {
-        std::memset(&m_readCB, 0, sizeof(aiocb64));
-        m_readCB.aio_fildes = m_fd;
-        m_readCB.aio_buf = m_buffer.data();
-        m_readCB.aio_nbytes = m_buffer.size();
     }
 
     LinuxDeviceInterface::~LinuxDeviceInterface()
@@ -173,22 +169,43 @@ namespace zen
 
     int LinuxDeviceInterface::run()
     {
-        struct aiocb64* const list[1] { &m_readCB };
+        std::array<std::byte, 256> buffer1, buffer2;
 
-        while (!m_terminate)
-        {
-            if (::aio_read64(&m_readCB) == -1)
+        struct aiocb readCB1 = {};
+        readCB1.aio_fildes = m_fd;
+        readCB1.aio_buf = buffer1.data();
+        readCB1.aio_nbytes = buffer1.size();
+
+        struct aiocb readCB2 = {};
+        readCB2.aio_fildes = m_fd;
+        readCB2.aio_buf = buffer2.data();
+        readCB2.aio_nbytes = buffer2.size();
+
+        struct aiocb* currentCB = &readCB1;
+        struct aiocb* lastCB = &readCB2;
+
+        if (m_terminate)
+            return ZenError_None;
+
+        if (::aio_read(currentCB) == -1)
+            return ZenError_Io_ReadFailed;
+
+        while (!m_terminate) {
+            if (::aio_suspend(&currentCB, 1, nullptr) == -1)
                 return ZenError_Io_ReadFailed;
 
-            if (::aio_suspend64(list, 1, nullptr) == -1)
+            if (::aio_error(currentCB) != 0)
                 return ZenError_Io_ReadFailed;
 
-            if (::aio_error64(&m_readCB) != 0)
+            const auto nBytesReceived = ::aio_return(currentCB);
+
+            // Start next read, process data (if any) in parallel.
+            std::swap(currentCB, lastCB);
+            if (::aio_read(currentCB) == -1)
                 return ZenError_Io_ReadFailed;
 
-            const auto nBytesReceived = ::aio_return64(&m_readCB);
             if (nBytesReceived > 0) {
-                if (auto error = publishReceivedData(gsl::make_span(m_buffer.data(), nBytesReceived)))
+                if (auto error = publishReceivedData(gsl::make_span((std::byte *)lastCB->aio_buf, nBytesReceived)))
                     return error;
             }
         }

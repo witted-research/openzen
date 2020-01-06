@@ -52,11 +52,8 @@ namespace zen
     private:
         int run();
 
-        std::array<std::byte, 256> m_buffer;
-
         std::string m_identifier;
 
-        struct aiocb64 m_readCB;
         int m_fd;
 
         std::atomic_bool m_terminate;
