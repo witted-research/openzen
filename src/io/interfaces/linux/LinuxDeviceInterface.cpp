@@ -70,6 +70,7 @@ namespace zen
         , m_fd(fd)
         , m_terminate(false)
         , m_pollingThread(&LinuxDeviceInterface::run, this)
+        , m_baudRate(0)
     {
         std::memset(&m_readCB, 0, sizeof(aiocb64));
         m_readCB.aio_fildes = m_fd;
