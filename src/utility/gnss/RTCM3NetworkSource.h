@@ -46,8 +46,8 @@ namespace zen {
             RTCM3Parser& m_parser;
 
             // will be created by the thread
-            std::array<char, 1024> m_buffer_read_some;
-            std::deque<std::byte> m_parserBuffer;
+            std::array<char, 1024> m_buffer_read_some{};
+            std::deque<std::byte> m_parserBuffer{};
             std::chrono::seconds m_waitTime = std::chrono::seconds(1);
         };
 

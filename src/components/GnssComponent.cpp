@@ -120,7 +120,7 @@ namespace zen
         gnssDataReset(gnssData);
 
         // check consistency of data package size
-        if (data.size() < sizeof(uint32_t)) {
+        if (data.size() < (ptrdiff_t)sizeof(uint32_t)) {
             spdlog::error("GPS data package size {0} too small, should at least contain the timestamp", data.size());
             return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
         }

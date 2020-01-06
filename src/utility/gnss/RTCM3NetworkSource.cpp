@@ -54,7 +54,7 @@ RTCM3NetworkSource::RTCM3NetworkSource() : m_transferThread([](TransferThreadOpt
         return true;
     }
 
-    for (int i = 0; i < length; i++) {
+    for (size_t i = 0; i < length; i++) {
         options.m_parserBuffer.push_back(std::byte(options.m_buffer_read_some[i]));
     }
     while (options.m_parser.next(options.m_parserBuffer) == true) {}
