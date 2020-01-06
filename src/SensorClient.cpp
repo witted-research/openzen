@@ -32,8 +32,8 @@ namespace zen
         SensorManager::get().subscribeToSensorDiscovery(*this);
     }
 
-    ZenError SensorClient::publishEvents(std::shared_ptr<Sensor> sensor, const std::string & endpoint) {
 #ifdef ZEN_NETWORK
+    ZenError SensorClient::publishEvents(std::shared_ptr<Sensor> sensor, const std::string & endpoint) {
         auto processor = std::make_unique<ZmqDataProcessor>();
 
         if (!processor->connect(endpoint)) {
@@ -42,11 +42,13 @@ namespace zen
         sensor->addProcessor(std::move(processor));
         spdlog::info("Publishing events to endpoint {0}", endpoint);
         return ZenError_None;
+    }
 #else
+    ZenError SensorClient::publishEvents(std::shared_ptr<Sensor>, const std::string&) {
         spdlog::error("ZeroMQ support not available in OpenZen build, cannot publish events");
         return ZenError_NotSupported;
-#endif
     }
+#endif
 
     std::shared_ptr<Sensor> SensorClient::findSensor(ZenSensorHandle_t handle) noexcept
     {
