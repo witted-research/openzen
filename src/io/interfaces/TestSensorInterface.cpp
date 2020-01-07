@@ -5,7 +5,7 @@
 
 namespace zen
 {
-    TestSensorInterface::TestSensorInterface(IIoEventSubscriber& subscriber,std::string const& endpoint) noexcept
+    TestSensorInterface::TestSensorInterface(IIoEventSubscriber& subscriber,std::string const&) noexcept
         : IIoEventInterface(subscriber)
     {
         spdlog::info("Created TestSensor interface");

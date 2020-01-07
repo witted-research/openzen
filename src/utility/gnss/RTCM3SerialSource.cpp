@@ -27,7 +27,7 @@ void RTCM3SerialSource::handle_read(const asio::error_code& error,
     } else {
         std::string s_in(m_buffer_read_some.begin(), m_buffer_read_some.begin() + bytes_transferred);
 
-        for (int i = 0; i < s_in.size(); i++) {
+        for (size_t i = 0; i < s_in.size(); i++) {
             m_parserBuffer.push_back(std::byte(s_in[i]));
         }
         // parse until parser has nothing left to parse
