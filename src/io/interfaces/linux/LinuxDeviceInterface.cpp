@@ -171,18 +171,18 @@ namespace zen
     {
         std::array<std::byte, 256> buffer1, buffer2;
 
-        struct aiocb readCB1 = {};
+        aiocb readCB1 = {};
         readCB1.aio_fildes = m_fd;
         readCB1.aio_buf = buffer1.data();
         readCB1.aio_nbytes = buffer1.size();
 
-        struct aiocb readCB2 = {};
+        aiocb readCB2 = {};
         readCB2.aio_fildes = m_fd;
         readCB2.aio_buf = buffer2.data();
         readCB2.aio_nbytes = buffer2.size();
 
-        struct aiocb* currentCB = &readCB1;
-        struct aiocb* lastCB = &readCB2;
+        aiocb* currentCB = &readCB1;
+        aiocb* lastCB = &readCB2;
 
         if (m_terminate)
             return ZenError_None;
