@@ -67,7 +67,7 @@ public:
         if (m_state == ParserState::Data) {
 
             // crc size at the send is 3 byte
-            if ((ssize_t)buffer.size() < m_dataLength + 3)
+            if (buffer.size() < size_t(m_dataLength + 3))
                 return false;
 
             auto byte0 = buffer[0];
@@ -75,7 +75,7 @@ public:
 
             uint16_t type = (uint16_t(byte0) * 256 + uint16_t(byte1)) >> 4;
 
-            for (ssize_t i = 0; i < m_dataLength + 3; i++) {
+            for (uint16_t i = 0; i < m_dataLength + 3; i++) {
                 m_thisFrame.push_back(buffer.front());
                 buffer.pop_front();
             }
