@@ -13,7 +13,7 @@ namespace zen
 {
     /**
     */
-    class ZmqDataProcessor : public DataProcessor {
+    class ZmqDataProcessor final : public DataProcessor {
     public:
         ZmqDataProcessor();
 
