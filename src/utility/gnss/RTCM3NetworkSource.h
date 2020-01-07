@@ -40,7 +40,7 @@ namespace zen {
         class TransferThreadOptions {
         public:
             const std::string m_networkHost;
-            const unsigned long m_networkPort;
+            const uint16_t m_networkPort;
             asio::io_context& m_ioContext;
             std::unique_ptr<asio::ip::tcp::socket>& m_socket;
             RTCM3Parser& m_parser;

@@ -68,7 +68,7 @@ void RTCM3NetworkSource::start(std::string const& networkHost, unsigned long net
 
     m_transferThread.start(
         TransferThreadOptions{
-            networkHost,networkPort, m_ioContext, m_socket, m_parser
+            networkHost, uint16_t(networkPort), m_ioContext, m_socket, m_parser
         }
     );
 
