@@ -293,7 +293,7 @@ namespace zen
 
             std::string outputString;
             // make sure to honor the null termination
-            int i = 0;
+            size_t i = 0;
             for (auto ch : arrayString) {
                 if (ch == 0)
                     break;
