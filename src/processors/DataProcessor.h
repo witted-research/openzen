@@ -14,6 +14,8 @@ namespace zen
     class DataProcessor {
     public:
 
+        virtual ~DataProcessor() = default;
+
         virtual LockingQueue<ZenEvent>& getEventQueue() = 0;
 
         virtual void release() = 0;
