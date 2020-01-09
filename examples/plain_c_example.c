@@ -56,6 +56,7 @@ int main(int argc, char **argv)
     }
 
     // Free sensorList.
+    p = sensorList;
     while (p) {
         SensorList* prev = p;
         p = p->next;
