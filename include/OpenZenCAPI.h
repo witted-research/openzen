@@ -6,7 +6,7 @@
 
 #include "ZenTypes.h"
 
-// disable C++ name wrangling
+// disable C++ name mangling
 extern "C" {
 
     /**
