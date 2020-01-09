@@ -52,3 +52,9 @@ if (MSVC)
             /Zc:__cplusplus
     )
 endif()
+
+add_executable(OpenZenPlainCExample
+    plain_c_example.c)
+
+target_link_libraries(OpenZenPlainCExample
+    OpenZen)
