@@ -1,7 +1,7 @@
 #ifndef ZEN_API_ZENTYPES_H_
 #define ZEN_API_ZENTYPES_H_
 
-#include <cstdint>
+#include <stdint.h>
 
 #ifdef _WIN32
 
