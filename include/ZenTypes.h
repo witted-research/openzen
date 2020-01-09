@@ -636,7 +636,7 @@ typedef enum ZenOrientationOffsetMode
 typedef enum ZenPropertyType
 {
     ZenPropertyType_Invalid = 0,
-    
+
     ZenPropertyType_Byte = 1,
     ZenPropertyType_Bool = 2,
     ZenPropertyType_Float = 3,
