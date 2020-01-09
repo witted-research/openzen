@@ -262,7 +262,7 @@ typedef enum ZenGnssFixCarrierPhaseSolution
 
     /// Carrier phase method using fixed ambiguities for solution
     ZenGnssFixCarrierPhaseSolution_FixedAmbiguities = 2,
-} ZenGnssFixDifferientialCorrection;
+} ZenGnssFixCarrierPhaseSolution;
 
 /**
 Global position, velocity and heading information measured using
