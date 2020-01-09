@@ -318,6 +318,10 @@ if(ZEN_USE_STATIC_LIBS)
     add_library(OpenZen STATIC ${zen_all_sources})
 else()
     add_library(OpenZen SHARED ${zen_all_sources})
+
+    # hide all non-exported symbols in the build
+    set_target_properties(OpenZen PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(OpenZen PROPERTIES VISIBILITY_INLINES_HIDDEN ON)
 endif()
 
 target_compile_definitions(OpenZen
