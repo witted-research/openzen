@@ -6,8 +6,10 @@
 
 #include "ZenTypes.h"
 
+#ifdef __cplusplus
 // disable C++ name mangling
 extern "C" {
+#endif
 
     /**
     This is the C API for the OpenZen library. If your project is compiled with C++, consider
@@ -212,6 +214,7 @@ extern "C" {
         const char* const rtkCorrectionSource,
         const char* const hostname,
         uint32_t port);
-
+#ifdef __cplusplus
 }
+#endif
 #endif
