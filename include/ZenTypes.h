@@ -8,9 +8,9 @@
 #if defined(ZEN_API_STATIC) || !defined(__cplusplus)
 #define ZEN_API
 #elif defined(ZEN_API_EXPORT)
-#define ZEN_API extern "C" __declspec(dllexport)
+#define ZEN_API __declspec(dllexport)
 #else
-#define ZEN_API extern "C" __declspec(dllimport)
+#define ZEN_API __declspec(dllimport)
 #endif
 
 #elif defined(__GNUC__) || defined(COMPILER_GCC) || defined(__APPLE__)
@@ -18,13 +18,13 @@
 #ifdef ZEN_API_STATIC
 #define ZEN_API
 #elif defined(ZEN_API_EXPORT)
-#define ZEN_API extern "C" __attribute__((visibility("default")))
+#define ZEN_API __attribute__((visibility("default")))
 #else
-#define ZEN_API extern "C"
+#define ZEN_API
 #endif
 
 #elif SWIG
-#define ZEN_API extern "C"
+#define ZEN_API
 #else
 
 #error "This platform is not supported, yet."
