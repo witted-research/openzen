@@ -1,7 +1,7 @@
 #ifndef ZEN_API_ZENTYPES_H_
 #define ZEN_API_ZENTYPES_H_
 
-#include <cstdint>
+#include <stdint.h>
 
 #ifdef _WIN32
 
@@ -41,9 +41,9 @@ typedef struct ZenClientHandle { uintptr_t handle; } ZenClientHandle_t;
 typedef struct ZenSensorHandle { uintptr_t handle; } ZenSensorHandle_t;
 typedef struct ZenComponentHandle { uintptr_t handle; } ZenComponentHandle_t;
 
-typedef uint32_t ZenError_t;
+typedef int ZenError_t;
 
-typedef enum ZenError : ZenError_t
+typedef enum ZenError
 {
     ZenError_None = 0,                       // None
     ZenError_Unknown = 1,                    // Unknown
@@ -104,7 +104,7 @@ typedef enum ZenError : ZenError_t
     ZenError_Max
 } ZenError;
 
-typedef enum ZenSensorInitError : ZenError_t
+typedef enum ZenSensorInitError
 {
     ZenSensorInitError_None = 0,
 
@@ -262,7 +262,7 @@ typedef enum ZenGnssFixCarrierPhaseSolution
 
     /// Carrier phase method using fixed ambiguities for solution
     ZenGnssFixCarrierPhaseSolution_FixedAmbiguities = 2,
-} ZenGnssFixDifferientialCorrection;
+} ZenGnssFixCarrierPhaseSolution;
 
 /**
 Global position, velocity and heading information measured using
@@ -404,7 +404,7 @@ typedef union
     ZenEventData_SensorListingProgress sensorListingProgress;
 } ZenEventData;
 
-typedef uint32_t ZenEvent_t;
+typedef int ZenEvent_t;
 
 typedef struct ZenEvent
 {
@@ -414,7 +414,7 @@ typedef struct ZenEvent
     ZenEventData data;
 } ZenEvent;
 
-typedef enum ZenSensorEvent : ZenEvent_t
+typedef enum ZenSensorEvent
 {
     ZenSensorEvent_None = 0,
 
@@ -429,7 +429,7 @@ typedef enum ZenSensorEvent : ZenEvent_t
     ZenSensorEvent_Max
 } ZenSensorEvent;
 
-typedef enum ZenImuEvent : ZenEvent_t
+typedef enum ZenImuEvent
 {
     ZenImuEvent_None = 0,
 
@@ -445,7 +445,7 @@ typedef enum ZenImuEvent : ZenEvent_t
 /**
 Measurement event of the Global navigation satellite system
 */
-typedef enum ZenGnssEvent : ZenEvent_t
+typedef enum ZenGnssEvent
 {
     ZenGnssEvent_None = 0,
 
@@ -458,9 +458,9 @@ typedef enum ZenGnssEvent : ZenEvent_t
     ZenGnssEvent_Max
 } ZenGnssEvent;
 
-typedef uint32_t ZenProperty_t;
+typedef int ZenProperty_t;
 
-typedef enum EZenSensorProperty : ZenProperty_t
+typedef enum EZenSensorProperty
 {
     ZenSensorProperty_Invalid = 0,
 
@@ -490,7 +490,7 @@ typedef enum EZenSensorProperty : ZenProperty_t
     ZenSensorProperty_Max
 } EZenSensorProperty;
 
-typedef enum EZenImuProperty : ZenProperty_t
+typedef enum EZenImuProperty
 {
     ZenImuProperty_Invalid = 0,
 
@@ -570,7 +570,7 @@ typedef enum EZenImuProperty : ZenProperty_t
     ZenImuProperty_Max
 } EZenImuProperty;
 
-typedef enum EZenGnssProperty : ZenProperty_t
+typedef enum EZenGnssProperty
 {
     ZenGnssProperty_Invalid = 0,
 
@@ -636,7 +636,7 @@ typedef enum ZenOrientationOffsetMode
 typedef enum ZenPropertyType
 {
     ZenPropertyType_Invalid = 0,
-    
+
     ZenPropertyType_Byte = 1,
     ZenPropertyType_Bool = 2,
     ZenPropertyType_Float = 3,
