@@ -25,11 +25,11 @@ namespace zen
     sudo usermod -a -G tty <user name>
 
     */
-    class LinuxDeviceInterface : public IIoInterface
+    class PosixDeviceInterface : public IIoInterface
     {
     public:
-        LinuxDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, int fd) noexcept;
-        ~LinuxDeviceInterface();
+        PosixDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, int fdRead, int fdWrite) noexcept;
+        ~PosixDeviceInterface();
 
         /** Send data to IO interface */
         ZenError send(gsl::span<const std::byte> data) noexcept override;
@@ -54,7 +54,7 @@ namespace zen
 
         std::string m_identifier;
 
-        int m_fd;
+        int m_fdRead, m_fdWrite;
 
         std::atomic_bool m_terminate;
         std::thread m_pollingThread;

@@ -86,7 +86,7 @@ namespace zen
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
         }
 
-        auto ioInterface = std::make_unique<LinuxDeviceInterface>(subscriber, ttyDevice, fd);
+        auto ioInterface = std::make_unique<PosixDeviceInterface>(subscriber, ttyDevice, fd);
 
         struct termios config;
         if (-1 == ::tcgetattr(fd, &config))

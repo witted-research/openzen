@@ -278,8 +278,8 @@ if(WIN32)
 elseif(UNIX AND NOT APPLE)
 
     set(io_interfaces_sources ${io_interfaces_sources}
-        src/io/interfaces/linux/LinuxDeviceInterface.cpp
-        src/io/interfaces/linux/LinuxDeviceInterface.h
+        src/io/interfaces/posix/PosixDeviceInterface.cpp
+        src/io/interfaces/posix/PosixDeviceInterface.h
     )
 
     set(io_systems_sources ${io_systems_sources}
@@ -288,10 +288,26 @@ elseif(UNIX AND NOT APPLE)
     )
 
     set(utility_sources ${utility_sources}
-        src/utility/linux/LinuxDll.cpp
-        src/utility/linux/LinuxDll.h
+        src/utility/posix/PosixDll.cpp
+        src/utility/posix/PosixDll.h
     )
 
+elseif(APPLE)
+
+    set(io_interfaces_sources ${io_interfaces_sources}
+        src/io/interfaces/posix/PosixDeviceInterface.cpp
+        src/io/interfaces/posix/PosixDeviceInterface.h
+    )
+
+    set(io_systems_sources ${io_systems_sources}
+        src/io/systems/mac/MacDeviceSystem.cpp
+        src/io/systems/mac/MacDeviceSystem.h
+    )
+
+    set(utility_sources ${utility_sources}
+        src/utility/posix/PosixDll.cpp
+        src/utility/posix/PosixDll.h
+    )
 else()
     message(FATAL_ERROR "OS not supported.")
 endif()
@@ -340,6 +356,8 @@ target_compile_features(OpenZen
     PRIVATE
         cxx_std_17
 )
+
+set_property(TARGET OpenZen PROPERTY CXX_EXTENSIONS FALSE)
 
 if (MSVC)
     target_compile_options(OpenZen

@@ -1,13 +1,40 @@
-#include "io/interfaces/linux/LinuxDeviceInterface.h"
+#include "io/interfaces/posix/PosixDeviceInterface.h"
 
 #include "utility/Finally.h"
 
+#ifdef __linux__
 #include "io/systems/linux/LinuxDeviceSystem.h"
+#elif __APPLE__
+#include "io/systems/mac/MacDeviceSystem.h"
+#else
+#error "Inconsistent configuration."
+#endif
 
 #include <cstring>
 
+#include <sys/errno.h>
+#include <sys/ioctl.h>
+#ifdef __APPLE__
+#include <IOKit/serial/ioss.h>
+#endif
 #include <termios.h>
 #include <unistd.h>
+
+#include "spdlog/spdlog.h"
+
+// These are only defined on Linux, but their values are just the numerical values, so no harm in defining them.
+#ifndef B921600
+#define B921600 speed_t(921600)
+#endif
+#ifndef B576000
+#define B576000 speed_t(576000)
+#endif
+#ifndef B500000
+#define B500000 speed_t(500000)
+#endif
+#ifndef B460800
+#define B460800 speed_t(460800)
+#endif
 
 namespace zen
 {
@@ -62,30 +89,68 @@ namespace zen
             else
                 return B0;
         }
+
+        ZenError setBaudRateForFD(int fd, int speed)
+        {
+#if defined(__linux__)
+            struct termios config;
+            if (-1 == ::tcgetattr(fd, &config))
+                return ZenError_Io_GetFailed;
+
+            cfsetispeed(&config, speed);
+            cfsetospeed(&config, speed);
+            if (-1 == ::tcsetattr(fd, TCSANOW, &config))
+                return ZenError_Io_SetFailed;
+#elif defined (__APPLE__)
+            if (speed <= B230400) {
+                struct termios config;
+                if (-1 == ::tcgetattr(fd, &config))
+                    return ZenError_Io_GetFailed;
+
+                cfsetispeed(&config, speed);
+                cfsetospeed(&config, speed);
+                spdlog::error("not what i thought");
+                if (-1 == ::tcsetattr(fd, TCSANOW, &config))
+                    return ZenError_Io_SetFailed;
+            }
+            else {
+                // POSIX only defines baud rates up to 230400.  Once you
+                // go above this, OS X needs an ioctl.
+                auto result = ::ioctl(fd, IOSSIOSPEED, &speed);
+                if (-1 == result)
+                    return ZenError_Io_SetFailed;
+            }
+#else
+#error "Unsupported system.  Don't know how to set high baud rates."
+#endif
+            return ZenError_None;
+        }
     }
 
-    LinuxDeviceInterface::LinuxDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, int fd) noexcept
+    PosixDeviceInterface::PosixDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, int fdRead, int fdWrite) noexcept
         : IIoInterface(subscriber)
         , m_identifier(identifier)
-        , m_fd(fd)
+        , m_fdRead(fdRead)
+        , m_fdWrite(fdWrite)
         , m_terminate(false)
-        , m_pollingThread(&LinuxDeviceInterface::run, this)
-        , m_baudrate(~0)
+        , m_pollingThread(&PosixDeviceInterface::run, this)
+        , m_baudrate(0)
     {
     }
 
-    LinuxDeviceInterface::~LinuxDeviceInterface()
+    PosixDeviceInterface::~PosixDeviceInterface()
     {
         m_terminate = true;
 
         m_pollingThread.join();
 
-        ::close(m_fd);
+        ::close(m_fdRead);
+        ::close(m_fdWrite);
     }
 
-    ZenError LinuxDeviceInterface::send(gsl::span<const std::byte> data) noexcept
+    ZenError PosixDeviceInterface::send(gsl::span<const std::byte> data) noexcept
     {
-        const auto res = ::write(m_fd, data.data(), data.size());
+        const auto res = ::write(m_fdWrite, data.data(), data.size());
         if (res == -1)
             return ZenError_Io_SendFailed;
 
@@ -95,33 +160,27 @@ namespace zen
         return ZenError_None;
     }
 
-    nonstd::expected<int32_t, ZenError> LinuxDeviceInterface::baudRate() const noexcept
+    nonstd::expected<int32_t, ZenError> PosixDeviceInterface::baudRate() const noexcept
     {
         return m_baudrate;
     }
 
-    ZenError LinuxDeviceInterface::setBaudRate(unsigned int rate) noexcept
+    ZenError PosixDeviceInterface::setBaudRate(unsigned int rate) noexcept
     {
         if (m_baudrate == rate)
             return ZenError_None;
 
-        struct termios config;
-        if (-1 == ::tcgetattr(m_fd, &config))
-            return ZenError_Io_GetFailed;
-
         const auto speed = mapBaudrate(rate);
-
-        cfsetispeed(&config, speed);
-        cfsetospeed(&config, speed);
-
-        if (-1 == ::tcsetattr(m_fd, TCSANOW,&config))
-            return ZenError_Io_SetFailed;
+        if (ZenError error = setBaudRateForFD(m_fdRead, speed); error != ZenError_None)
+            return error;
+        if (ZenError error = setBaudRateForFD(m_fdWrite, speed); error != ZenError_None)
+            return error;
 
         m_baudrate = rate;
         return ZenError_None;
     }
 
-    nonstd::expected<std::vector<int32_t>, ZenError> LinuxDeviceInterface::supportedBaudRates() const noexcept
+    nonstd::expected<std::vector<int32_t>, ZenError> PosixDeviceInterface::supportedBaudRates() const noexcept
     {
         std::vector<int32_t> baudRates;
         baudRates.reserve(22);
@@ -152,14 +211,18 @@ namespace zen
         return baudRates;
     }
 
-    std::string_view LinuxDeviceInterface::type() const noexcept
+    std::string_view PosixDeviceInterface::type() const noexcept
     {
+#ifdef __linux__
         return LinuxDeviceSystem::KEY;
+#elif __APPLE__
+        return MacDeviceSystem::KEY;
+#endif
     }
 
-    bool LinuxDeviceInterface::equals(const ZenSensorDesc& desc) const noexcept
+    bool PosixDeviceInterface::equals(const ZenSensorDesc& desc) const noexcept
     {
-        if (std::string_view(LinuxDeviceSystem::KEY) != desc.ioType)
+        if (type() != desc.ioType)
             return false;
 
         if (desc.name != m_identifier)
@@ -168,17 +231,17 @@ namespace zen
         return true;
     }
 
-    int LinuxDeviceInterface::run()
+    int PosixDeviceInterface::run()
     {
         std::array<std::byte, 256> buffer1, buffer2;
 
         aiocb readCB1 = {};
-        readCB1.aio_fildes = m_fd;
+        readCB1.aio_fildes = m_fdRead;
         readCB1.aio_buf = buffer1.data();
         readCB1.aio_nbytes = buffer1.size();
 
         aiocb readCB2 = {};
-        readCB2.aio_fildes = m_fd;
+        readCB2.aio_fildes = m_fdRead;
         readCB2.aio_buf = buffer2.data();
         readCB2.aio_nbytes = buffer2.size();
 
