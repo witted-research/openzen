@@ -4,8 +4,10 @@
 #include <cstdint>
 #include <cstddef>
 #include <functional>
+#include <unordered_map>
 #include <utility>
 #include <variant>
+#include <vector>
 
 #include <gsl/span>
 #include <nonstd/expected.hpp>
