@@ -53,8 +53,8 @@ if (MSVC)
     )
 endif()
 
-add_executable(OpenZenPlainCExample
-    plain_c_example.c)
+add_executable(OpenZenExampleCAPI
+    ExampleCAPI.c)
 
-target_link_libraries(OpenZenPlainCExample
+target_link_libraries(OpenZenExampleCAPI
     OpenZen)
