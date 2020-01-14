@@ -2,7 +2,7 @@
 #include "io/systems/linux/LinuxDeviceQuery.h"
 #include "io/systems/linux/LinuxDeviceSystem.h"
 
-#include "io/interfaces/linux/LinuxDeviceInterface.h"
+#include "io/interfaces/posix/PosixDeviceInterface.h"
 
 #include <spdlog/spdlog.h>
 
@@ -16,9 +16,31 @@ namespace zen
 {
     namespace
     {
-        int openFD(std::string_view filename)
+        ZenSensorInitError setupFD(int fd)
         {
-            return ::open(filename.data(), O_RDWR | O_NOCTTY | O_SYNC);
+            struct termios config;
+            if (-1 == ::tcgetattr(fd, &config))
+                return ZenSensorInitError_IoFailed;
+
+            config.c_iflag &= ~(IGNBRK | IXANY | INLCR | IGNCR | ICRNL);
+            config.c_iflag &= ~IXON;    // disable XON/XOFF flow control (output)
+            config.c_iflag &= ~IXOFF;   // disable XON/XOFF flow control (input)
+            config.c_cflag &= ~CRTSCTS; // disable RTS flow control
+            config.c_lflag = 0;
+            config.c_oflag = 0;
+            config.c_cflag &= ~CSIZE;
+            config.c_cflag |= CS8;                // 8-bit chars
+            config.c_cflag |= CLOCAL;             // ignore modem controls
+            config.c_cflag |= CREAD;              // enable reading
+            config.c_cflag &= ~(PARENB | PARODD); // disable parity
+            config.c_cflag &= ~CSTOPB;            // one stop bit
+            config.c_cc[VMIN] = 0;                // read doesn´t block
+            config.c_cc[VTIME] = 5;               // 0.5 seconds read timeout
+
+            if (-1 == ::tcsetattr(fd, TCSANOW, &config))
+                return ZenSensorInitError_IoFailed;
+
+            return ZenSensorInitError_None;
         }
     }
 
@@ -80,36 +102,19 @@ namespace zen
         const auto ttyDevice = ttyDevices[0];
 
         spdlog::info("Opening file {} for sensor communication", ttyDevice);
-        const int fd = openFD(ttyDevice);
-        if (fd == -1) {
+        const int fdRead = ::open(ttyDevice.data(), O_RDONLY | O_NOCTTY | O_SYNC);
+        const int fdWrite = ::open(ttyDevice.data(), O_WRONLY | O_NOCTTY | O_SYNC);
+        if (fdRead == -1 || fdWrite == -1) {
             spdlog::error("Error while opening file {} for sensor communication", ttyDevice);
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
         }
+        
+        auto ioInterface = std::make_unique<PosixDeviceInterface>(subscriber, ttyDevice, fdRead, fdWrite);
 
-        auto ioInterface = std::make_unique<PosixDeviceInterface>(subscriber, ttyDevice, fd);
-
-        struct termios config;
-        if (-1 == ::tcgetattr(fd, &config))
-            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
-
-        config.c_iflag &= ~(IGNBRK | IXANY | INLCR | IGNCR | ICRNL);
-        config.c_iflag &= ~IXON;                // disable XON/XOFF flow control (output)
-        config.c_iflag &= ~IXOFF;               // disable XON/XOFF flow control (input)
-        config.c_cflag &= ~CRTSCTS;             // disable RTS flow control
-        config.c_lflag = 0;
-        config.c_oflag = 0;
-        config.c_cflag &= ~CSIZE;
-        config.c_cflag |= CS8;                  // 8-bit chars
-        config.c_cflag |= CLOCAL;               // ignore modem controls
-        config.c_cflag |= CREAD;                // enable reading
-        config.c_cflag &= ~(PARENB | PARODD);   // disable parity
-        config.c_cflag &= ~CSTOPB;              // one stop bit
-        config.c_cc[VMIN] = 0;                  // read doesn´t block
-        config.c_cc[VTIME] = 5;                 // 0.5 seconds read timeout
-
-        if (-1 == ::tcsetattr(fd, TCSANOW, &config))
-            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
-
+        if (ZenSensorInitError error = setupFD(fdRead); error != ZenSensorInitError_None)
+            return nonstd::make_unexpected(error);
+        if (ZenSensorInitError error = setupFD(fdWrite); error != ZenSensorInitError_None)
+            return nonstd::make_unexpected(error);
         return std::move(ioInterface);
     }
 }
