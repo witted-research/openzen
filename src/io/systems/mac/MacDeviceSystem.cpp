@@ -1,12 +1,11 @@
 
 #include "io/systems/mac/MacDeviceSystem.h"
 
-#include "io/interfaces/posix/PosixDeviceInterface.h"
-
 #include <spdlog/spdlog.h>
 
 #include <cstring>
 
+#include <dirent.h>
 #include <fcntl.h>
 #include <termios.h>
 #include <unistd.h>
@@ -14,6 +13,8 @@
 #include <sys/ioctl.h>
 #include <IOKit/serial/ioss.h>
 #include <IOKit/serial/IOSerialKeys.h>
+
+#include "io/interfaces/posix/PosixDeviceInterface.h"
 
 namespace zen
 {
@@ -67,24 +68,43 @@ namespace zen
 
     ZenError MacDeviceSystem::listDevices(std::vector<ZenSensorDesc>& outDevices)
     {
-        ZenSensorDesc desc;
-        const std::string siLabsSerialNumber = "<unknown>";
+        // The SiLabs driver registers a device /dev/cu.SLAB_USBtoUARTnn,
+        // where n is empty for the first or only device connected to the
+        // system and is a monotonously increasing number for devices
+        // connected while another device is already connected.
+        // We therefore identify devices by looking for the common first
+        // part of the string.
 
-        std::memcpy(desc.name, siLabsSerialNumber.c_str(), siLabsSerialNumber.size());
-        desc.name[siLabsSerialNumber.size()] = '\0';
+        // std::filesystem is barely supported on MacOS, so this uses the POSIX
+        // fiilesystem iterators.
+        DIR *dp = opendir("/dev/");
+        if (!dp)
+            return ZenError_Device_ListingFailed;
+        auto closeDirGuard = gsl::finally([dp] { closedir(dp); });
+        while (dirent *entry = readdir(dp)) {
+            std::string_view sfn(entry->d_name, strlen(entry->d_name));
+            if (sfn.substr(0, strlen("cu.SLAB_USBtoUART")) != "cu.SLAB_USBtoUART")
+                continue;
 
-        std::memcpy(desc.serialNumber, siLabsSerialNumber.c_str(), siLabsSerialNumber.size());
-        desc.serialNumber[siLabsSerialNumber.size()] = '\0';
+            // The strings always fit in the destination fields.
+            // "/dev/cu.SLAB_USBtoUART" is 22 characters long.
+            ZenSensorDesc desc;
+            std::memcpy(desc.name, sfn.data(), sfn.size());
+            desc.name[sfn.size()] = '\0';
 
-        std::memcpy(desc.ioType, MacDeviceSystem::KEY, sizeof(MacDeviceSystem::KEY));
+            std::memcpy(desc.serialNumber, sfn.data(), sfn.size());
+            desc.serialNumber[sfn.size()] = '\0';
 
-        std::strncpy(desc.identifier, "/dev/cu.SLAB_USBtoUART", 63);
-        desc.identifier[strlen("/dev/cu.SLAB_USBtoUART")] = '\0';
+            std::memcpy(desc.ioType, MacDeviceSystem::KEY, sizeof(MacDeviceSystem::KEY));
 
-        desc.baudRate = 921600;
+            std::string fnWithPath = std::string("/dev/") + std::string(sfn);
+            std::memcpy(desc.identifier, fnWithPath.data(), fnWithPath.size());
+            desc.identifier[fnWithPath.size()] = '\0';
 
-        outDevices.emplace_back(desc);
+            desc.baudRate = 921600;
 
+            outDevices.emplace_back(desc);
+        }     
         return ZenError_None;
     }
 
