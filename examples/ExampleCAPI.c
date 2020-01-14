@@ -6,8 +6,8 @@
     The example lists all available sensors to stdout.
 */
 
-#include <malloc.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "OpenZenCAPI.h"
 
