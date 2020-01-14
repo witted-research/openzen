@@ -60,11 +60,13 @@ After calling `make install`, the folder `OpenZenRelease` will contain the binar
 
 Please see this [CMake file](https://bitbucket.org/lpresearch/openzen/src/master/standalone_example/CMakeLists.txt) for an example how to use OpenZen as an external, binary-only package in your build.
 
-## Roadmap
+## Note on Licensing
 
-OpenZen is only just taking its first baby steps, but we already have plans for some improvements. As a counterpart to the existing OpenZen framework, we hope to release an open-source firmware module for communication and boilerplate logic in the near future. The goal is to enable developers, tinkerers and rapid-prototypers by providing a single solution for all tedious parts of development on both host and client-side; instead allowing them to focus on what they do best.
-
-Unfortunately the current version of OpenZen depends on Qt5 for Bluetooth communication. In due time we plan to replace this with our own cross-platform implementation, or another library with more permissive license - if the opportunity presents itself. Until then, it does mean that we have to abide by Qt's LGPL v3 license.
+OpenZen is licensed under a simple MIT-type license and thus is free to use and modify for all purposes.  Please be aware
+that OpenZen relies on the Qt library for Bluetooth functionality and thus Qt's license conditions may apply to the resulting
+binary.  If you want to avoid this, OpenZen can be built without Bluetooth support and thus without using Qt.  This is
+achieved by setting the CMake option `ZEN_BLUETOOTH` to `OFF`, e.g. by adding `-DZEN_BLUETOOTH=OFF` to the command line while
+configuring.
 
 ## Contributing
 
