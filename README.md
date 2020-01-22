@@ -1,11 +1,21 @@
 # OpenZen
 
+High performance sensor data streaming and processing
+
+Full documentation: <https://lpresearch.bitbucket.io/openzen/>
+
+![OpenZen Unity plugin connected to a LPMS-CU2 sensor and live visualization of sensor orientation](https://lpresearch.bitbucket.io/openzen_resources/OpenZenUnityDemo.gif)
+
+OpenZen Unity plugin connected to a LPMS-CU2 sensor and live visualization of sensor orientation.
+
 ## Overview
 OpenZen is a framework that allows access to Sensor Hardware from multiple vendors without requiring understanding of the target hardware or communication layer by providing a homogeneous API to application developers and a communication protocol to hardware developers.
 
 Currently, OpenZen has full support for communication over Bluetooth and USB (using the Silabs driver), as well as experimental support for Bluetooth Low-Energy, CAN (using the PCAN Basic driver) and USB (using the Ftdi driver). At the moment OpenZen has only been used with IMU sensors, but is easily extensible to any type of sensor or range of properties.
 
 Where possible we favour open standards, but as OpenZen finds its origin in [OpenMAT](https://bitbucket.org/lpresearch/openmat-2-os/) it needs to provide backwards compatibility for all sensors that originally worked with its *LpSensor* library. As such, OpenZen still contains some custom protocols which will be phased out over time. Legacy protocols are generally referred to with the v0 indicator.
+
+You can find the full documentation for OpenZen here: <https://lpresearch.bitbucket.io/openzen/>
 
 ## Setup
 
