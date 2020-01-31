@@ -25,26 +25,14 @@ namespace zen
     sudo usermod -a -G tty <user name>
 
     */
-    class PosixDeviceInterface : public IIoInterface
+    class PosixDeviceInterfaceImpl : public IIoInterface
     {
     public:
-        PosixDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, int fdRead, int fdWrite) noexcept;
-        ~PosixDeviceInterface();
+        PosixDeviceInterfaceImpl(IIoDataSubscriber& subscriber, std::string_view identifier, int fdRead, int fdWrite) noexcept;
+        ~PosixDeviceInterfaceImpl();
 
         /** Send data to IO interface */
         ZenError send(gsl::span<const std::byte> data) noexcept override;
-
-        /** Returns the IO interface's baudrate (bit/s) */
-        nonstd::expected<int32_t, ZenError> baudRate() const noexcept override;
-
-        /** Set Baudrate of IO interface (bit/s) */
-        ZenError setBaudRate(unsigned int rate) noexcept override;
-
-        /** Returns the supported baudrates of the IO interface (bit/s) */
-        nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept override;
-
-        /** Returns the type of IO interface */
-        std::string_view type() const noexcept override;
 
         /** Returns whether the IO interface equals the sensor description */
         bool equals(const ZenSensorDesc& desc) const noexcept override;
@@ -54,13 +42,60 @@ namespace zen
 
         std::string m_identifier;
 
-        int m_fdRead, m_fdWrite;
-
         std::atomic_bool m_terminate;
         std::thread m_pollingThread;
 
-        unsigned int m_baudrate;
+    protected:
+        template <class TSystem>
+        friend class PosixDeviceInterface;
+        int m_fdRead, m_fdWrite;
     };
+
+    template <class TSystem>
+    class PosixDeviceInterface final : public PosixDeviceInterfaceImpl {
+    public:
+        PosixDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, int fdRead, int fdWrite) noexcept
+            : PosixDeviceInterfaceImpl(subscriber, identifier, fdRead, fdWrite)
+            , m_baudRate(~0u)
+        {}
+
+        /** Returns the IO interface's baudrate (bit/s) */
+        nonstd::expected<int32_t, ZenError> baudRate() const noexcept override
+        {
+            return m_baudRate;
+        }
+
+        /** Set Baudrate of IO interface (bit/s) */
+        ZenError setBaudRate(unsigned int rate) noexcept override
+        {
+            const auto speed = TSystem::mapBaudRate(rate);
+            if (m_baudRate == speed)
+                return ZenError_None;
+
+            if (ZenError error = TSystem::setBaudRateForFD(m_fdRead, speed); error != ZenError_None)
+                return error;
+            if (ZenError error = TSystem::setBaudRateForFD(m_fdWrite, speed); error != ZenError_None)
+                return error;
+
+            m_baudRate = speed;
+            return ZenError_None;
+        }
+
+        /** Returns the supported baudrates of the IO interface (bit/s) */
+        nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() const noexcept override
+        {
+            return TSystem::supportedBaudRates();
+        }
+
+        /** Returns the type of IO interface */
+        std::string_view type() const noexcept override
+        {
+            return TSystem::KEY;
+        }
+
+    private:
+        int32_t m_baudRate;
+    };    
 }
 
 #endif

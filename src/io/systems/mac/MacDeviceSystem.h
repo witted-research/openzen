@@ -5,7 +5,7 @@
 
 namespace zen
 {
-    class MacDeviceSystem : public IIoSystem
+    class MacDeviceSystem final : public IIoSystem
     {
     public:
         constexpr static const char KEY[] = "MacDevice";
@@ -15,6 +15,10 @@ namespace zen
         ZenError listDevices(std::vector<ZenSensorDesc>& outDevices) override;
 
         nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept override;
+
+        static nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() noexcept;
+        static constexpr int32_t mapBaudRate(unsigned int baudRate) noexcept;
+        static ZenError setBaudRateForFD(int fd, int speed) noexcept;
     };
 }
 
