@@ -134,12 +134,6 @@ namespace zen
             return nonstd::make_unexpected(pfdRead.error());
         }
         int fdRead = *pfdRead;
-        if (0) {
-            std::byte data[256];
-            spdlog::error("reading");
-            const auto nBytesReceived = ::read(fdRead, data, 256);
-            spdlog::error("first read gave {}", nBytesReceived);
-        }
         auto pfdWrite = openFD(ttyDevice, false);
         if (!pfdWrite) {
             spdlog::error("Error while opening file {} for sensor communication", ttyDevice);
