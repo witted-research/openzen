@@ -6,41 +6,6 @@
 
 namespace zen
 {
-    namespace
-    {
-        constexpr unsigned int mapBaudrate(unsigned int baudrate)
-        {
-            if (baudrate > CBR_128000)
-                return CBR_256000;
-            else if (baudrate > CBR_115200)
-                return CBR_128000;
-            else if (baudrate > CBR_57600)
-                return CBR_115200;
-            else if (baudrate > CBR_38400)
-                return CBR_57600;
-            else if (baudrate > CBR_19200)
-                return CBR_38400;
-            else if (baudrate > CBR_14400)
-                return CBR_19200;
-            else if (baudrate > CBR_9600)
-                return CBR_14400;
-            else if (baudrate > CBR_4800)
-                return CBR_9600;
-            else if (baudrate > CBR_2400)
-                return CBR_4800;
-            else if (baudrate > CBR_1200)
-                return CBR_2400;
-            else if (baudrate > CBR_600)
-                return CBR_1200;
-            else if (baudrate > CBR_300)
-                return CBR_600;
-            else if (baudrate > CBR_110)
-                return CBR_300;
-            else
-                return CBR_110;
-        }
-    }
-
     WindowsDeviceInterface::WindowsDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, HANDLE handle, OVERLAPPED ioReader, OVERLAPPED ioWriter) noexcept
         : IIoInterface(subscriber)
         , m_identifier(identifier)
