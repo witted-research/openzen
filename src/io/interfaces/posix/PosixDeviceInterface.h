@@ -46,8 +46,6 @@ namespace zen
         std::thread m_pollingThread;
 
     protected:
-        template <class TSystem>
-        friend class PosixDeviceInterface;
         int m_fdRead, m_fdWrite;
     };
 
