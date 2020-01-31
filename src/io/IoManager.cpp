@@ -16,6 +16,8 @@
 #include "io/systems/windows/WindowsDeviceSystem.h"
 #elif __linux__
 #include "io/systems/linux/LinuxDeviceSystem.h"
+#elif __APPLE__
+#include "io/systems/mac/MacDeviceSystem.h"
 #endif
 
 namespace zen
@@ -38,6 +40,8 @@ namespace zen
     static auto windowsDeviceRegistry = makeRegistry<WindowsDeviceSystem>();
 #elif __linux__
     static auto linuxDeviceRegistry = makeRegistry<LinuxDeviceSystem>();
+#elif __APPLE__
+    static auto macDeviceRegistry = makeRegistry<MacDeviceSystem>();
 #endif
 
     IAutoIoSystemRegistry* IoManager::head = nullptr;

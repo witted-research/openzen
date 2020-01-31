@@ -1,14 +1,14 @@
-#ifndef ZEN_IO_SYSTEMS_LINUX_LINUXDEVICESYSTEM_H_
-#define ZEN_IO_SYSTEMS_LINUX_LINUXDEVICESYSTEM_H_
+#ifndef ZEN_IO_SYSTEMS_MAC_MACDEVICESYSTEM_H_
+#define ZEN_IO_SYSTEMS_MAC_MACDEVICESYSTEM_H_
 
 #include "io/IIoSystem.h"
 
 namespace zen
 {
-    class LinuxDeviceSystem final : public IIoSystem
+    class MacDeviceSystem final : public IIoSystem
     {
     public:
-        constexpr static const char KEY[] = "LinuxDevice";
+        constexpr static const char KEY[] = "MacDevice";
 
         bool available() override { return true; }
 
