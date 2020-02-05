@@ -480,6 +480,14 @@ if (ZEN_INSTALL)
         PUBLIC_HEADER DESTINATION include
     )
 
+    if(WIN32)
+        get_target_property(FTDI_DLL ftdi IMPORTED_LOCATION)
+        get_target_property(SIUSB_DLL siusb IMPORTED_LOCATION)
+        get_target_property(PCANBASIC_DLL pcanbasic IMPORTED_LOCATION)
+        
+        install(FILES ${FTDI_DLL} ${SIUSB_DLL} ${PCANBASIC_DLL} DESTINATION bin)
+    endif()
+
     include(CMakePackageConfigHelpers)
     write_basic_package_version_file(
         "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
