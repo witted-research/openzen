@@ -13,9 +13,9 @@ if(WIN32)
 	)
 
 	if (X64)
-		set(SHARED_LIB ${CMAKE_CURRENT_SOURCE_DIR}/win64/siUSBXp.dll)
+		set(SHARED_LIB ${CMAKE_CURRENT_SOURCE_DIR}/win64/SiUSBXp.dll)
 	else()
-		set(SHARED_LIB ${CMAKE_CURRENT_SOURCE_DIR}/win32/siUSBXp.dll)
+		set(SHARED_LIB ${CMAKE_CURRENT_SOURCE_DIR}/win32/SiUSBXp.dll)
 	endif()
 
 	set_target_properties(siusb PROPERTIES
