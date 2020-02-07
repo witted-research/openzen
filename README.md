@@ -17,7 +17,7 @@ Where possible we favour open standards, but as OpenZen finds its origin in [Ope
 
 You can find the full documentation for OpenZen here: <https://lpresearch.bitbucket.io/openzen/>
 
-## Dowload Library
+## Download Library
 
 You can download the newest pre-compiled version of OpenZen for your platform here:
 
