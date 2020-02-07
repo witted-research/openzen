@@ -17,6 +17,7 @@ public enum ZenError {
   ZenError_WrongDataType = 12,
   ZenError_BufferTooSmall = 13,
   ZenError_InvalidArgument = 14,
+  ZenError_NotSupported = 15,
   ZenError_AlreadyInitialized = 20,
   ZenError_NotInitialized = 21,
   ZenError_Device_IoTypeInvalid = 30,

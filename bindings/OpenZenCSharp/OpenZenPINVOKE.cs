@@ -378,6 +378,138 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_delete_ZenImuData")]
   public static extern void delete_ZenImuData(global::System.Runtime.InteropServices.HandleRef jarg1);
 
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_timestamp_set")]
+  public static extern void ZenGnssData_timestamp_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_timestamp_get")]
+  public static extern double ZenGnssData_timestamp_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_latitude_set")]
+  public static extern void ZenGnssData_latitude_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_latitude_get")]
+  public static extern double ZenGnssData_latitude_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_horizontalAccuracy_set")]
+  public static extern void ZenGnssData_horizontalAccuracy_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_horizontalAccuracy_get")]
+  public static extern double ZenGnssData_horizontalAccuracy_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_longitude_set")]
+  public static extern void ZenGnssData_longitude_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_longitude_get")]
+  public static extern double ZenGnssData_longitude_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_verticalAccuracy_set")]
+  public static extern void ZenGnssData_verticalAccuracy_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_verticalAccuracy_get")]
+  public static extern double ZenGnssData_verticalAccuracy_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_height_set")]
+  public static extern void ZenGnssData_height_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_height_get")]
+  public static extern double ZenGnssData_height_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_headingOfMotion_set")]
+  public static extern void ZenGnssData_headingOfMotion_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_headingOfMotion_get")]
+  public static extern double ZenGnssData_headingOfMotion_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_headingOfVehicle_set")]
+  public static extern void ZenGnssData_headingOfVehicle_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_headingOfVehicle_get")]
+  public static extern double ZenGnssData_headingOfVehicle_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_headingAccuracy_set")]
+  public static extern void ZenGnssData_headingAccuracy_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_headingAccuracy_get")]
+  public static extern double ZenGnssData_headingAccuracy_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_velocity_set")]
+  public static extern void ZenGnssData_velocity_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_velocity_get")]
+  public static extern double ZenGnssData_velocity_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_velocityAccuracy_set")]
+  public static extern void ZenGnssData_velocityAccuracy_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_velocityAccuracy_get")]
+  public static extern double ZenGnssData_velocityAccuracy_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_fixType_set")]
+  public static extern void ZenGnssData_fixType_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_fixType_get")]
+  public static extern int ZenGnssData_fixType_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_carrierPhaseSolution_set")]
+  public static extern void ZenGnssData_carrierPhaseSolution_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_carrierPhaseSolution_get")]
+  public static extern int ZenGnssData_carrierPhaseSolution_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_numberSatellitesUsed_set")]
+  public static extern void ZenGnssData_numberSatellitesUsed_set(global::System.Runtime.InteropServices.HandleRef jarg1, byte jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_numberSatellitesUsed_get")]
+  public static extern byte ZenGnssData_numberSatellitesUsed_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_year_set")]
+  public static extern void ZenGnssData_year_set(global::System.Runtime.InteropServices.HandleRef jarg1, ushort jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_year_get")]
+  public static extern ushort ZenGnssData_year_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_month_set")]
+  public static extern void ZenGnssData_month_set(global::System.Runtime.InteropServices.HandleRef jarg1, byte jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_month_get")]
+  public static extern byte ZenGnssData_month_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_day_set")]
+  public static extern void ZenGnssData_day_set(global::System.Runtime.InteropServices.HandleRef jarg1, byte jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_day_get")]
+  public static extern byte ZenGnssData_day_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_hour_set")]
+  public static extern void ZenGnssData_hour_set(global::System.Runtime.InteropServices.HandleRef jarg1, byte jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_hour_get")]
+  public static extern byte ZenGnssData_hour_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_minute_set")]
+  public static extern void ZenGnssData_minute_set(global::System.Runtime.InteropServices.HandleRef jarg1, byte jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_minute_get")]
+  public static extern byte ZenGnssData_minute_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_second_set")]
+  public static extern void ZenGnssData_second_set(global::System.Runtime.InteropServices.HandleRef jarg1, byte jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_second_get")]
+  public static extern byte ZenGnssData_second_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_nanoSecondCorrection_set")]
+  public static extern void ZenGnssData_nanoSecondCorrection_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_nanoSecondCorrection_get")]
+  public static extern int ZenGnssData_nanoSecondCorrection_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_new_ZenGnssData")]
+  public static extern global::System.IntPtr new_ZenGnssData();
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_delete_ZenGnssData")]
+  public static extern void delete_ZenGnssData(global::System.Runtime.InteropServices.HandleRef jarg1);
+
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorDesc_name_set")]
   public static extern void ZenSensorDesc_name_set(global::System.Runtime.InteropServices.HandleRef jarg1, string jarg2);
 
@@ -415,10 +547,10 @@ class OpenZenPINVOKE {
   public static extern void delete_ZenSensorDesc(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEventData_SensorDisconnected_error_set")]
-  public static extern void ZenEventData_SensorDisconnected_error_set(global::System.Runtime.InteropServices.HandleRef jarg1, uint jarg2);
+  public static extern void ZenEventData_SensorDisconnected_error_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEventData_SensorDisconnected_error_get")]
-  public static extern uint ZenEventData_SensorDisconnected_error_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+  public static extern int ZenEventData_SensorDisconnected_error_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_new_ZenEventData_SensorDisconnected")]
   public static extern global::System.IntPtr new_ZenEventData_SensorDisconnected();
@@ -450,6 +582,12 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEventData_imuData_get")]
   public static extern global::System.IntPtr ZenEventData_imuData_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEventData_gnssData_set")]
+  public static extern void ZenEventData_gnssData_set(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEventData_gnssData_get")]
+  public static extern global::System.IntPtr ZenEventData_gnssData_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEventData_sensorDisconnected_set")]
   public static extern void ZenEventData_sensorDisconnected_set(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
 
@@ -475,10 +613,10 @@ class OpenZenPINVOKE {
   public static extern void delete_ZenEventData(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEvent_eventType_set")]
-  public static extern void ZenEvent_eventType_set(global::System.Runtime.InteropServices.HandleRef jarg1, uint jarg2);
+  public static extern void ZenEvent_eventType_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEvent_eventType_get")]
-  public static extern uint ZenEvent_eventType_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+  public static extern int ZenEvent_eventType_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenEvent_sensor_set")]
   public static extern void ZenEvent_sensor_set(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
@@ -507,6 +645,9 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_g_zenSensorType_Imu_get")]
   public static extern string g_zenSensorType_Imu_get();
 
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_g_zenSensorType_Gnss_get")]
+  public static extern string g_zenSensorType_Gnss_get();
+
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenInit")]
   public static extern int ZenInit(global::System.Runtime.InteropServices.HandleRef jarg1);
 
@@ -534,6 +675,9 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenWaitForNextEvent")]
   public static extern bool ZenWaitForNextEvent(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
 
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenPublishEvents")]
+  public static extern int ZenPublishEvents(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, string jarg3);
+
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponents")]
   public static extern int ZenSensorComponents(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, string jarg3, global::System.Runtime.InteropServices.HandleRef jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
 
@@ -553,95 +697,98 @@ class OpenZenPINVOKE {
   public static extern int ZenSensorUpdateIAPAsync(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorExecuteProperty")]
-  public static extern int ZenSensorExecuteProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3);
+  public static extern int ZenSensorExecuteProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorGetArrayProperty")]
-  public static extern int ZenSensorGetArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, int jarg4, global::System.Runtime.InteropServices.HandleRef jarg5, global::System.Runtime.InteropServices.HandleRef jarg6);
+  public static extern int ZenSensorGetArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, int jarg4, global::System.Runtime.InteropServices.HandleRef jarg5, global::System.Runtime.InteropServices.HandleRef jarg6);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorGetBoolProperty")]
-  public static extern int ZenSensorGetBoolProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, global::System.Runtime.InteropServices.HandleRef jarg4);
+  public static extern int ZenSensorGetBoolProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, global::System.Runtime.InteropServices.HandleRef jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorGetFloatProperty")]
-  public static extern int ZenSensorGetFloatProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, global::System.Runtime.InteropServices.HandleRef jarg4);
+  public static extern int ZenSensorGetFloatProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, global::System.Runtime.InteropServices.HandleRef jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorGetInt32Property")]
-  public static extern int ZenSensorGetInt32Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, global::System.Runtime.InteropServices.HandleRef jarg4);
+  public static extern int ZenSensorGetInt32Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, global::System.Runtime.InteropServices.HandleRef jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorGetUInt64Property")]
-  public static extern int ZenSensorGetUInt64Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, global::System.Runtime.InteropServices.HandleRef jarg4);
+  public static extern int ZenSensorGetUInt64Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, global::System.Runtime.InteropServices.HandleRef jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorSetArrayProperty")]
-  public static extern int ZenSensorSetArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, int jarg4, global::System.Runtime.InteropServices.HandleRef jarg5, uint jarg6);
+  public static extern int ZenSensorSetArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, int jarg4, global::System.Runtime.InteropServices.HandleRef jarg5, uint jarg6);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorSetBoolProperty")]
-  public static extern int ZenSensorSetBoolProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, bool jarg4);
+  public static extern int ZenSensorSetBoolProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, bool jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorSetFloatProperty")]
-  public static extern int ZenSensorSetFloatProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, float jarg4);
+  public static extern int ZenSensorSetFloatProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, float jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorSetInt32Property")]
-  public static extern int ZenSensorSetInt32Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, int jarg4);
+  public static extern int ZenSensorSetInt32Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, int jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorSetUInt64Property")]
-  public static extern int ZenSensorSetUInt64Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3, uint jarg4);
+  public static extern int ZenSensorSetUInt64Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3, ulong jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorIsArrayProperty")]
-  public static extern bool ZenSensorIsArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3);
+  public static extern bool ZenSensorIsArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorIsConstantProperty")]
-  public static extern bool ZenSensorIsConstantProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3);
+  public static extern bool ZenSensorIsConstantProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorIsExecutableProperty")]
-  public static extern bool ZenSensorIsExecutableProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3);
+  public static extern bool ZenSensorIsExecutableProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorPropertyType")]
-  public static extern int ZenSensorPropertyType(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, uint jarg3);
+  public static extern int ZenSensorPropertyType(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, int jarg3);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentType")]
   public static extern string ZenSensorComponentType(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentExecuteProperty")]
-  public static extern int ZenSensorComponentExecuteProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4);
+  public static extern int ZenSensorComponentExecuteProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentGetArrayProperty")]
-  public static extern int ZenSensorComponentGetArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, int jarg5, global::System.Runtime.InteropServices.HandleRef jarg6, global::System.Runtime.InteropServices.HandleRef jarg7);
+  public static extern int ZenSensorComponentGetArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, int jarg5, global::System.Runtime.InteropServices.HandleRef jarg6, global::System.Runtime.InteropServices.HandleRef jarg7);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentGetBoolProperty")]
-  public static extern int ZenSensorComponentGetBoolProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
+  public static extern int ZenSensorComponentGetBoolProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentGetFloatProperty")]
-  public static extern int ZenSensorComponentGetFloatProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
+  public static extern int ZenSensorComponentGetFloatProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentGetInt32Property")]
-  public static extern int ZenSensorComponentGetInt32Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
+  public static extern int ZenSensorComponentGetInt32Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentGetUInt64Property")]
-  public static extern int ZenSensorComponentGetUInt64Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
+  public static extern int ZenSensorComponentGetUInt64Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, global::System.Runtime.InteropServices.HandleRef jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentSetArrayProperty")]
-  public static extern int ZenSensorComponentSetArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, int jarg5, global::System.Runtime.InteropServices.HandleRef jarg6, uint jarg7);
+  public static extern int ZenSensorComponentSetArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, int jarg5, global::System.Runtime.InteropServices.HandleRef jarg6, uint jarg7);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentSetBoolProperty")]
-  public static extern int ZenSensorComponentSetBoolProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, bool jarg5);
+  public static extern int ZenSensorComponentSetBoolProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, bool jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentSetFloatProperty")]
-  public static extern int ZenSensorComponentSetFloatProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, float jarg5);
+  public static extern int ZenSensorComponentSetFloatProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, float jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentSetInt32Property")]
-  public static extern int ZenSensorComponentSetInt32Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, int jarg5);
+  public static extern int ZenSensorComponentSetInt32Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, int jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentSetUInt64Property")]
-  public static extern int ZenSensorComponentSetUInt64Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4, uint jarg5);
+  public static extern int ZenSensorComponentSetUInt64Property(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4, ulong jarg5);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentIsArrayProperty")]
-  public static extern bool ZenSensorComponentIsArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4);
+  public static extern bool ZenSensorComponentIsArrayProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentIsConstantProperty")]
-  public static extern bool ZenSensorComponentIsConstantProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4);
+  public static extern bool ZenSensorComponentIsConstantProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentIsExecutableProperty")]
-  public static extern bool ZenSensorComponentIsExecutableProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4);
+  public static extern bool ZenSensorComponentIsExecutableProperty(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentPropertyType")]
-  public static extern int ZenSensorComponentPropertyType(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, uint jarg4);
+  public static extern int ZenSensorComponentPropertyType(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, int jarg4);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenSensorComponentGnnsForwardRtkCorrections")]
+  public static extern int ZenSensorComponentGnnsForwardRtkCorrections(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2, global::System.Runtime.InteropServices.HandleRef jarg3, string jarg4, string jarg5, uint jarg6);
 }

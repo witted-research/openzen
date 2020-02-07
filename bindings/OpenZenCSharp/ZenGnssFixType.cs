@@ -9,11 +9,12 @@
 //------------------------------------------------------------------------------
 
 
-public enum ZenLogLevel {
-  ZenLogLevel_Off,
-  ZenLogLevel_Error,
-  ZenLogLevel_Warning,
-  ZenLogLevel_Info,
-  ZenLogLevel_Debug,
-  ZenLogLevel_Max
+public enum ZenGnssFixType {
+  ZenGnssFixType_NoFix = 0,
+  ZenGnssFixType_DeadReckoningOnly = 1,
+  ZenGnssFixType_2dFix = 2,
+  ZenGnssFixType_3dFix = 3,
+  ZenGnssFixType_GnnsAndDeadReckoning = 4,
+  ZenGnssFixType_TimeOnlyFix = 5,
+  ZenGnssFixType_Max
 }

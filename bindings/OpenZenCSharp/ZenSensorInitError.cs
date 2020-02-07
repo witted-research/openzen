@@ -18,13 +18,16 @@ public enum ZenSensorInitError {
   ZenSensorInitError_UnsupportedDataFormat,
   ZenSensorInitError_UnsupportedIoType,
   ZenSensorInitError_UnsupportedProtocol,
+  ZenSensorInitError_UnsupportedFunction,
   ZenSensorInitError_ConnectFailed,
   ZenSensorInitError_IoFailed,
   ZenSensorInitError_RetrieveFailed,
   ZenSensorInitError_SetBaudRateFailed,
   ZenSensorInitError_SendFailed,
+  ZenSensorInitError_Timeout,
   ZenSensorInitError_IncompatibleBaudRates,
   ZenSensorInitError_InvalidAddress,
   ZenSensorInitError_InvalidConfig,
+  ZenSensorInitError_NoConfiguration,
   ZenSensorInitError_Max
 }

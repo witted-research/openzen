@@ -9,11 +9,8 @@
 //------------------------------------------------------------------------------
 
 
-public enum ZenLogLevel {
-  ZenLogLevel_Off,
-  ZenLogLevel_Error,
-  ZenLogLevel_Warning,
-  ZenLogLevel_Info,
-  ZenLogLevel_Debug,
-  ZenLogLevel_Max
+public enum ZenGnssFixCarrierPhaseSolution {
+  ZenGnssFixCarrierPhaseSolution_None = 0,
+  ZenGnssFixCarrierPhaseSolution_FloatAmbiguities = 1,
+  ZenGnssFixCarrierPhaseSolution_FixedAmbiguities = 2
 }

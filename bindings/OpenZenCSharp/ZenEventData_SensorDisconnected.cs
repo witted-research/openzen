@@ -43,12 +43,12 @@ public class ZenEventData_SensorDisconnected : global::System.IDisposable {
     }
   }
 
-  public uint error {
+  public int error {
     set {
       OpenZenPINVOKE.ZenEventData_SensorDisconnected_error_set(swigCPtr, value);
     } 
     get {
-      uint ret = OpenZenPINVOKE.ZenEventData_SensorDisconnected_error_get(swigCPtr);
+      int ret = OpenZenPINVOKE.ZenEventData_SensorDisconnected_error_get(swigCPtr);
       return ret;
     } 
   }

@@ -17,6 +17,13 @@ public class OpenZen {
     } 
   }
 
+  public static string g_zenSensorType_Gnss {
+    get {
+      string ret = OpenZenPINVOKE.g_zenSensorType_Gnss_get();
+      return ret;
+    } 
+  }
+
   public static ZenError ZenInit(ZenClientHandle_t outHandle) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenInit(ZenClientHandle_t.getCPtr(outHandle));
     return ret;
@@ -69,6 +76,12 @@ public class OpenZen {
     return ret;
   }
 
+  public static ZenError ZenPublishEvents(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, string endpoint) {
+    ZenError ret = (ZenError)OpenZenPINVOKE.ZenPublishEvents(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), endpoint);
+    if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
+    return ret;
+  }
+
   public static ZenError ZenSensorComponents(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, string type, SWIGTYPE_p_p_ZenComponentHandle outComponentHandles, SWIGTYPE_p_size_t outLength) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponents(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), type, SWIGTYPE_p_p_ZenComponentHandle.getCPtr(outComponentHandles), SWIGTYPE_p_size_t.getCPtr(outLength));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
@@ -105,91 +118,91 @@ public class OpenZen {
     return ret;
   }
 
-  public static ZenError ZenSensorExecuteProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property) {
+  public static ZenError ZenSensorExecuteProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorExecuteProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorGetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, ZenPropertyType type, SWIGTYPE_p_void buffer, SWIGTYPE_p_size_t bufferSize) {
+  public static ZenError ZenSensorGetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, ZenPropertyType type, SWIGTYPE_p_void buffer, SWIGTYPE_p_size_t bufferSize) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorGetArrayProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, (int)type, SWIGTYPE_p_void.getCPtr(buffer), SWIGTYPE_p_size_t.getCPtr(bufferSize));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorGetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, SWIGTYPE_p_bool outValue) {
+  public static ZenError ZenSensorGetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, SWIGTYPE_p_bool outValue) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorGetBoolProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, SWIGTYPE_p_bool.getCPtr(outValue));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorGetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, SWIGTYPE_p_float outValue) {
+  public static ZenError ZenSensorGetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, SWIGTYPE_p_float outValue) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorGetFloatProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, SWIGTYPE_p_float.getCPtr(outValue));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, SWIGTYPE_p_int outValue) {
+  public static ZenError ZenSensorGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, SWIGTYPE_p_int outValue) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorGetInt32Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, SWIGTYPE_p_int.getCPtr(outValue));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, SWIGTYPE_p_unsigned_long outValue) {
-    ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorGetUInt64Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, SWIGTYPE_p_unsigned_long.getCPtr(outValue));
+  public static ZenError ZenSensorGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, SWIGTYPE_p_unsigned_long_long outValue) {
+    ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorGetUInt64Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, SWIGTYPE_p_unsigned_long_long.getCPtr(outValue));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorSetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, ZenPropertyType type, SWIGTYPE_p_void buffer, uint bufferSize) {
+  public static ZenError ZenSensorSetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, ZenPropertyType type, SWIGTYPE_p_void buffer, uint bufferSize) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorSetArrayProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, (int)type, SWIGTYPE_p_void.getCPtr(buffer), bufferSize);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorSetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, bool value) {
+  public static ZenError ZenSensorSetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, bool value) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorSetBoolProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, value);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorSetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, float value) {
+  public static ZenError ZenSensorSetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, float value) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorSetFloatProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, value);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, int value) {
+  public static ZenError ZenSensorSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, int value) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorSetInt32Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, value);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorSetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property, uint value) {
+  public static ZenError ZenSensorSetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property, ulong value) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorSetUInt64Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property, value);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static bool ZenSensorIsArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property) {
+  public static bool ZenSensorIsArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property) {
     bool ret = OpenZenPINVOKE.ZenSensorIsArrayProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static bool ZenSensorIsConstantProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property) {
+  public static bool ZenSensorIsConstantProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property) {
     bool ret = OpenZenPINVOKE.ZenSensorIsConstantProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static bool ZenSensorIsExecutableProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property) {
+  public static bool ZenSensorIsExecutableProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property) {
     bool ret = OpenZenPINVOKE.ZenSensorIsExecutableProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenPropertyType ZenSensorPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, uint property) {
+  public static ZenPropertyType ZenSensorPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, int property) {
     ZenPropertyType ret = (ZenPropertyType)OpenZenPINVOKE.ZenSensorPropertyType(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
@@ -201,92 +214,98 @@ public class OpenZen {
     return ret;
   }
 
-  public static ZenError ZenSensorComponentExecuteProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property) {
+  public static ZenError ZenSensorComponentExecuteProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentExecuteProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentGetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, ZenPropertyType type, SWIGTYPE_p_void buffer, SWIGTYPE_p_size_t bufferSize) {
+  public static ZenError ZenSensorComponentGetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, ZenPropertyType type, SWIGTYPE_p_void buffer, SWIGTYPE_p_size_t bufferSize) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentGetArrayProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, (int)type, SWIGTYPE_p_void.getCPtr(buffer), SWIGTYPE_p_size_t.getCPtr(bufferSize));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentGetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, SWIGTYPE_p_bool outValue) {
+  public static ZenError ZenSensorComponentGetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, SWIGTYPE_p_bool outValue) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentGetBoolProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, SWIGTYPE_p_bool.getCPtr(outValue));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentGetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, SWIGTYPE_p_float outValue) {
+  public static ZenError ZenSensorComponentGetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, SWIGTYPE_p_float outValue) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentGetFloatProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, SWIGTYPE_p_float.getCPtr(outValue));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, SWIGTYPE_p_int outValue) {
+  public static ZenError ZenSensorComponentGetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, SWIGTYPE_p_int outValue) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentGetInt32Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, SWIGTYPE_p_int.getCPtr(outValue));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, SWIGTYPE_p_unsigned_long outValue) {
-    ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentGetUInt64Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, SWIGTYPE_p_unsigned_long.getCPtr(outValue));
+  public static ZenError ZenSensorComponentGetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, SWIGTYPE_p_unsigned_long_long outValue) {
+    ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentGetUInt64Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, SWIGTYPE_p_unsigned_long_long.getCPtr(outValue));
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentSetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, ZenPropertyType type, SWIGTYPE_p_void buffer, uint bufferSize) {
+  public static ZenError ZenSensorComponentSetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, ZenPropertyType type, SWIGTYPE_p_void buffer, uint bufferSize) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentSetArrayProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, (int)type, SWIGTYPE_p_void.getCPtr(buffer), bufferSize);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentSetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, bool value) {
+  public static ZenError ZenSensorComponentSetBoolProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, bool value) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentSetBoolProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, value);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentSetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, float value) {
+  public static ZenError ZenSensorComponentSetFloatProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, float value) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentSetFloatProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, value);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, int value) {
+  public static ZenError ZenSensorComponentSetInt32Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, int value) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentSetInt32Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, value);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenError ZenSensorComponentSetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property, uint value) {
+  public static ZenError ZenSensorComponentSetUInt64Property(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property, ulong value) {
     ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentSetUInt64Property(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property, value);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static bool ZenSensorComponentIsArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property) {
+  public static bool ZenSensorComponentIsArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property) {
     bool ret = OpenZenPINVOKE.ZenSensorComponentIsArrayProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static bool ZenSensorComponentIsConstantProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property) {
+  public static bool ZenSensorComponentIsConstantProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property) {
     bool ret = OpenZenPINVOKE.ZenSensorComponentIsConstantProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static bool ZenSensorComponentIsExecutableProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property) {
+  public static bool ZenSensorComponentIsExecutableProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property) {
     bool ret = OpenZenPINVOKE.ZenSensorComponentIsExecutableProperty(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }
 
-  public static ZenPropertyType ZenSensorComponentPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, uint property) {
+  public static ZenPropertyType ZenSensorComponentPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, int property) {
     ZenPropertyType ret = (ZenPropertyType)OpenZenPINVOKE.ZenSensorComponentPropertyType(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), property);
+    if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
+    return ret;
+  }
+
+  public static ZenError ZenSensorComponentGnnsForwardRtkCorrections(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, string rtkCorrectionSource, string hostname, uint port) {
+    ZenError ret = (ZenError)OpenZenPINVOKE.ZenSensorComponentGnnsForwardRtkCorrections(ZenClientHandle_t.getCPtr(clientHandle), ZenSensorHandle_t.getCPtr(sensorHandle), ZenComponentHandle_t.getCPtr(componentHandle), rtkCorrectionSource, hostname, port);
     if (OpenZenPINVOKE.SWIGPendingException.Pending) throw OpenZenPINVOKE.SWIGPendingException.Retrieve();
     return ret;
   }

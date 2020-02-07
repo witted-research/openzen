@@ -24,6 +24,7 @@ public enum EZenSensorProperty {
   ZenSensorProperty_SupportedBaudRates,
   ZenSensorProperty_DataMode,
   ZenSensorProperty_TimeOffset,
+  ZenSensorProperty_SensorModel,
   ZenSensorProperty_SensorSpecific_Start = 10000,
   ZenSensorProperty_SensorSpecific_End = 19999,
   ZenSensorProperty_Max

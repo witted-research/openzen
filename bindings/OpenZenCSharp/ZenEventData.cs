@@ -54,6 +54,17 @@ public class ZenEventData : global::System.IDisposable {
     } 
   }
 
+  public ZenGnssData gnssData {
+    set {
+      OpenZenPINVOKE.ZenEventData_gnssData_set(swigCPtr, ZenGnssData.getCPtr(value));
+    } 
+    get {
+      global::System.IntPtr cPtr = OpenZenPINVOKE.ZenEventData_gnssData_get(swigCPtr);
+      ZenGnssData ret = (cPtr == global::System.IntPtr.Zero) ? null : new ZenGnssData(cPtr, false);
+      return ret;
+    } 
+  }
+
   public ZenEventData_SensorDisconnected sensorDisconnected {
     set {
       OpenZenPINVOKE.ZenEventData_sensorDisconnected_set(swigCPtr, ZenEventData_SensorDisconnected.getCPtr(value));

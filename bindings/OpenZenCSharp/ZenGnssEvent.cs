@@ -9,11 +9,10 @@
 //------------------------------------------------------------------------------
 
 
-public enum ZenLogLevel {
-  ZenLogLevel_Off,
-  ZenLogLevel_Error,
-  ZenLogLevel_Warning,
-  ZenLogLevel_Info,
-  ZenLogLevel_Debug,
-  ZenLogLevel_Max
+public enum ZenGnssEvent {
+  ZenGnssEvent_None = 0,
+  ZenGnssEvent_Sample = 1,
+  ZenGnssEvent_ComponentSpecific_Start = 10000,
+  ZenGnssEvent_ComponentSpecific_End = 19999,
+  ZenGnssEvent_Max
 }
