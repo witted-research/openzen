@@ -5,9 +5,14 @@ Setup
 Dowloading pre-compiled OpenZen
 ===============================
 
-TODO
+The pre-compiled binaries for OpenZen on Windows are available to download here:
 
-Building OpenZen from source
+`OpenZen Release 1.0 <https://bitbucket.org/lpresearch/openzen/downloads/OpenZen-Release-1.0-x64.zip>`_
+
+The folder example in this download contains a full example how to use OpenZen
+together with VisualStudio 2019 on Windows 64-bit.
+
+Building OpenZen from Source
 ============================
 
 OpenZen uses CMake (3.11 or higher) as build system, and has been built
