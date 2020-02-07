@@ -99,6 +99,9 @@
     <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_unsigned_long.cs">
       <Link>SWIGTYPE_p_unsigned_long.cs</Link>
     </Compile>
+    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_unsigned_long_long.cs">
+      <Link>SWIGTYPE_p_unsigned_long_long.cs</Link>
+    </Compile>
     <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_void.cs">
       <Link>SWIGTYPE_p_void.cs</Link>
     </Compile>
@@ -126,6 +129,15 @@
     <Compile Include="..\..\OpenZenCSharp\ZenEventData_SensorListingProgress.cs">
       <Link>ZenEventData_SensorListingProgress.cs</Link>
     </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenGnssData.cs">
+      <Link>ZenGnssData.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenGnssFixCarrierPhaseSolution.cs">
+      <Link>ZenGnssFixCarrierPhaseSolution.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenGnssFixType.cs">
+      <Link>ZenGnssFixType.cs</Link>
+    </Compile>
     <Compile Include="..\..\OpenZenCSharp\ZenHeaveMotionData.cs">
       <Link>ZenHeaveMotionData.cs</Link>
     </Compile>
@@ -134,6 +146,9 @@
     </Compile>
     <Compile Include="..\..\OpenZenCSharp\ZenImuEvent.cs">
       <Link>ZenImuEvent.cs</Link>
+    </Compile>
+    <Compile Include="..\..\OpenZenCSharp\ZenLogLevel.cs">
+      <Link>ZenLogLevel.cs</Link>
     </Compile>
     <Compile Include="..\..\OpenZenCSharp\ZenOrientationOffsetMode.cs">
       <Link>ZenOrientationOffsetMode.cs</Link>
