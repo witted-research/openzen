@@ -53,8 +53,12 @@ if (MSVC)
     )
 endif()
 
-add_executable(OpenZenExampleCAPI
-    ExampleCAPI.c)
+# Disabled for now, as it results on compiler errors with Visual Studio static
+# runtime linking
+if (!MSVC)
+    add_executable(OpenZenExampleCAPI
+        ExampleCAPI.c)
 
-target_link_libraries(OpenZenExampleCAPI
-    OpenZen)
+    target_link_libraries(OpenZenExampleCAPI
+        OpenZen)
+endif()
