@@ -592,6 +592,7 @@ namespace zen
         /**
          * Should be done via ZenSensor::release and this method will be removed in the future.
          */
+        [[deprecated]]
         ZenError releaseSensor(ZenSensor& sensor) noexcept
         {
             if (auto error = ZenReleaseSensor(m_handle, sensor.m_sensorHandle))
