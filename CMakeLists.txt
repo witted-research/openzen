@@ -364,6 +364,13 @@ if (MSVC)
         PRIVATE
             /W4
     )
+
+    # make sure we link with the static runtime libraries
+    # and have no dependencies on VC++ studio DLLs during runtime
+    # We don't have any C++ exposed, so the C++ compatiblity
+    # to the host program of the DLL is not required
+    set_property(TARGET OpenZen PROPERTY
+        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 else()
     target_compile_options(OpenZen
         PRIVATE
