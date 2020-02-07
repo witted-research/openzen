@@ -74,7 +74,7 @@ Please see this [CMake file](https://bitbucket.org/lpresearch/openzen/src/master
 
 OpenZen is licensed under a simple MIT-type license and thus is free to use and modify for all purposes.  Please be aware
 that OpenZen relies on the Qt library for Bluetooth functionality and thus Qt's license conditions may apply to the resulting
-binary.  If you want to avoid this, OpenZen can be built without Bluetooth support and thus without using Qt.  This is
+binary. If you want to avoid this, OpenZen can be built without Bluetooth support and thus without using Qt. This is
 achieved by setting the CMake option `ZEN_BLUETOOTH` to `OFF`, e.g. by adding `-DZEN_BLUETOOTH=OFF` to the command line while
 configuring.
 
