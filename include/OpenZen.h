@@ -92,18 +92,21 @@ namespace zen
     */
     class ZenSensorComponent
     {
+        friend class ZenSensor;
+
     private:
         ZenClientHandle_t m_clientHandle;
         ZenSensorHandle_t m_sensorHandle;
         ZenComponentHandle_t m_componentHandle;
 
-    public:
+    protected:
         ZenSensorComponent(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle) noexcept
             : m_clientHandle(clientHandle)
             , m_sensorHandle(sensorHandle)
             , m_componentHandle(componentHandle)
         {}
 
+    public:
         ZenSensorComponent(const ZenSensorComponent& other) noexcept
             : m_clientHandle(other.m_clientHandle)
             , m_sensorHandle(other.m_sensorHandle)
@@ -266,18 +269,18 @@ namespace zen
     */
     class ZenSensor
     {
+        friend class ZenClient;
+
     private:
         ZenClientHandle_t m_clientHandle;
         ZenSensorHandle_t m_sensorHandle;
 
-    public:
-        friend class ZenClient;
-
+    protected:
         ZenSensor(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
             : m_clientHandle(clientHandle)
             , m_sensorHandle(sensorHandle)
         {}
-
+    public:
         ZenSensor(ZenSensor&& other)
             : m_clientHandle(other.m_clientHandle)
             , m_sensorHandle(other.m_sensorHandle)
