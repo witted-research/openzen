@@ -17,6 +17,12 @@ Where possible we favour open standards, but as OpenZen finds its origin in [Ope
 
 You can find the full documentation for OpenZen here: <https://lpresearch.bitbucket.io/openzen/>
 
+## Dowload Library
+
+You can download the newest pre-compiled version of OpenZen for your platform here:
+
+<https://bitbucket.org/lpresearch/openzen/downloads/>
+
 ## Setup
 
 OpenZen uses CMake (3.11 or higher) as build system, and has been built and tested on Windows (MSVC) and Ubuntu (gcc7). As OpenZen is written in C++17, an up-to-date compiler is required. The following steps guide you through setting up OpenZen in Windows and Linux.
