@@ -369,8 +369,21 @@ if (MSVC)
     # and have no dependencies on VC++ studio DLLs during runtime
     # We don't have any C++ exposed, so the C++ compatiblity
     # to the host program of the DLL is not required
+
+    # this line will only work in CMake => 3.15
+    # https://cmake.org/cmake/help/v3.15/policy/CMP0091.html#policy:CMP0091
     set_property(TARGET OpenZen PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+        MSVC_RUNTIME_LIBRARY "MultiThriaeeaded$<$<CONFIG:Debug>:Debug>")
+
+    # according to
+    # https://gitlab.kitware.com/cmake/community/-/wikis/FAQ#how-can-i-build-my-msvc-application-with-a-static-runtime
+    foreach(flag_var
+            CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+       if(${flag_var} MATCHES "/MD")
+          string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+       endif(${flag_var} MATCHES "/MD")
+    endforeach(flag_var)
 else()
     target_compile_options(OpenZen
         PRIVATE
