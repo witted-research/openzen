@@ -7,10 +7,10 @@ Dowloading pre-compiled OpenZen
 
 The pre-compiled binaries for OpenZen on Windows are available to download here:
 
-`OpenZen Release 1.0 <https://bitbucket.org/lpresearch/openzen/downloads/OpenZen-Release-1.0-x64.zip>`_
+`OpenZen Releases <https://bitbucket.org/lpresearch/openzen/downloads/>`_
 
 The folder example in this download contains a full example how to use OpenZen
-together with VisualStudio 2019 on Windows 64-bit.
+together with VisualStudio 2017 on Windows 64-bit.
 
 Building OpenZen from Source
 ============================
