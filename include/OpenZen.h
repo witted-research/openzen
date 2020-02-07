@@ -92,34 +92,47 @@ namespace zen
     */
     class ZenSensorComponent
     {
+        friend class ZenSensor;
+
     private:
         ZenClientHandle_t m_clientHandle;
         ZenSensorHandle_t m_sensorHandle;
         ZenComponentHandle_t m_componentHandle;
 
-    public:
+    protected:
         ZenSensorComponent(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle) noexcept
             : m_clientHandle(clientHandle)
             , m_sensorHandle(sensorHandle)
             , m_componentHandle(componentHandle)
         {}
 
+    public:
         ZenSensorComponent(const ZenSensorComponent& other) noexcept
             : m_clientHandle(other.m_clientHandle)
             , m_sensorHandle(other.m_sensorHandle)
             , m_componentHandle(other.m_componentHandle)
         {}
 
+        /**
+         * Return the sensor handle this object in referencing to
+         */
         ZenSensorHandle_t sensor() const noexcept
         {
             return m_sensorHandle;
         }
 
+        /**
+         * Return the component handle this object in referencing to
+         */
         ZenComponentHandle_t component() const noexcept
         {
             return m_componentHandle;
         }
 
+        /**
+         * Returns the type name of this component. At this point, this method
+         * will return either g_zenSensorType_Imu or g_zenSensorType_Gnss
+         */
 #ifdef OPENZEN_CXX17
         std::string_view type() const noexcept
 #else
@@ -129,11 +142,18 @@ namespace zen
             return ZenSensorComponentType(m_clientHandle, m_sensorHandle, m_componentHandle);
         }
 
+        /**
+         * Triggers the execution of a property that supports that feature, for example the
+         * ZenImuProperty_CalibrateGyro property to start the Gyro calibration.
+         */
         ZenError executeProperty(ZenProperty_t property) noexcept
         {
             return ZenSensorComponentExecuteProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property);
         }
 
+        /**
+         * Loads an array property from this sensor component
+         */
         template <typename T>
         std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length) noexcept
         {
@@ -142,6 +162,9 @@ namespace zen
             return result;
         }
 
+        /**
+         * Loads a bool property from this sensor component
+         */
         std::pair<ZenError, bool> getBoolProperty(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, false);
@@ -149,6 +172,9 @@ namespace zen
             return result;
         }
 
+        /**
+         * Loads a float property from this sensor component
+         */
         std::pair<ZenError, float> getFloatProperty(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, 0.f);
@@ -156,6 +182,9 @@ namespace zen
             return result;
         }
 
+        /**
+         * Loads a int32 property from this sensor component
+         */
         std::pair<ZenError, int32_t> getInt32Property(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, 0);
@@ -163,6 +192,9 @@ namespace zen
             return result;
         }
 
+        /**
+         * Loads an uint64 property from this sensor component
+         */
         std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, uint64_t(0));
@@ -170,32 +202,59 @@ namespace zen
             return result;
         }
 
+        /**
+         * Sets an array property on this sensor component
+         */
         template <typename T>
         ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length) noexcept
         {
             return ZenSensorComponentSetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type::value, array, length);
         }
 
+        /**
+         * Sets a bool property on this sensor component
+         */
         ZenError setBoolProperty(ZenProperty_t property, bool value) noexcept
         {
             return ZenSensorComponentSetBoolProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
 
+        /**
+         * Sets a float property on this sensor component
+         */
         ZenError setFloatProperty(ZenProperty_t property, float value) noexcept
         {
             return ZenSensorComponentSetFloatProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
 
+        /**
+         * Sets an int32 property on this sensor component
+         */
         ZenError setInt32Property(ZenProperty_t property, int32_t value) noexcept
         {
             return ZenSensorComponentSetInt32Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
 
+        /**
+         * Sets an uint64 property on this sensor component
+         */
         ZenError setUInt64Property(ZenProperty_t property, uint64_t value) noexcept
         {
             return ZenSensorComponentSetUInt64Property(m_clientHandle, m_sensorHandle, m_componentHandle, property, value);
         }
 
+        /**
+         * Starts forwarding the RTK-GPS corrections to the sensor.
+         * This method call is only supported on components of type GNSS.
+         *
+         * Use this type of method call to forward from a network source:
+         *
+         *      component.forwardRtkCorrections("RTCM3Network", "192.168.1.117", 9000)
+         *
+         * And this call to read RTK corrections directly from a local COM port
+         *
+         *      component.forwardRtkCorrections("RTCM3Serial", "COM11", 57600)
+         */
         ZenError forwardRtkCorrections(const char* const rtkCorrectionSource,
             const char* const hostname,
             uint32_t port) noexcept {
@@ -205,22 +264,23 @@ namespace zen
 
     /**
     This class represents one sensor connected by OpenZen. One sensor can contain one or more
-    components which deliver measurement data.
+    components which deliver measurement data. Don't instantiate this class directly but use the
+    ZenClient::obtainSensor() or ZenClient::obtainSensorByName() calls.
     */
     class ZenSensor
     {
+        friend class ZenClient;
+
     private:
         ZenClientHandle_t m_clientHandle;
         ZenSensorHandle_t m_sensorHandle;
 
-    public:
-        friend class ZenClient;
-
+    protected:
         ZenSensor(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
             : m_clientHandle(clientHandle)
             , m_sensorHandle(sensorHandle)
         {}
-
+    public:
         ZenSensor(ZenSensor&& other)
             : m_clientHandle(other.m_clientHandle)
             , m_sensorHandle(other.m_sensorHandle)
@@ -233,22 +293,41 @@ namespace zen
             release();
         }
 
+        /**
+         * Release the connected sensor. No further events from this sensor will
+         * be transmitted.
+         */
         ZenError release() noexcept
         {
             return ZenReleaseSensor(m_clientHandle, m_sensorHandle);
         }
 
+        /** On first call, tries to initialises a firmware update, and returns an error on failure.
+         * Subsequent calls do not require a valid buffer and buffer size, and only report the current status:
+         * Returns ZenAsync_Updating while busy updating firmware.
+         * Returns ZenAsync_Finished once the entire firmware has been written to the sensor.
+         * Returns ZenAsync_Failed if an error has occurred while updating.
+         */
         ZenAsyncStatus updateFirmwareAsync(const std::vector<unsigned char>& firmware) noexcept
         {
             return ZenSensorUpdateFirmwareAsync(m_clientHandle, m_sensorHandle, firmware.data(), firmware.size());
         }
 
+        /** On first call, tries to initialise an IAP update, and returns an error on failure.
+         * Subsequent calls do not require a valid buffer and buffer size, and only report the current status:
+         * Returns ZenAsync_Updating while busy updating IAP.
+         * Returns ZenAsync_Finished once the entire IAP has been written to the sensor.
+         * Returns ZenAsync_Failed if an error has ocurred while updating.
+         */
         ZenAsyncStatus updateIAPAsync(const std::vector<unsigned char>& iap) noexcept
         {
             return ZenSensorUpdateIAPAsync(m_clientHandle, m_sensorHandle, iap.data(), iap.size());
         }
 
 #ifdef OPENZEN_CXX17
+        /**
+         * Returns the IO sytem name used for this sensor connection
+         */
         std::string_view ioType() const noexcept
 #else
         const char* ioType() const noexcept
@@ -257,23 +336,33 @@ namespace zen
             return ZenSensorIoType(m_clientHandle, m_sensorHandle);
         }
 
+        /**
+         * Compare if a sensor description matches the sensor
+         * this instance points to
+         */
         bool equals(const ZenSensorDesc& desc) const noexcept
         {
             return ZenSensorEquals(m_clientHandle, m_sensorHandle, &desc);
         }
 
         /**
-        Publish all data events from this sensor over a network interface
-        */
+         * Publish all data events from this sensor over a network interface
+         */
         ZenError publishEvents(std::string const& endpoint) noexcept {
             return ZenPublishEvents(m_clientHandle, m_sensorHandle, endpoint.c_str());
         }
 
+        /**
+         * Execute a sensor property which supports to be executed
+         */
         ZenError executeProperty(ZenProperty_t property) noexcept
         {
             return ZenSensorExecuteProperty(m_clientHandle, m_sensorHandle, property);
         }
 
+        /**
+         * Loads an array property from this sensor component
+         */
         template <typename T>
         std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length) noexcept
         {
@@ -282,6 +371,9 @@ namespace zen
             return result;
         }
 
+        /**
+         * Loads a string property from this sensor component
+         */
         std::pair<ZenError, std::string> getStringProperty(ZenProperty_t property) noexcept
         {
             std::array<unsigned char, 255> arrayString;
@@ -306,6 +398,9 @@ namespace zen
             return std::make_pair(error, outputString);
         }
 
+        /**
+         * Loads a bool property from this sensor component
+         */
         std::pair<ZenError, bool> getBoolProperty(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, false);
@@ -313,6 +408,9 @@ namespace zen
             return result;
         }
 
+        /**
+         * Loads a float property from this sensor component
+         */
         std::pair<ZenError, float> getFloatProperty(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, 0.f);
@@ -320,6 +418,9 @@ namespace zen
             return result;
         }
 
+        /**
+         * Loads an int32 property from this sensor component
+         */
         std::pair<ZenError, int32_t> getInt32Property(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, 0);
@@ -327,6 +428,9 @@ namespace zen
             return result;
         }
 
+        /**
+         * Loads an uint64 property from this sensor component
+         */
         std::pair<ZenError, uint64_t> getUInt64Property(ZenProperty_t property) noexcept
         {
             auto result = std::make_pair(ZenError_None, uint64_t(0));
@@ -334,33 +438,53 @@ namespace zen
             return result;
         }
 
+        /**
+         * Sets an array property for this sensor component
+         */
         template <typename T>
         ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length) noexcept
         {
             return ZenSensorSetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type::value, array, length);
         }
 
+        /**
+         * Sets a bool property for this sensor component
+         */
         ZenError setBoolProperty(ZenProperty_t property, bool value) noexcept
         {
             return ZenSensorSetBoolProperty(m_clientHandle, m_sensorHandle, property, value);
         }
 
+        /**
+         * Sets a float property for this sensor component
+         */
         ZenError setFloatProperty(ZenProperty_t property, float value) noexcept
         {
             return ZenSensorSetFloatProperty(m_clientHandle, m_sensorHandle, property, value);
         }
 
+        /**
+         * Sets an int32 property for this sensor component
+         */
         ZenError setInt32Property(ZenProperty_t property, int32_t value) noexcept
         {
             return ZenSensorSetInt32Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
+        /**
+         * Sets an uint64 property for this sensor component
+         */
         ZenError setUInt64Property(ZenProperty_t property, uint64_t value) noexcept
         {
             return ZenSensorSetUInt64Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
 #ifdef OPENZEN_CXX17
+        /**
+         * Returns an instance of a sensor component on this sensor. type can be either
+         * g_zenSensorType_Imu or g_zenSensorType_Gnss. If a requested sensor component
+         * is not available on a sensor, the std::optional object is empty.
+         */
         std::optional<ZenSensorComponent> getAnyComponentOfType(std::string_view type) noexcept
         {
             ZenComponentHandle_t* handles = nullptr;
@@ -374,6 +498,11 @@ namespace zen
             return ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]);
         }
 #else
+        /**
+         * Returns an instance of a sensor component on this sensor. type can be either
+         * g_zenSensorType_Imu or g_zenSensorType_Gnss. If a requested sensor component
+         * is not available on a sensor, the bool entry of the std::pair is false.
+         */
         std::pair<bool, ZenSensorComponent> getAnyComponentOfType(const char* type) noexcept
         {
             ZenComponentHandle_t* handles = nullptr;
@@ -414,16 +543,32 @@ namespace zen
             close();
         }
 
+        /**
+         * Close connection to the OpenZen client. No additional sensor can be obtained via this ZenClient.
+         */
         ZenError close() noexcept
         {
             return ZenShutdown(m_handle);
         }
 
+        /** call the method ZenClient::listSensorsAsync to start the query for available sensors.
+         * Depending on the IO systems, it can take a couple of seconds for the listing to be complete.
+         * The ZenClient::listSensorsAsync method will return immediately and the information
+         * on the found sensors will be send to ZenClient's event queue and can be retrieved
+         * with calls to ZenClient::pollNextEvent or ZenClient::waitForNextEvent. You can either
+         * do this on your applications main thread or use a background thread to retrieve the event
+         * listing data.
+         * The event types ZenSensorEvent_SensorListingProgress and ZenSensorEvent_SensorFound will contain
+         * provide the progress of the listing and report if a sensor has been found.
+         */
         ZenError listSensorsAsync() noexcept
         {
             return ZenListSensorsAsync(m_handle);
         }
 
+        /**
+         * Connect to a sensor with the ZenSensorDesc which was obtained via a call to listSensorsAsync
+         */
         std::pair<ZenSensorInitError, ZenSensor> obtainSensor(const ZenSensorDesc& desc) noexcept
         {
             ZenSensorHandle_t sensorHandle;
@@ -431,6 +576,13 @@ namespace zen
             return std::make_pair(error, ZenSensor(m_handle, sensorHandle));
         }
 
+        /**
+         * Sensors can also connected directly if the IO system they are connected too and their name
+         * is known already. Here, the method ZenClient::obtainSensorByName can be called with the
+         * name of the IO system and the name of the sensor:
+         *      // connect the sensor with the name lpmscu2000573 via the SiLabs USB IO System
+         *      auto sensorPair = client.obtainSensorByName("SiUsb", "lpmscu2000573");
+         */
         std::pair<ZenSensorInitError, ZenSensor> obtainSensorByName(const std::string& ioType,
             const std::string& identifier, uint32_t baudrate = 0) noexcept
         {
@@ -440,6 +592,10 @@ namespace zen
             return std::make_pair(error, ZenSensor(m_handle, sensorHandle));
         }
 
+        /**
+         * Should be done via ZenSensor::release and this method will be removed in the future.
+         */
+        [[deprecated]]
         ZenError releaseSensor(ZenSensor& sensor) noexcept
         {
             if (auto error = ZenReleaseSensor(m_handle, sensor.m_sensorHandle))
@@ -450,8 +606,18 @@ namespace zen
         }
 
 #ifdef OPENZEN_CXX17
+        /**
+         * Poll the next event from the queue of this ZenClient. This method will
+         * return immediately. If no event is available on the queue, the std::optional
+         * will be empty.
+         */
         std::optional<ZenEvent> pollNextEvent() noexcept
 #else
+        /**
+         * Poll the next event from the queue of this ZenClient. This method will
+         * return immediately. If no event is available on the queue, bool entry
+         * of the std::pair will be false.
+         */
         std::pair<bool, ZenEvent> pollNextEvent() noexcept
 #endif
         {
@@ -473,8 +639,24 @@ namespace zen
         }
 
 #ifdef OPENZEN_CXX17
+        /**
+         * Wait for the next event from the queue of this ZenClient. This method will
+         * return immediately if an entry is available. Otherwise the method call will
+         * block until an event is available. If the sensor connection is released on
+         * another thread, the method call will return.
+         * If no event is available on the queue, the std::optional
+         * will be empty.
+         */
         std::optional<ZenEvent> waitForNextEvent() noexcept
 #else
+        /**
+         * Wait for the next event from the queue of this ZenClient. This method will
+         * return immediately if an entry is available. Otherwise the method call will
+         * block until an event is available. If the sensor connection is released on
+         * another thread, the method call will return.
+         * If no event is available on the queue, bool entry
+         * of the std::pair will be false.
+         */
         std::pair<bool, ZenEvent> waitForNextEvent() noexcept
 #endif
         {

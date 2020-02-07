@@ -14,7 +14,9 @@ TEST(ZeroMQStreming, acquireAndRelease) {
     auto remoteSensor = client.second.obtainSensorByName("ZeroMQ", "tcp://localhost:8899" );
 
     ASSERT_EQ(ZenError_None, remoteSensor.first);
-    client.second.releaseSensor(remoteSensor.second);
+
+    remoteSensor.second.release();
+    client.second.close();
 }
 
 TEST(ZeroMQStreming, acquireInvalidHostAndProtocol) {
