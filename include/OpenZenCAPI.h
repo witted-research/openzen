@@ -100,7 +100,7 @@ extern "C" {
      * Subsequent calls do not require a valid buffer and buffer size, and only report the current status:
      * Returns ZenAsync_Updating while busy updating firmware.
      * Returns ZenAsync_Finished once the entire firmware has been written to the sensor.
-     * Returns ZenAsync_Failed if an error has occured while updating.
+     * Returns ZenAsync_Failed if an error has occurred while updating.
      */
     ZEN_API ZenAsyncStatus ZenSensorUpdateFirmwareAsync(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const unsigned char* const buffer, size_t bufferSize);
 
@@ -108,7 +108,7 @@ extern "C" {
      * Subsequent calls do not require a valid buffer and buffer size, and only report the current status:
      * Returns ZenAsync_Updating while busy updating IAP.
      * Returns ZenAsync_Finished once the entire IAP has been written to the sensor.
-     * Returns ZenAsync_Failed if an error has occured while updating.
+     * Returns ZenAsync_Failed if an error has occurred while updating.
      */
     ZEN_API ZenAsyncStatus ZenSensorUpdateIAPAsync(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, const unsigned char* const buffer, size_t bufferSize);
 
@@ -209,7 +209,18 @@ extern "C" {
     /** Returns the type of the property */
     ZEN_API ZenPropertyType ZenSensorComponentPropertyType(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle, ZenProperty_t property);
 
-    /** Enable forwarding of RTK corrections from a RTK correction source to an RTK-enabled IG1 */
+    /**
+     * Starts forwarding the RTK-GPS corrections to the sensor.
+     * This method call is only supported on components of type GNSS.
+     *
+     * Use this type of method call to forward from a network source:
+     *
+     *      ZenSensorComponentGnnsForwardRtkCorrections("RTCM3Network", "192.168.1.117", 9000)
+     *
+     * And this call to read RTK corrections directly from a local COM port
+     *
+     *      ZenSensorComponentGnnsForwardRtkCorrections("RTCM3Serial", "COM11", 57600)
+     */
     ZEN_API ZenError ZenSensorComponentGnnsForwardRtkCorrections(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle,
         const char* const rtkCorrectionSource,
         const char* const hostname,
