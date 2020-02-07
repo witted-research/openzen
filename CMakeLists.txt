@@ -17,9 +17,12 @@ if (MSVC)
           string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
        endif(${flag_var} MATCHES "/MD")
     endforeach(flag_var)
-endif()
 
-add_subdirectory(external)
+    # select windows 7 as base version
+    # https://docs.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=vs-2019
+    add_definitions(-D_WIN32_WINNT=0x0601)
+    add_definitions(-D_WINVER=0x0601)
+endif()
 
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
 option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
@@ -38,6 +41,8 @@ option(ZEN_INSTALL "Generate the install target for OpenZen." OFF)
 #----------------------------------------------------------------
 # Find includes in corresponding build include_directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+add_subdirectory(external)
 
 # contains additional C/C++ precompiler defines
 # which might be set depending on the selected compile options
