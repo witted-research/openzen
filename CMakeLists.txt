@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(OpenZen VERSION 0.1.0 LANGUAGES CXX;C)
 
+option(ZEN_MSVC_RUNTIME_STATIC "Link the MSVC runtime statically, useful for library releases" OFF)
+
 # Global compile options which also affect the externals
 if (MSVC)
     # make sure we link with the static runtime libraries
@@ -10,13 +12,15 @@ if (MSVC)
 
     # according to
     # https://gitlab.kitware.com/cmake/community/-/wikis/FAQ#how-can-i-build-my-msvc-application-with-a-static-runtime
-    foreach(flag_var
-            CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-            CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-       if(${flag_var} MATCHES "/MD")
-          string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-       endif(${flag_var} MATCHES "/MD")
-    endforeach(flag_var)
+    if (ZEN_MSVC_RUNTIME_STATIC)
+        foreach(flag_var
+                CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+                CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+           if(${flag_var} MATCHES "/MD")
+              string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+           endif(${flag_var} MATCHES "/MD")
+        endforeach(flag_var)
+    endif()
 
     # select windows 7 as base version
     # https://docs.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=vs-2019
