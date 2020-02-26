@@ -14,8 +14,12 @@ LP-Research LPMS-CU2
 9-Axis Inertial Measurement Unit (IMU) / attitude and heading reference system with CAN and
 USB Connectivity. This sensor has one Imu component which can be accessed via OpenZen.
 
-The LPMS-CU2 can be connected via a USB-cable and connected via the USB Express mode or the
+The LPMS-CU2 can be connected via a USB-cable and via the USB Express mode or the
 COM-Port communication mode, depending on how the sensor is configured.
+
+**Provided OpenZen component:**
+
+1x IMU
 
 LP-Research LPMS-B2
 ===================
@@ -34,6 +38,10 @@ system's bluetooth configuration.
 The pairing process is described
 `here <http://www.lp-research.com/wp-content/uploads/2016/09/LpmsB2QuickStartGuide20160727.pdf>`_
 
+**Provided OpenZen component:**
+
+1x IMU
+
 LP-Research LPMS-IG1 and LPMS-IG1P
 ==================================
 .. image:: images/lpms-ig1.jpg
@@ -48,3 +56,13 @@ with USB / CAN / RS232 Connectivity. The LPMS-IG1P has an Global Navigation Sate
 
 The LPMS-IG1 sensor has one Imu component which can be accessed via OpenZen. The LPMS-IG1P sensor has
 an additional GNSS component which is available to OpenZen.
+
+**LPMS-IG1 provides OpenZen component:**
+
+1x IMU
+
+**LPMS-IG1P provides OpenZen components:**
+
+1x IMU
+
+1X GNSS
