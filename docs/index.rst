@@ -37,4 +37,5 @@ OpenZen can be used on Windows and Linux systems and provides a C, C++ and C# AP
 
 .. TODO:
 .. zeromq usage
+.. describe Output value configuration in more detail
 .. document more IO systems
