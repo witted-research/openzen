@@ -236,7 +236,7 @@ is in streaming mode to send out data on its own:
 
 Now, sensor events with measurement data will be available on the event queue of the OpenZen client.
 You can use the previously introduced methods ``ZenClient::pollNextEvent`` or
-``ZenClient::waitForNextEvent`` to retrieve the sensor data:
+``ZenClient::waitForNextEvent`` to retrieve the sensor data of the inertial measurement unit:
 
 .. code-block:: cpp
 
@@ -258,6 +258,23 @@ You can use the previously introduced methods ``ZenClient::pollNextEvent`` or
                 std::cout << "> Gyro: \t\t x = " << event.data.imuData.g[0]
                     << "\t y = " << event.data.imuData.g[1]
                     << "\t z = " << event.data.imuData.g[2] << std::endl;
+            break;
+        }
+    }
+
+To process the GNSS data streamed from the sensor, you can filter for events coming from
+the GNSS component like this:
+
+.. code-block:: cpp
+
+    if (event.component.handle == g_gnssHandle)
+    {
+        switch (event.eventType)
+        {
+        case ZenGnssEvent_Sample:
+                std::cout << "> GPS Fix Type: \t = " << event.data.gnssData.fixType << std::endl;
+                std::cout << "> Longitude: \t = " << event.data.gnssData.longitude
+                    << "   Latitude: \t = " << event.data.gnssData.latitude << std::endl;
             break;
         }
     }
