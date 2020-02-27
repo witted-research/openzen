@@ -97,6 +97,7 @@ namespace zen
 
             case ZenImuProperty_CentricCompensationRate:
             case ZenImuProperty_LinearCompensationRate:
+            case ZenImuProperty_FilterPreset: // Note: property name is misleading, this sets the magnetometer covariance
             case ZenImuProperty_FieldRadius:
             case ZenImuProperty_AccAlignment:
             case ZenImuProperty_AccBias:
@@ -110,7 +111,6 @@ namespace zen
                 return ZenPropertyType_Float;
 
             case ZenImuProperty_FilterMode:
-            case ZenImuProperty_FilterPreset:
             case ZenImuProperty_OrientationOffsetMode:
             case ZenImuProperty_AccRange:
             case ZenImuProperty_AccSupportedRanges:
