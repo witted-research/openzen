@@ -231,6 +231,40 @@ namespace zen
 
     }
 
+    constexpr float mapMagCovarFromImu(uint32_t value)
+    {
+        if (value <= 0x00000000)
+            return 0;
+        else if (value <= 0x00000001)
+            return 1e1;
+        else if (value <= 0x00000002)
+            return 5e1;
+        else
+            return 1e2;
+    }
+
+    constexpr float mapLinAccCompFromImu(uint32_t value)
+    {
+        if (value <= 0x00000000)
+            return 0;
+        else if (value <= 0x00000001)
+            return 1e2;
+        else if (value <= 0x00000002)
+            return 1e3;
+        else if (value <= 0x00000003)
+            return 1e4;
+        else
+            return 1e5;
+    }
+
+    constexpr float mapCentricAccCompFromImu(uint32_t value)
+    {
+        if (value <= 0x00000000)
+            return 0;
+        else
+            return 1e2;
+    }
+
     constexpr float mapCanHeartbeatFromImu(uint32_t value)
     {
         if (value <= 0x00000000)
@@ -263,11 +297,19 @@ namespace zen
                 setBool(ZenImuProperty_StreamData, true);
             });
 
+        if (property == ZenImuProperty_FilterPreset) // Note: property name is misleading, this sets the magnetometer covariance
+        {
+            const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::GetFilterPreset);
+            if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
+                return mapMagCovarFromImu(*result);
+            else
+                return nonstd::make_unexpected(result.error());
+        }
         if (property == ZenImuProperty_LinearCompensationRate)
         {
             const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::GetLinearCompensationRate);
             if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
-                return static_cast<float>(*result);
+                return mapLinAccCompFromImu(*result);
             else
                 return nonstd::make_unexpected(result.error());
         }
@@ -275,7 +317,7 @@ namespace zen
         {
             const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::GetCentricCompensationRate);
             if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
-                return *result > 0 ? 1.f : 0.f;
+                return mapCentricAccCompFromImu(*result);
             else
                 return nonstd::make_unexpected(result.error());
         }
@@ -509,6 +551,40 @@ namespace zen
         return ZenError_UnknownProperty;
     }
 
+    constexpr uint32_t mapMagCovarToImu(float value)
+    {
+        if (value < 1e1)
+            return 0x00000000;
+        else if (value < 5e1)
+            return 0x00000001;
+        else if (value < 1e2)
+            return 0x00000002;
+        else
+            return 0x00000003;
+    }
+
+    constexpr uint32_t mapLinAccCompToImu(float value)
+    {
+        if (value < 1e2)
+            return 0x00000000;
+        else if (value < 1e3)
+            return 0x00000001;
+        else if (value < 1e4)
+            return 0x00000002;
+        else if (value < 1e5)
+            return 0x00000003;
+        else
+            return 0x00000004;
+    }
+
+    constexpr uint32_t mapCentricAccCompToImu(float value)
+    {
+        if (value < 1e2)
+            return 0x00000000;
+        else
+            return 0x00000001;
+    }
+
     constexpr uint32_t mapCanHeartbeatToImu(float value)
     {
         if (value <= 0.5)
@@ -540,8 +616,7 @@ namespace zen
 
                 if (property == ZenImuProperty_CentricCompensationRate)
                 {
-                    constexpr float eps = std::numeric_limits<float>::epsilon();
-                    const uint32_t iValue = (-eps <= value && value <= eps) ? 0 : 1; // Account for imprecision of float
+                    const uint32_t iValue = mapCentricAccCompToImu(value);
                     const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetCentricCompensationRate);
                     if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
                         return error;
@@ -551,14 +626,24 @@ namespace zen
                 }
                 else if (property == ZenImuProperty_LinearCompensationRate)
                 {
-                    uint32_t iValue = lroundf(value);
+                    uint32_t iValue = mapLinAccCompToImu(value);
                     const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetLinearCompensationRate);
                     if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
                         return error;
 
                     notifyPropertyChange(property, value);
                     return ZenError_None;
-                } 
+                }
+                else if (property == ZenImuProperty_FilterPreset) // Note: property name is misleading, this sets the magnetometer covariance
+                {
+                    uint32_t iValue = mapMagCovarToImu(value);
+                    const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetFilterPreset);
+                    if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
+                        return error;
+
+                    notifyPropertyChange(property, value);
+                    return ZenError_None;
+                }
                 else if (property == ZenImuProperty_CanHeartbeat)
                 {
                     const auto function = static_cast<DeviceProperty_t>(imu::v0::map(property, false));
@@ -801,6 +886,7 @@ namespace zen
 
         case ZenImuProperty_CentricCompensationRate:
         case ZenImuProperty_LinearCompensationRate:
+        case ZenImuProperty_FilterPreset: // Note: property name is misleading, this sets the magnetometer covariance
         case ZenImuProperty_FieldRadius:
         case ZenImuProperty_AccAlignment:
         case ZenImuProperty_AccBias:
@@ -817,7 +903,6 @@ namespace zen
         case ZenImuProperty_SamplingRate:
         case ZenImuProperty_SupportedSamplingRates:
         case ZenImuProperty_FilterMode:
-        case ZenImuProperty_FilterPreset:
         case ZenImuProperty_OrientationOffsetMode:
         case ZenImuProperty_AccRange:
         case ZenImuProperty_AccSupportedRanges:
