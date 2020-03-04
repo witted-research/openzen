@@ -25,7 +25,7 @@ You can download the newest pre-compiled version of OpenZen for your platform he
 
 ## Setup
 
-OpenZen uses CMake (3.11 or higher) as build system, and has been built and tested on Windows (MSVC) and Ubuntu (gcc7). As OpenZen is written in C++17, an up-to-date compiler is required. The following steps guide you through setting up OpenZen in Windows and Linux.
+OpenZen uses CMake (3.11 or higher) as build system, and has been built and tested on Windows (Microsoft Visual Studio 2017 and 2019) and Ubuntu (gcc7). As OpenZen is written in C++17, an up-to-date compiler is required. The following steps guide you through setting up OpenZen in Windows and Linux.
 
 ### Windows
 
@@ -39,9 +39,9 @@ You can do that by inserting this line (with the correct Qt installation path on
 ```
 set(CMAKE_PREFIX_PATH "C://Qt//5.12.3//msvc2017_64//")
 ```
-in the topmost CMakeLists.txt
+in the topmost CMakeLists.txt file.
 
-6. Compile and run the *OpenZenExample* using MSVC
+Now you can open and compile OpenZen with Visual Studio. When starting Visual Studio, use the top menu and do File -> Open -> Folder... and select the OpenZen directory.
 
 ### Linux
 
