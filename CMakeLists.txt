@@ -421,6 +421,8 @@ set(zen_include_dirs_private
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:GSL,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:openzen_asio,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:cereal,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:nonstd::expected-lite,INTERFACE_INCLUDE_DIRECTORIES>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:pcanbasic,INTERFACE_INCLUDE_DIRECTORIES>>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:siusb,INTERFACE_INCLUDE_DIRECTORIES>>
@@ -443,8 +445,6 @@ set (zen_libs
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
         spdlog
-        openzen_asio
-        cereal
         ${zen_optional_libs}
 )
 
