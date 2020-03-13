@@ -17,12 +17,10 @@ add_subdirectory(siusb)
 set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
 add_subdirectory(cereal)
 
-# in case OpenZen includes the install target, spdlog also
-# needs to be forced to generate its install target. Normally
-# it does not do that if it is in a sub-folder
-if (ZEN_INSTALL)
-    set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
-endif()
+# spdlog doesn't install if it's built in a subfolder.
+# This breaks our install target due to troubles with EXPORT
+# sets.  So force spdlog.
+set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
 add_subdirectory(spdlog)
 
 # expose the Asio headers as library
