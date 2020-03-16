@@ -14,13 +14,13 @@ add_subdirectory(nlohmann-json EXCLUDE_FROM_ALL)
 
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
-set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
-add_subdirectory(cereal)
 
-# spdlog doesn't install if it's built in a subfolder.
-# This breaks our install target due to troubles with EXPORT
-# sets.  So force spdlog.
-set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
+# tells cereal to not build any tests
+set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
+# we don't want cereals install targets, so use
+# EXCLUDE_FROM_ALL on this folder
+add_subdirectory(cereal EXCLUDE_FROM_ALL)
+
 add_subdirectory(spdlog)
 
 # expose the Asio headers as library
