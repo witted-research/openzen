@@ -28,6 +28,9 @@ if (MSVC)
     add_definitions(-D_WINVER=0x0601)
 endif()
 
+# Please note: The static OpenZen build does not support library installation (aka "make install")
+# as the private dependencies cannot be resolved by CMake
+# see https://gitlab.kitware.com/cmake/cmake/issues/17357 for example
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
 option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
