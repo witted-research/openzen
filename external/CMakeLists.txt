@@ -21,6 +21,12 @@ set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
 # EXCLUDE_FROM_ALL on this folder
 add_subdirectory(cereal EXCLUDE_FROM_ALL)
 
+if (ZEN_USE_STATIC_LIBS)
+    # install spdlog in case of static build
+    # because CMake will otherwise complain about
+    # missing export target
+    set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
+endif()
 add_subdirectory(spdlog)
 
 # expose the Asio headers as library
