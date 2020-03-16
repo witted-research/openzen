@@ -28,12 +28,14 @@ if (MSVC)
     add_definitions(-D_WINVER=0x0601)
 endif()
 
+# Please note: The static OpenZen build does not support library installation (aka "make install")
+# as the private dependencies cannot be resolved by CMake
+# see https://gitlab.kitware.com/cmake/cmake/issues/17357 for example
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
 option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
 option(ZEN_NETWORK "Compile OpenZen with support for network streaming of measurement data" OFF)
 option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
-option(ZEN_INSTALL "Generate the install target for OpenZen." OFF)
 
 
 # Enable this line and set it to the correct Qt installation path if you want to compile
@@ -421,6 +423,8 @@ set(zen_include_dirs_private
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         $<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:GSL,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:openzen_asio,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:cereal,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:nonstd::expected-lite,INTERFACE_INCLUDE_DIRECTORIES>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:pcanbasic,INTERFACE_INCLUDE_DIRECTORIES>>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:siusb,INTERFACE_INCLUDE_DIRECTORIES>>
@@ -443,8 +447,6 @@ set (zen_libs
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads
         spdlog
-        openzen_asio
-        cereal
         ${zen_optional_libs}
 )
 
@@ -504,54 +506,52 @@ set_property(TARGET OpenZen PROPERTY PUBLIC_HEADER
     include/ZenTypes.h
 )
 
-if (ZEN_INSTALL)
-    install(TARGETS OpenZen EXPORT OpenZenTarget
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-        PUBLIC_HEADER DESTINATION include
-    )
+install(TARGETS OpenZen EXPORT OpenZenTarget
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+    PUBLIC_HEADER DESTINATION include
+)
 
-    if(WIN32)
-        get_target_property(FTDI_DLL ftdi IMPORTED_LOCATION)
-        get_target_property(SIUSB_DLL siusb IMPORTED_LOCATION)
-        get_target_property(PCANBASIC_DLL pcanbasic IMPORTED_LOCATION)
-        
-        install(FILES ${FTDI_DLL} ${SIUSB_DLL} ${PCANBASIC_DLL} DESTINATION bin)
-    endif()
+if(WIN32)
+    get_target_property(FTDI_DLL ftdi IMPORTED_LOCATION)
+    get_target_property(SIUSB_DLL siusb IMPORTED_LOCATION)
+    get_target_property(PCANBASIC_DLL pcanbasic IMPORTED_LOCATION)
 
-    include(CMakePackageConfigHelpers)
-    write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
-        VERSION ${OpenZen_VERSION}
-        COMPATIBILITY AnyNewerVersion
-    )
-
-    export(EXPORT OpenZenTarget
-        FILE "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigTargets.cmake"
-        NAMESPACE OpenZen::
-    )
-    configure_file(cmake/OpenZenConfig.cmake
-        "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfig.cmake"
-        COPYONLY
-    )
-
-    set(ConfigPackageLocation lib/cmake/OpenZen)
-    install(EXPORT OpenZenTarget
-        FILE
-            OpenZenTargets.cmake
-        NAMESPACE
-            OpenZen::
-        DESTINATION
-            ${ConfigPackageLocation}
-    )
-    install(
-        FILES
-            cmake/OpenZenConfig.cmake
-            "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
-        DESTINATION
-            ${ConfigPackageLocation}
-        COMPONENT
-            Devel
-    )
+    install(FILES ${FTDI_DLL} ${SIUSB_DLL} ${PCANBASIC_DLL} DESTINATION bin)
 endif()
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
+    VERSION ${OpenZen_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+export(EXPORT OpenZenTarget
+    FILE "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigTargets.cmake"
+    NAMESPACE OpenZen::
+)
+configure_file(cmake/OpenZenConfig.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfig.cmake"
+    COPYONLY
+)
+
+set(ConfigPackageLocation lib/cmake/OpenZen)
+install(EXPORT OpenZenTarget
+    FILE
+        OpenZenTargets.cmake
+    NAMESPACE
+        OpenZen::
+    DESTINATION
+        ${ConfigPackageLocation}
+)
+install(
+    FILES
+        cmake/OpenZenConfig.cmake
+        "${CMAKE_CURRENT_BINARY_DIR}/OpenZenConfigVersion.cmake"
+    DESTINATION
+        ${ConfigPackageLocation}
+    COMPONENT
+        Devel
+)

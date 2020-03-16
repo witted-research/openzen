@@ -14,13 +14,17 @@ add_subdirectory(nlohmann-json EXCLUDE_FROM_ALL)
 
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
-set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
-add_subdirectory(cereal)
 
-# in case OpenZen includes the install target, spdlog also
-# needs to be forced to generate its install target. Normally
-# it does not do that if it is in a sub-folder
-if (ZEN_INSTALL)
+# tells cereal to not build any tests
+set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
+# we don't want cereals install targets, so use
+# EXCLUDE_FROM_ALL on this folder
+add_subdirectory(cereal EXCLUDE_FROM_ALL)
+
+if (ZEN_USE_STATIC_LIBS)
+    # install spdlog in case of static build
+    # because CMake will otherwise complain about
+    # missing export target
     set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
 endif()
 add_subdirectory(spdlog)
