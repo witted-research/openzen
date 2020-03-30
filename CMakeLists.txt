@@ -36,6 +36,8 @@ option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portabl
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
 option(ZEN_NETWORK "Compile OpenZen with support for network streaming of measurement data" OFF)
 option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
+option(ZEN_TESTS "Compile with OpenZen tests" ON)
+option(ZEN_EXAMPLES "Compile with OpenZen examples" ON)
 
 
 # Enable this line and set it to the correct Qt installation path if you want to compile
@@ -455,48 +457,53 @@ target_link_libraries(OpenZen
         ${zen_libs}
 )
 
-# Unit test binary for OpenZen
-#
-# This will build the OpenZen source files into a binary
-# and compile the unit test code. The DLL version of OpenZen cannot be used
-# because the most of the symbols we want to test are not visible with the
-# Windows DLL default visibility.
-add_executable(OpenZenTests
-  ${zen_all_sources}
-  ${zen_optional_test_sources}
-  src/test/ModbusTest.cpp
-  src/test/communication/ConnectionNegotiatorTest.cpp
-  src/test/components/GnssComponentTest.cpp
-  src/test/streaming/SerializationTest.cpp
-  src/test/OpenZenTests.cpp)
 
-target_include_directories(OpenZenTests
-    PUBLIC
-        ${zen_include_dirs_public}
-    PRIVATE
-        ${zen_include_dirs_private}
-)
+if (ZEN_TESTS)
+    # Unit test binary for OpenZen
+    #
+    # This will build the OpenZen source files into a binary
+    # and compile the unit test code. The DLL version of OpenZen cannot be used
+    # because the most of the symbols we want to test are not visible with the
+    # Windows DLL default visibility.
+    add_executable(OpenZenTests
+    ${zen_all_sources}
+    ${zen_optional_test_sources}
+    src/test/ModbusTest.cpp
+    src/test/communication/ConnectionNegotiatorTest.cpp
+    src/test/components/GnssComponentTest.cpp
+    src/test/streaming/SerializationTest.cpp
+    src/test/OpenZenTests.cpp)
 
-target_link_libraries(OpenZenTests
-    PRIVATE
-        gtest
-        ${zen_libs}
-)
+    target_include_directories(OpenZenTests
+        PUBLIC
+            ${zen_include_dirs_public}
+        PRIVATE
+            ${zen_include_dirs_private}
+    )
 
-target_compile_features(OpenZenTests
-    PRIVATE
-        cxx_std_17
-)
+    target_link_libraries(OpenZenTests
+        PRIVATE
+            gtest
+            ${zen_libs}
+    )
 
-# always compile the unit test binary without any function exports
-target_compile_definitions(OpenZenTests
-    PRIVATE
-        ZEN_API_STATIC
-        ${zen_optional_compile_definitions_private}
-)
+    target_compile_features(OpenZenTests
+        PRIVATE
+            cxx_std_17
+    )
 
-# build example code
-add_subdirectory(examples)
+    # always compile the unit test binary without any function exports
+    target_compile_definitions(OpenZenTests
+        PRIVATE
+            ZEN_API_STATIC
+            ${zen_optional_compile_definitions_private}
+    )
+endif()
+
+if (ZEN_EXAMPLES)
+    # build example code
+    add_subdirectory(examples)
+endif()
 
 # configuration for CMake package installation
 set_property(TARGET OpenZen PROPERTY PUBLIC_HEADER
