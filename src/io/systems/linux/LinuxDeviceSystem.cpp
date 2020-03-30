@@ -202,13 +202,17 @@ namespace zen
     ZenError LinuxDeviceSystem::setBaudRateForFD(int fd, int speed) noexcept
     {
         struct termios config;
-        if (-1 == ::tcgetattr(fd, &config))
+        if (-1 == ::tcgetattr(fd, &config)) {
+            spdlog::error("Cannot get configuration of io interface file");
             return ZenError_Io_GetFailed;
+        }
 
         cfsetispeed(&config, speed);
         cfsetospeed(&config, speed);
-        if (-1 == ::tcsetattr(fd, TCSANOW, &config))
+        if (-1 == ::tcsetattr(fd, TCSANOW, &config)) {
+            spdlog::error("Cannot set configuration of io interface file");
             return ZenError_Io_SetFailed;
+        }
         return ZenError_None;
     }
 }
