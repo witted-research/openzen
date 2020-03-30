@@ -115,7 +115,7 @@ namespace zen
             std::memcpy(desc.identifier, fnWithPath.data(), fnWithPath.size());
             desc.identifier[fnWithPath.size()] = '\0';
 
-            desc.baudRate = 921600;
+            desc.baudRate = getDefaultBaudrate();
 
             outDevices.emplace_back(desc);
         }     
