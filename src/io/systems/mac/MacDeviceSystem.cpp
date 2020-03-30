@@ -231,21 +231,26 @@ namespace zen
     {
         if (speed <= B230400) {
             struct termios config;
-            if (-1 == ::tcgetattr(fd, &config))
+            if (-1 == ::tcgetattr(fd, &config)) {
+                spdlog::error("Cannot get IO file's configuration");
                 return ZenError_Io_GetFailed;
+            }
 
             cfsetispeed(&config, speed);
             cfsetospeed(&config, speed);
-            spdlog::error("not what i thought");
-            if (-1 == ::tcsetattr(fd, TCSANOW, &config))
+            if (-1 == ::tcsetattr(fd, TCSANOW, &config)) {
+                spdlog::error("Cannot get IO file's configuration");
                 return ZenError_Io_SetFailed;
+            }
         }
         else {
             // POSIX only defines baud rates up to 230400.  Once you
             // go above this, OS X needs an ioctl.
             auto result = ::ioctl(fd, IOSSIOSPEED, &speed);
-            if (-1 == result)
+            if (-1 == result) {
+                spdlog::error("Cannot set IO speed");
                 return ZenError_Io_SetFailed;
+            }
         }
 
         return ZenError_None;
