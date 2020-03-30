@@ -281,6 +281,9 @@ namespace zen
             , m_sensorHandle(sensorHandle)
         {}
     public:
+        ZenSensor() : m_sensorHandle(ZenSensorHandle_t{0}) {
+        }
+
         ZenSensor(ZenSensor&& other)
             : m_clientHandle(other.m_clientHandle)
             , m_sensorHandle(other.m_sensorHandle)
@@ -290,7 +293,9 @@ namespace zen
 
         ~ZenSensor()
         {
-            release();
+            if (m_sensorHandle.handle != 0) {
+                release();
+            }
         }
 
         /**
@@ -528,6 +533,9 @@ namespace zen
         ZenClientHandle_t m_handle;
 
     public:
+        ZenClient() noexcept : m_handle({0}) {
+        }
+
         ZenClient(ZenClientHandle_t handle) noexcept
             : m_handle(handle)
         {}
@@ -540,7 +548,9 @@ namespace zen
 
         ~ZenClient() noexcept
         {
-            close();
+            if (m_handle.handle != 0) {
+                close();
+            }
         }
 
         /**
