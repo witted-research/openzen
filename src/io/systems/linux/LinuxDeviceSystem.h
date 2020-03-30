@@ -19,6 +19,8 @@ namespace zen
         static nonstd::expected<std::vector<int32_t>, ZenError> supportedBaudRates() noexcept;
         static constexpr int32_t mapBaudRate(unsigned int baudRate) noexcept;
         static ZenError setBaudRateForFD(int fd, int speed) noexcept;
+
+        uint32_t getDefaultBaudrate() override { return 921600; }
     };
 }
 

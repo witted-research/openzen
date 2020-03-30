@@ -68,7 +68,7 @@ namespace zen
                 std::memcpy(desc.identifier, siLabsDevs.c_str(), siLabsDevs.size());
                 desc.identifier[siLabsDevs.size()] = '\0';
 
-                desc.baudRate = 921600;
+                desc.baudRate = getDefaultBaudrate();
 
                 outDevices.emplace_back(desc);
             }
