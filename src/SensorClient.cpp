@@ -84,6 +84,7 @@ namespace zen
         const std::string& identifier, uint32_t baudRate) noexcept {
 
         ZenSensorDesc desc;
+        desc.serialNumber[0] = 0;
         desc.baudRate = baudRate;
         safeStringToChar(ioType, desc.ioType, size_t(64));
         safeStringToChar(identifier, desc.identifier, size_t(64));
