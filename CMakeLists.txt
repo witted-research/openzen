@@ -444,7 +444,6 @@ include(FindThreads)
 set (zen_libs
         $<$<PLATFORM_ID:Linux>:atomic>
         $<$<PLATFORM_ID:Linux>:dl>
-        nlohmann_json::nlohmann_json
         $<$<PLATFORM_ID:Linux>:rt>
         $<$<PLATFORM_ID:Linux>:stdc++fs>
         Threads::Threads

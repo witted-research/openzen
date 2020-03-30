@@ -4,7 +4,6 @@
 #include <gsl/string_span>
 
 #include "spdlog/spdlog.h"
-#include "nlohmann/json.hpp"
 
 #include "ZenProtocol.h"
 #include "communication/Modbus.h"
