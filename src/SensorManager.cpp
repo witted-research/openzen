@@ -91,6 +91,7 @@ namespace zen
             if (desc.baudRate == 0) {
                 desc.baudRate = ioSystem->get().getDefaultBaudrate();
             }
+            spdlog::info("Obtaining sensor {0} with baudrate {1}", desc.identifier, desc.baudRate);
 
             if (auto ioInterface = ioSystem->get().obtain(desc, *communicator.get()))
                 communicator->init(std::move(*ioInterface));
