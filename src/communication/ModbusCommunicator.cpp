@@ -61,8 +61,8 @@ namespace zen
             {
                 const auto& frame = m_parser->frame();
 
-                SPDLOG_DEBUG("Received and parsed message with address {} function {}",
-                    std::to_string(frame.address), std::to_string(frame.function));
+                SPDLOG_DEBUG("Received and parsed message with address {} function {} and data size {}",
+                    std::to_string(frame.address), std::to_string(frame.function), frame.data.size());
 
                 if (m_subscriber->processReceivedData(frame.address, frame.function, frame.data))
                 {
