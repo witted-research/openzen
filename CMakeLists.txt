@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(OpenZen VERSION 0.1.0 LANGUAGES CXX;C)
+project(OpenZen VERSION 1.0.0 LANGUAGES CXX;C)
 
 option(ZEN_MSVC_RUNTIME_STATIC "Link the MSVC runtime statically, useful for library releases" OFF)
 
