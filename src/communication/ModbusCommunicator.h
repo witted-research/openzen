@@ -51,6 +51,12 @@ namespace zen
             m_parserBusy.clear(std::memory_order_release);
         }
 
+        /** Forcefully reset the parser state. This is useful when starting to parse the data stream
+         *  and we are not sure whether we found the start of a package properly */
+        void resetParser() {
+            m_parser->reset();
+        }
+
     protected:
         IModbusFrameSubscriber* m_subscriber;
 

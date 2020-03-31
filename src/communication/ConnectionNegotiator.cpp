@@ -56,7 +56,7 @@ namespace zen
 
         // try two times because in some cases, the reply of the first command send to the sensor
         // will not be in the input buffer.
-        for (size_t retries = 0; retries < 2; retries++) {
+        for (size_t retries = 0; retries < m_connectRetryAttempts; retries++) {
             m_terminated = false;
             // disable streaming during connection negotiation, command same for legacy and Ig1
             if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV0::SetCommandMode), gsl::span<std::byte>()))
@@ -68,6 +68,12 @@ namespace zen
                 std::unique_lock<std::mutex> lock(m_mutex);
                 if (m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; }) == false) {
                     // hit timeout, will retry
+                    SPDLOG_DEBUG("Time out while attempting to set sensor in command mode for connection negotiaton");
+
+                    // reset parser because if the data transmission of the sensor stopped without
+                    // sending the full package payload, we might still think we are parsing the payload
+                    // while we already get an acknowledgement for our command mode request
+                    communicator.resetParser();
                 } else {
                     commandModeReply = true;
                     break;

@@ -45,6 +45,7 @@ namespace zen
         mutable std::condition_variable m_cv;
         mutable std::mutex m_mutex;
         bool m_isLegacy = true;
+        const size_t m_connectRetryAttempts = 2;
     };
 }
 
