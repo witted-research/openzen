@@ -55,6 +55,13 @@ add_subdirectory(external)
 # contains additional C/C++ precompiler defines
 # which might be set depending on the selected compile options
 set(zen_optional_compile_definitions_private)
+# set the correct log level
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # this will enable the SPDLOG_DEBUG macros for the build
+    list (APPEND zen_optional_compile_definitions_private
+        SPDLOG_ACTIVE_LEVEL=1
+    )
+endif()
 
 if (ZEN_BLUETOOTH)
     # Instruct CMake to run moc automatically when needed
