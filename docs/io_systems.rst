@@ -99,6 +99,14 @@ Allows to connect to a sensor which is connected via the USB-mode on Linux syste
 equivalent of the SiUsb IO system on Linux in that it needs not baud rate configuration and only
 the device's name to connect.
 
+Sensors can only be connected on Linux if the user running the OpenZen process has read and write access to the
+serial devices of the system. To allow this, the users needs to be added to the dialout group. This can be
+done with this command:
+
+.. code-block:: bash
+
+    sudo adduser <username> dialout
+
 =======================     ===================
 Name in OpenZen             LinuxDevice
 Supported Platforms         Linux
