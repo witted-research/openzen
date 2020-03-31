@@ -201,7 +201,7 @@ namespace zen
             uint8_t idx = 1;
             for (const auto& config : m_config.components)
             {
-                spdlog::debug("Creating component object for component {0} and version {1}", config.id, config.version);
+                SPDLOG_DEBUG("Creating component object for component {0} and version {1}", config.id, config.version);
                 auto factory = manager.getFactory(config.id);
                 if (!factory) {
                     spdlog::error("Cannot find factory for component {0}", config.id);
@@ -213,7 +213,7 @@ namespace zen
                     spdlog::error("Cannot create object for component {0} and version {1}", config.id, config.version);
                     return component.error();
                 }
-                spdlog::debug("Created component object for component {0} and version {1}", config.id, config.version);
+                SPDLOG_DEBUG("Created component object for component {0} and version {1}", config.id, config.version);
                 m_components.push_back(std::move(*component));
             }
 
@@ -225,7 +225,7 @@ namespace zen
                 if (auto error = component->init())
                     return error;
 
-            spdlog::debug("Components created and initialized");
+            SPDLOG_DEBUG("Components created and initialized");
 
             // [LEGACY] Fix for sensors that did not support negotiation yet
             // [LEGACY] Swap the order of sensor-component initialization in the future
@@ -238,7 +238,7 @@ namespace zen
             else
                 return ZenSensorInitError_UnsupportedProtocol;
 
-            spdlog::debug("Sensor properties initialized");
+            SPDLOG_DEBUG("Sensor properties initialized");
         }
         else {
             // high-level sensor dont need initialization

@@ -145,14 +145,16 @@ std::vector<std::string> getDeviceFileForSiLabsSerial(std::string const &serial_
 {
     auto devices = getSiLabsDevices();
 
+    #if SPDLOG_ACTIVE_LEVEL <= SPDLOG_LEVEL_DEBUG
     for (auto const &dev : devices)
     {
-        spdlog::debug("Serial Number {0} found for these devices", dev.first);
+        SPDLOG_DEBUG("Serial Number {0} found for these devices", dev.first);
         for (auto const &devFileName : dev.second)
         {
-            spdlog::debug("-> Device file name {0}", devFileName);
+            SPDLOG_DEBUG("-> Device file name {0}", devFileName);
         }
     }
+    #endif
 
     if (devices.find(serial_string) == devices.end())
     {

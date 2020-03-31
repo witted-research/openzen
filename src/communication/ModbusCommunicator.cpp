@@ -22,7 +22,7 @@ namespace zen
 
     ZenError ModbusCommunicator::send(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept
     {
-        spdlog::debug("sending address: {0} function: {1} data size: {2} data: {3}",
+        SPDLOG_DEBUG("sending address: {0} function: {1} data size: {2} data: {3}",
             address, function, data.size(), util::spanToString(data));
         if (!data.empty() && data.data() == nullptr)
             return ZenError_IsNull;
@@ -38,7 +38,7 @@ namespace zen
     ZenError ModbusCommunicator::processData(gsl::span<const std::byte> data) noexcept
     {
         // enable this for low-level communication debugging
-        //spdlog::debug("received: {0}", util::spanToString(data));
+        SPDLOG_DEBUG("received data of size: {0}", data.size());
 
         while (!data.empty())
         {
@@ -49,7 +49,7 @@ namespace zen
 
             if (modbus::FrameParseError_None != m_parser->parse(data))
             {
-                spdlog::debug("Parsing of packet failed, can happen when OpenZen started to parse in the middle of a package.");
+                SPDLOG_DEBUG("Parsing of packet failed, can happen when OpenZen started to parse in the middle of a package.");
                 // drop first byte and look for new start character
                 m_parser->reset();
                 data = data.subspan(1);
@@ -60,6 +60,9 @@ namespace zen
             if (m_parser->finished())
             {
                 const auto& frame = m_parser->frame();
+
+                SPDLOG_DEBUG("Received and parsed message with address {} function {}",
+                    std::to_string(frame.address), std::to_string(frame.function));
 
                 if (m_subscriber->processReceivedData(frame.address, frame.function, frame.data))
                 {

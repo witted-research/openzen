@@ -40,14 +40,14 @@ namespace zen
 
             // Initialize to non-streaming to retrieve the config bitset
             if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false)) {
-                spdlog::debug("Cannot disable streaming of legacy sensor");
+                SPDLOG_DEBUG("Cannot disable streaming of legacy sensor");
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
             }
 
             if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config),
                 static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
             {
-                spdlog::debug("Loaded config bitset of legacy sensor: {}", bitset.value());
+                SPDLOG_DEBUG("Loaded config bitset of legacy sensor: {}", bitset.value());
                 properties->setConfigBitset(*bitset);
                 return std::make_unique<ImuComponent>(std::move(properties), communicator, version);
             }
@@ -61,14 +61,14 @@ namespace zen
 
             // Initialize to non-streaming to retrieve the config bitset
             if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false)) {
-                spdlog::debug("Cannot disable streaming of Ig1 sensor");
+                SPDLOG_DEBUG("Cannot disable streaming of Ig1 sensor");
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
             }
 
             if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyV1::GetImuTransmitData),
                 static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
             {
-                spdlog::debug("Loaded output bitset of Ig1 sensor: {}", bitset.value());
+                SPDLOG_DEBUG("Loaded output bitset of Ig1 sensor: {}", bitset.value());
                 properties->setOutputDataBitset(*bitset);
                 return std::make_unique<ImuIg1Component>(std::move(properties), communicator, version);
             }
