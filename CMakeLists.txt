@@ -36,6 +36,7 @@ option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portabl
 option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
 option(ZEN_NETWORK "Compile OpenZen with support for network streaming of measurement data" OFF)
 option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
+option(ZEN_PYTHON "Compile Python bindings for OpenZen" OFF)
 option(ZEN_TESTS "Compile with OpenZen tests" ON)
 option(ZEN_EXAMPLES "Compile with OpenZen examples" ON)
 
@@ -55,6 +56,8 @@ add_subdirectory(external)
 # contains additional C/C++ precompiler defines
 # which might be set depending on the selected compile options
 set(zen_optional_compile_definitions_private)
+set(zen_optional_libs)
+
 # set the correct log level
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     # this will enable the SPDLOG_DEBUG macros for the build
@@ -105,7 +108,19 @@ if(ZEN_CSHARP)
     )
 endif()
 
-set(zen_optional_libs)
+if(ZEN_PYTHON)
+    # this is only available in cmake 3.12 or newer
+    # libOpenZen.so needs to be renamed to _OpenZen.so so the python module can find it.
+    find_package (Python COMPONENTS Development)
+    list (APPEND zen_sources
+        ## run
+        # swig.exe -python -small -c++ -debug-typedef -DSWIGWORDSIZE64 -o OpenZenPython/OpenZen_wrap_python.cxx -outdir OpenZenPython OpenZen.i
+        # in the bindings folder to generate
+        bindings/OpenZenPython/OpenZen_wrap_python.cxx
+    )
+    list (APPEND zen_optional_libs Python::Python)
+endif()
+
 set(zen_optional_test_sources)
 
 set(processors_sources

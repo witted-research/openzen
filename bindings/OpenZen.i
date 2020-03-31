@@ -3,7 +3,7 @@
 // to proper arrays
 
 // run
-// swigwin-4.0.0\swig.exe -csharp -outdir OpenZenCSharp OpenZen.i
+// swig.exe -csharp -small -c++ -debug-typedef -DSWIGWORDSIZE64 -o OpenZenCSharp/OpenZen_wrap_csharp.cxx -outdir OpenZenCSharp OpenZen.i
 // to export for Csharp
 %array_class(float, OpenZenFloatArray);
 
