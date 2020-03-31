@@ -14,6 +14,7 @@ Contents
     ./cpp_api
     ./csharp_api
     ./unity_plugin
+    ./ros
 
 Overview
 --------
