@@ -28,6 +28,10 @@ if (MSVC)
     add_definitions(-D_WINVER=0x0601)
 endif()
 
+if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
+    message(FATAL_ERROR "GCC Version 7.0 is at least need to compile OpenZen")
+endif()
+
 # Please note: The static OpenZen build does not support library installation (aka "make install")
 # as the private dependencies cannot be resolved by CMake
 # see https://gitlab.kitware.com/cmake/cmake/issues/17357 for example
