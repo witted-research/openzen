@@ -143,5 +143,8 @@ Parameters
 ~sensor_interface (string, default: LinuxDevice)
     Name of IO system for initiating sensor connection. Use "LinuxDevice" for usb connection in Linux. For more details, please check the documentation in the section :ref:`io-system-label`.
 
+~baudrate (integer, default: 0)
+    Baudrate in bits per seconds used to connect to the sensor. If the baudrate is left at 0, OpenZen will automatically pick the default baudrate for the respective sensor model.
+
 ~frame_id (string, default: imu) 
     The frame in which imu readings will be returned.
