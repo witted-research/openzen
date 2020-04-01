@@ -51,6 +51,13 @@ a specific sensor, you can use the serial name of the sensor as parameter, for e
 
     rosrun openzen_sensor openzen_sensor_node _sensor_name:="LPMSCU2000573"
 
+If your sensor is configured for a different baud rate, you can use the baudrate parameter to
+give a specfic baud rate setting:
+
+.. code-block:: bash
+
+    rosrun openzen_sensor openzen_sensor_node _sensor_name:="LPMSCU2000573" _baudrate:=115200
+
 Now you can print the IMU values from ROS with:
 
 .. code-block:: bash
