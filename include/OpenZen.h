@@ -107,6 +107,12 @@ namespace zen
         {}
 
     public:
+        ZenSensorComponent() {
+            m_clientHandle.handle = 0;
+            m_sensorHandle.handle = 0;
+            m_componentHandle.handle = 0;
+        }
+
         ZenSensorComponent(const ZenSensorComponent& other) noexcept
             : m_clientHandle(other.m_clientHandle)
             , m_sensorHandle(other.m_sensorHandle)
