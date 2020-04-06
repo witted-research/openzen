@@ -16,16 +16,16 @@ namespace zen
 {
     BluetoothInterface::BluetoothInterface(IIoDataSubscriber& subscriber, std::unique_ptr<BluetoothDeviceHandler> handler) noexcept
         : IIoInterface(subscriber)
-        , m_handler(std::move(handler))
         , m_terminate(false)
+        , m_handler(std::move(handler))
         , m_ioReader(&BluetoothInterface::run, this)
     {}
 
     BluetoothInterface::~BluetoothInterface()
     {
         m_terminate = true;
-        m_handler.reset();
         m_ioReader.join();
+        m_handler.reset();
     }
 
     ZenError BluetoothInterface::send(gsl::span<const std::byte> data) noexcept
@@ -69,12 +69,10 @@ namespace zen
         while (!m_terminate)
         {
             // This is the only place where we read asynchronously, so no need to check the expected
-            auto future = m_handler->readAsync();
-            future->wait();
+            auto buffer = m_handler->read();
 
             try
             {
-                auto buffer = future->get();
                 if (buffer.has_value())
                 {
                     if (auto error = publishReceivedData(*buffer))

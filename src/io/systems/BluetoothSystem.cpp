@@ -10,6 +10,8 @@
 
 #include "io/systems/BluetoothSystem.h"
 
+#include <spdlog/spdlog.h>
+
 #include "io/bluetooth/BluetoothDeviceFinder.h"
 #include "io/interfaces/BluetoothInterface.h"
 
@@ -17,14 +19,12 @@ namespace zen
 {
     bool BluetoothSystem::available()
     {
-        if (QBluetoothDeviceDiscoveryAgent::supportedDiscoveryMethods().testFlag(QBluetoothDeviceDiscoveryAgent::ClassicMethod))
-            return true;
-
-        return false;
+        return true;
     }
 
     ZenError BluetoothSystem::listDevices(std::vector<ZenSensorDesc>& outDevices)
     {
+        spdlog::info("Starting listing of Bluetooth devices");
         BluetoothDeviceFinder finder;
         return finder.listDevices(outDevices);
     }

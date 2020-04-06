@@ -46,12 +46,15 @@ pipelines:
             - make
             - ./OpenZenTests
       - step:
-          name: Linux x64 Build no Bluetooth
+          name: Linux x64 Build with Bluetooth
           script:
+            # install needed Bluetooth library until the build image is updated
+            - apt-get update -y
+            - apt-get install -y libbluetooth-dev
             - git submodule update --init
             - mkdir ../linux_x64_build_nobt && cd ../linux_x64_build_nobt
             # disable most of optional components for now
-            - cmake -DZEN_BLUETOOTH=OFF ../build
+            - cmake -DZEN_BLUETOOTH=ON ../build
             - make
             - ./OpenZenTests
       - step:

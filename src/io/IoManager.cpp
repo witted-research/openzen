@@ -33,8 +33,10 @@
 namespace zen
 {
     static auto testSensorRegistry = makeRegistry<TestSensorSystem>();
-#ifdef ZEN_BLUETOOTH
+#ifdef ZEN_BLUETOOTH_BLE
     static auto bleRegistry = makeRegistry<BleSystem>();
+#endif
+#ifdef ZEN_BLUETOOTH
     static auto bluetoothRegistry = makeRegistry<BluetoothSystem>();
 #endif
 #ifdef ZEN_NETWORK

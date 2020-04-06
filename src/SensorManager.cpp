@@ -49,7 +49,7 @@ namespace zen
         , m_sensorThread(&SensorManager::sensorLoop, this)
         , m_sensorDiscoveryThread(&SensorManager::sensorDiscoveryLoop, this)   
     {
-#ifdef ZEN_BLUETOOTH
+#ifdef ZEN_BLUETOOTH_BLE
         // Necessary for QBluetooth
         if (QCoreApplication::instance() == nullptr)
         {

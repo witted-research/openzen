@@ -19,7 +19,7 @@
 #include <thread>
 #include <type_traits>
 
-#ifdef ZEN_BLUETOOTH
+#ifdef ZEN_BLUETOOTH_BLE
 #include <QCoreApplication>
 #endif
 
@@ -92,7 +92,7 @@ namespace zen
         std::thread m_sensorThread;
         std::thread m_sensorDiscoveryThread;
 
-        #ifdef ZEN_BLUETOOTH
+        #ifdef ZEN_BLUETOOTH_BLE
         std::unique_ptr<QCoreApplication> m_app;
         #endif
     };

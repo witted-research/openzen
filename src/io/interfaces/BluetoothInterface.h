@@ -48,8 +48,10 @@ namespace zen
     private:
         int run();
 
-        std::unique_ptr<BluetoothDeviceHandler> m_handler;
         std::atomic_bool m_terminate;
+
+        std::unique_ptr<BluetoothDeviceHandler> m_handler;
+
         std::thread m_ioReader;
     };
 }

@@ -2,6 +2,8 @@
 # so their headers and cmake files are not copied to the
 # output folder when "make install" is used
 
+add_subdirectory(bluetooth-serial-port)
+
 add_subdirectory(expected-lite EXCLUDE_FROM_ALL)
 add_subdirectory(ftdi)
 add_subdirectory(gsl EXCLUDE_FROM_ALL)

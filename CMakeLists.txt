@@ -37,7 +37,9 @@ endif()
 # see https://gitlab.kitware.com/cmake/cmake/issues/17357 for example
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
 option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
-option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ON)
+# linux needs libbluetooth-dev to be able to compile, so disable it by default
+option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ${WIN32})
+option(ZEN_BLUETOOTH_BLE "Compile OpenZen with bluetooth low-energy support, needs Qt installed" OFF)
 option(ZEN_NETWORK "Compile OpenZen with support for network streaming of measurement data" OFF)
 option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
 option(ZEN_PYTHON "Compile Python bindings for OpenZen" OFF)
@@ -230,25 +232,14 @@ if(ZEN_BLUETOOTH)
         src/io/ble/BleDeviceHandler.h
     )
 
-    set(io_bluetooth_sources
-        src/io/bluetooth/BluetoothDeviceFinder.cpp
-        src/io/bluetooth/BluetoothDeviceFinder.h
-        src/io/bluetooth/BluetoothDeviceHandler.cpp
-        src/io/bluetooth/BluetoothDeviceHandler.h
-    )
-
     list (APPEND io_systems_sources
         src/io/systems/BleSystem.cpp
         src/io/systems/BleSystem.h
-        src/io/systems/BluetoothSystem.cpp
-        src/io/systems/BluetoothSystem.h
     )
 
     list (APPEND io_interfaces_sources
         src/io/interfaces/BleInterface.cpp
         src/io/interfaces/BleInterface.h
-        src/io/interfaces/BluetoothInterface.cpp
-        src/io/interfaces/BluetoothInterface.h
     )
 
     list (APPEND zen_optional_libs
@@ -260,9 +251,37 @@ if(ZEN_BLUETOOTH)
     )
 
 else()
-    set(io_ble_sources)
-    set(io_bluetooth_sources)
+set(io_bluetooth_sources
+src/io/bluetooth/BluetoothDeviceFinder.cpp
+src/io/bluetooth/BluetoothDeviceFinder.h
+src/io/bluetooth/BluetoothDeviceHandler.cpp
+src/io/bluetooth/BluetoothDeviceHandler.h
+)
+
+list (APPEND io_systems_sources
+src/io/systems/BluetoothSystem.cpp
+src/io/systems/BluetoothSystem.h
+)
+
+list (APPEND io_interfaces_sources
+src/io/interfaces/BluetoothInterface.cpp
+src/io/interfaces/BluetoothInterface.h
+)
 endif()
+
+
+set(io_bluetooth_sources
+    src/io/bluetooth/BluetoothDeviceFinder.cpp
+    src/io/bluetooth/BluetoothDeviceFinder.h
+    
+    src/io/bluetooth/BluetoothDeviceHandler.cpp
+    src/io/bluetooth/BluetoothDeviceHandler.h
+)
+
+list (APPEND zen_optional_libs
+    bluetoothserialport
+)
+
 
 if(ZEN_NETWORK)
     set(io_zeromq_sources
