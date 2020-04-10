@@ -39,10 +39,20 @@ namespace zen
     {
         spdlog::info("Running TestSensor interface thread");
 
-        for (size_t i = 0; i < 10; i++) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        while(!m_terminate) {
+            // simulate 100 Hz
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
             ZenEvent evt;
             evt.eventType = ZenImuEvent_Sample;
+
+            evt.data.imuData.q[0] = 0.5;
+            evt.data.imuData.q[1] = -0.5;
+            evt.data.imuData.q[2] = -0.5;
+            evt.data.imuData.q[3] = 0.5;
+
+            evt.data.imuData.a[0] = 0.0f;
+            evt.data.imuData.a[1] = 0.0f;
+            evt.data.imuData.a[2] = -1.0f;
 
             evt.data.imuData.g[0] = 23.0f;
             evt.data.imuData.g[1] = 24.0f;
