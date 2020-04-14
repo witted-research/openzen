@@ -1,3 +1,8 @@
+# SiLabs USB express SDK has been downloaded from here:
+# https://www.silabs.com/products/development-tools/software/direct-access-drivers
+# This driver is covered by the SiLabs Royalty-free distribution license according to
+# https://www.silabs.com/documents/public/data-sheets/CP2102-9.pdf
+
 # Determine platform (32/64)
 if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
 	set(X64 ON)

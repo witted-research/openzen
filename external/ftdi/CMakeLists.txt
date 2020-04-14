@@ -1,3 +1,9 @@
+# FTDI driver has been downloaded from this website:
+# https://www.ftdichip.com/Drivers/D2XX.htm
+#
+# The licence covering the driver in this folder can be found in the
+# LICENCE file in this folder
+
 # Determine platform (32/64)
 if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
 	set(X64 ON)
