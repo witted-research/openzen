@@ -1,3 +1,13 @@
+//===========================================================================//
+//
+// Copyright (C) 2020 LP-Research Inc.
+//
+// This file is part of OpenZen, under the MIT License.
+// See https://bitbucket.org/lpresearch/openzen/src/master/LICENSE for details
+// SPDX-License-Identifier: MIT
+//
+//===========================================================================//
+
 #ifndef FINDTHISMODULE_H_a48839fa_5146_4d3b_afda_d185e792951c
 #define FINDTHISMODULE_H_a48839fa_5146_4d3b_afda_d185e792951c
 
