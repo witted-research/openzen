@@ -15,13 +15,13 @@
 
 #include "io/systems/BleSystem.h"
 #include "io/systems/BluetoothSystem.h"
-#include "io/systems/FtdiUsbSystem.h"
 #include "io/systems/TestSensorSystem.h"
 #ifdef ZEN_NETWORK
 #include "io/systems/ZeroMQSystem.h"
 #endif
 #if WIN32
 #include "io/systems/PcanBasicSystem.h"
+#include "io/systems/FtdiUsbSystem.h"
 #include "io/systems/SiUsbSystem.h"
 #include "io/systems/windows/WindowsDeviceSystem.h"
 #elif __linux__
@@ -40,11 +40,11 @@ namespace zen
 #ifdef ZEN_NETWORK
     static auto zmqRegistry = makeRegistry<ZeroMQSystem>();
 #endif
-    static auto ftdiUsbRegistry = makeRegistry<FtdiUsbSystem>();
 
 #if WIN32
     static auto pcanRegistry = makeRegistry<PcanBasicSystem>();
     static auto siUsbRegistry = makeRegistry<SiUsbSystem>();
+    static auto ftdiUsbRegistry = makeRegistry<FtdiUsbSystem>();
 
     // [XXX] Need to re-evaluate the usage
     static auto windowsDeviceRegistry = makeRegistry<WindowsDeviceSystem>();

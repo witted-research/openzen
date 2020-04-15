@@ -178,15 +178,11 @@ set(io_can_sources
 set(io_interfaces_sources
     src/io/interfaces/CanInterface.cpp
     src/io/interfaces/CanInterface.h
-    src/io/interfaces/FtdiUsbInterface.cpp
-    src/io/interfaces/FtdiUsbInterface.h
     src/io/interfaces/TestSensorInterface.cpp
     src/io/interfaces/TestSensorInterface.h
 )
 
 set(io_systems_sources
-    src/io/systems/FtdiUsbSystem.cpp
-    src/io/systems/FtdiUsbSystem.h
     src/io/systems/TestSensorSystem.cpp
     src/io/systems/TestSensorSystem.h
 )
@@ -310,6 +306,8 @@ if(WIN32)
     set(io_interfaces_sources ${io_interfaces_sources}
         src/io/interfaces/SiUsbInterface.cpp
         src/io/interfaces/SiUsbInterface.h
+        src/io/interfaces/FtdiUsbInterface.cpp
+        src/io/interfaces/FtdiUsbInterface.h
         src/io/interfaces/windows/WindowsDeviceInterface.cpp
         src/io/interfaces/windows/WindowsDeviceInterface.h
     )
@@ -319,6 +317,8 @@ if(WIN32)
         src/io/systems/PcanBasicSystem.h
         src/io/systems/SiUsbSystem.cpp
         src/io/systems/SiUsbSystem.h
+        src/io/systems/FtdiUsbSystem.cpp
+        src/io/systems/FtdiUsbSystem.h
         src/io/systems/windows/EnumerateSerialPorts.cpp
         src/io/systems/windows/EnumerateSerialPorts.h
         src/io/systems/windows/WindowsDeviceSystem.cpp
@@ -449,13 +449,13 @@ set(zen_include_dirs_public
 
 set(zen_include_dirs_private
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        $<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:GSL,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:openzen_asio,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:cereal,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:nonstd::expected-lite,INTERFACE_INCLUDE_DIRECTORIES>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:pcanbasic,INTERFACE_INCLUDE_DIRECTORIES>>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:siusb,INTERFACE_INCLUDE_DIRECTORIES>>
+        $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>>
 )
 
 target_include_directories(OpenZen
