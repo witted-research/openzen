@@ -52,7 +52,6 @@ namespace zen
             fnTable.setLatencyTimer = reinterpret_cast<FtdiFnTable::SetLatencyTimerFn>(dll.procedure(m_handle, "FT_SetLatencyTimer"));
             fnTable.setUsbParameters = reinterpret_cast<FtdiFnTable::SetUsbParametersFn>(dll.procedure(m_handle, "FT_SetUSBParameters"));
             fnTable.write = reinterpret_cast<FtdiFnTable::WriteFn>(dll.procedure(m_handle, "FT_Write"));
-            std::cout << "Loaded Ftdi driver." << std::endl;
             return true;
         }
 
