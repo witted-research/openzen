@@ -72,7 +72,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     )
 endif()
 
-if (ZEN_BLUETOOTH)
+if (ZEN_BLUETOOTH_BLE)
     # Instruct CMake to run moc automatically when needed
     set(CMAKE_AUTOMOC ON)
     find_package(Qt5Bluetooth REQUIRED)
@@ -224,7 +224,7 @@ set(utility_sources
     src/utility/gnss/RTCM3Parser.h
 )
 
-if(ZEN_BLUETOOTH)
+if(ZEN_BLUETOOTH_BLE)
     set(io_ble_sources
         src/io/ble/BleDeviceFinder.cpp
         src/io/ble/BleDeviceFinder.h
@@ -247,41 +247,36 @@ if(ZEN_BLUETOOTH)
     )
 
     list (APPEND zen_optional_compile_definitions_private
-        ZEN_BLUETOOTH
+        ZEN_BLUETOOTH_BLE
     )
-
-else()
-set(io_bluetooth_sources
-src/io/bluetooth/BluetoothDeviceFinder.cpp
-src/io/bluetooth/BluetoothDeviceFinder.h
-src/io/bluetooth/BluetoothDeviceHandler.cpp
-src/io/bluetooth/BluetoothDeviceHandler.h
-)
-
-list (APPEND io_systems_sources
-src/io/systems/BluetoothSystem.cpp
-src/io/systems/BluetoothSystem.h
-)
-
-list (APPEND io_interfaces_sources
-src/io/interfaces/BluetoothInterface.cpp
-src/io/interfaces/BluetoothInterface.h
-)
 endif()
 
+if(ZEN_BLUETOOTH)
+    set(io_bluetooth_sources
+        src/io/bluetooth/BluetoothDeviceFinder.cpp
+        src/io/bluetooth/BluetoothDeviceFinder.h
+        src/io/bluetooth/BluetoothDeviceHandler.cpp
+        src/io/bluetooth/BluetoothDeviceHandler.h
+    )
 
-set(io_bluetooth_sources
-    src/io/bluetooth/BluetoothDeviceFinder.cpp
-    src/io/bluetooth/BluetoothDeviceFinder.h
-    
-    src/io/bluetooth/BluetoothDeviceHandler.cpp
-    src/io/bluetooth/BluetoothDeviceHandler.h
-)
+    list (APPEND io_systems_sources
+        src/io/systems/BluetoothSystem.cpp
+        src/io/systems/BluetoothSystem.h
+    )
 
-list (APPEND zen_optional_libs
-    bluetoothserialport
-)
+    list (APPEND io_interfaces_sources
+        src/io/interfaces/BluetoothInterface.cpp
+        src/io/interfaces/BluetoothInterface.h
+    )
 
+    list (APPEND zen_optional_libs
+        bluetoothserialport
+    )
+
+    list (APPEND zen_optional_compile_definitions_private
+        ZEN_BLUETOOTH
+    )
+endif()
 
 if(ZEN_NETWORK)
     set(io_zeromq_sources

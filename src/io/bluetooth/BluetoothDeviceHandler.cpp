@@ -33,7 +33,8 @@ namespace zen
             m_device->Connect();
             return ZenSensorInitError_None;
         }
-        catch(BluetoothException &) {
+        catch(BluetoothException & be) {
+            spdlog::error("Cannot connect to Bluetooth sensor: {0}", be.what());
             return ZenSensorInitError_ConnectFailed;
         }
     }

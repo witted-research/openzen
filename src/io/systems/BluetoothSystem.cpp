@@ -32,8 +32,10 @@ namespace zen
     nonstd::expected<std::unique_ptr<IIoInterface>, ZenSensorInitError> BluetoothSystem::obtain(const ZenSensorDesc& desc, IIoDataSubscriber& subscriber) noexcept
     {
         auto handle = std::make_unique<BluetoothDeviceHandler>(desc.identifier);
-        if (auto error = handle->initialize())
+        if (auto error = handle->initialize()) {
+            spdlog::error("Cannot initialize Blueooth device handler");
             return nonstd::make_unexpected(error);
+        }
 
         return std::make_unique<BluetoothInterface>(subscriber, std::move(handle));
     }

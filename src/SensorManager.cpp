@@ -103,22 +103,28 @@ namespace zen
             }
             spdlog::info("Obtaining sensor {0} with baudrate {1}", desc.identifier, desc.baudRate);
 
-            if (auto ioInterface = ioSystem->get().obtain(desc, *communicator.get()))
+            if (auto ioInterface = ioSystem->get().obtain(desc, *communicator.get())) {
                 communicator->init(std::move(*ioInterface));
-            else
+            } else {
+                spdlog::error("IO System returned error");
                 return nonstd::make_unexpected(ioInterface.error());
+            }
 
             auto agreement = negotiator.negotiate(*communicator.get(), desc.baudRate);
-            if (!agreement)
+            if (!agreement) {
+                spdlog::error("Sensor connection cannot be negotiated");
                 return nonstd::make_unexpected(agreement.error());
+            }
 
             lock.lock();
             const auto token = m_nextToken++;
             lock.unlock();
 
             auto sensor = make_sensor(std::move(*agreement), std::move(communicator), token);
-            if (!sensor)
+            if (!sensor) {
+                spdlog::error("Sensor object cannot be created");
                 return nonstd::make_unexpected(sensor.error());
+            }
 
             lock.lock();
             m_sensors.insert(*sensor);
