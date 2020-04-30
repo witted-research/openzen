@@ -253,11 +253,56 @@ endif()
 
 if(ZEN_BLUETOOTH)
     set(io_bluetooth_sources
+        src/utility/bluetooth-serial-port/BluetoothException.h
+        src/utility/bluetooth-serial-port/BTSerialPortBinding.h
+        src/utility/bluetooth-serial-port/DeviceINQ.h
+        src/utility/bluetooth-serial-port/Enums.h
+        src/utility/bluetooth-serial-port/Enums.cc
         src/io/bluetooth/BluetoothDeviceFinder.cpp
         src/io/bluetooth/BluetoothDeviceFinder.h
         src/io/bluetooth/BluetoothDeviceHandler.cpp
         src/io/bluetooth/BluetoothDeviceHandler.h
     )
+
+    if(WIN32) # windows
+        list (APPEND io_bluetooth_sources
+            src/utility/bluetooth-serial-port/windows/BluetoothHelpers.cc
+            src/utility/bluetooth-serial-port/windows/BTSerialPortBinding.cc
+            src/utility/bluetooth-serial-port/windows/DeviceINQ.cc
+        )
+
+        list (APPEND zen_optional_libs
+            ws2_32
+            bthprops
+        )
+    elseif(APPLE) # MacOSX
+        list (APPEND io_bluetooth_sources
+            src/utility/bluetooth-serial-port/osx/BluetoothDeviceResources.mm
+            src/utility/bluetooth-serial-port/osx/BluetoothWorker.mm
+            src/utility/bluetooth-serial-port/osx/BTSerialPortBinding.mm
+            src/utility/bluetooth-serial-port/osx/DeviceINQ.mm
+            src/utility/bluetooth-serial-port/osx/pipe.c
+        )
+        find_library(FOUNDATION Foundation)
+        find_library(IOBLUETOOTH IOBluetooth)
+        list (APPEND zen_optional_libs
+            ${FOUNDATION}
+            ${IOBLUETOOTH}
+            -fobjc-arc
+        )
+
+        add_executable(btScan src/osx/btScan.mm)
+        target_link_libraries(btScan ${FOUNDATION} ${IOBLUETOOTH})
+    else() # Linux
+        list (APPEND io_bluetooth_sources
+            src/utility/bluetooth-serial-port/linux/BTSerialPortBinding.cc
+            src/utility/bluetooth-serial-port/linux/DeviceINQ.cc
+        )
+
+        list (APPEND zen_optional_libs
+            bluetooth
+        )
+    endif()
 
     list (APPEND io_systems_sources
         src/io/systems/BluetoothSystem.cpp
@@ -267,10 +312,6 @@ if(ZEN_BLUETOOTH)
     list (APPEND io_interfaces_sources
         src/io/interfaces/BluetoothInterface.cpp
         src/io/interfaces/BluetoothInterface.h
-    )
-
-    list (APPEND zen_optional_libs
-        bluetoothserialport
     )
 
     list (APPEND zen_optional_compile_definitions_private

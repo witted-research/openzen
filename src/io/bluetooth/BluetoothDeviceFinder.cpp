@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <cstring>
 
-#include "DeviceINQ.h"
+#include "utility/bluetooth-serial-port/DeviceINQ.h"
 
 #include "io/systems/BluetoothSystem.h"
 

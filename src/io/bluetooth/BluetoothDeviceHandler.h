@@ -11,7 +11,7 @@
 #ifndef ZEN_IO_BLUETOOTH_BLUETOOTHDEVICEHANDLER_H_
 #define ZEN_IO_BLUETOOTH_BLUETOOTHDEVICEHANDLER_H_
 
-#include "BTSerialPortBinding.h"
+#include "utility/bluetooth-serial-port/BTSerialPortBinding.h"
 
 #include "nonstd/expected.hpp"
 

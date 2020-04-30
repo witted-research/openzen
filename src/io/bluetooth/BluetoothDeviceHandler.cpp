@@ -10,7 +10,7 @@
 
 #include "io/bluetooth/BluetoothDeviceHandler.h"
 
-#include "BluetoothException.h"
+#include "utility/bluetooth-serial-port/BluetoothException.h"
 
 #include <spdlog/spdlog.h>
 
