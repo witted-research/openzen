@@ -32,13 +32,34 @@ if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
     message(FATAL_ERROR "GCC Version 7.0 is at least need to compile OpenZen")
 endif()
 
+set (ZEN_BLUETOOTH_DEFAULT ${WIN32})
+
+## check if libbluetooth is available on Unix
+if(UNIX AND NOT APPLE)
+    find_library(LIBBLUETOOTH_LIBRARY
+        NAMES bluetooth)
+
+    if (NOT LIBBLUETOOTH_LIBRARY)
+        set(ZEN_BLUETOOTH_DEFAULT OFF)
+
+        message("Please install libbluetooth for bluetooth support")
+        if (ZEN_BLUETOOTH)
+            # give a fatal error message if Bluetooth support was requested
+            # by cmake parameters but we cannot fullfil it
+            message(FATAL_ERROR "libbluetooth required to compile with Bluetooth support")
+        endif()
+    else()
+        set(ZEN_BLUETOOTH_DEFAULT ON)
+    endif()
+endif()
+
 # Please note: The static OpenZen build does not support library installation (aka "make install")
 # as the private dependencies cannot be resolved by CMake
 # see https://gitlab.kitware.com/cmake/cmake/issues/17357 for example
 option(ZEN_USE_STATIC_LIBS "Whether to compile OpenZen as a static library" OFF)
 option(ZEN_STATIC_LINK_LIBCXX "Option to statically link libstdc++ to be portable to older systems (Linux only)" OFF)
 # linux needs libbluetooth-dev to be able to compile, so disable it by default
-option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ${WIN32})
+option(ZEN_BLUETOOTH "Compile OpenZen with bluetooth support" ${ZEN_BLUETOOTH_DEFAULT})
 option(ZEN_BLUETOOTH_BLE "Compile OpenZen with bluetooth low-energy support, needs Qt installed" OFF)
 option(ZEN_NETWORK "Compile OpenZen with support for network streaming of measurement data" OFF)
 option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
