@@ -291,8 +291,10 @@ if(ZEN_BLUETOOTH)
             -fobjc-arc
         )
 
-        add_executable(btScan src/osx/btScan.mm)
+        add_executable(btScan src/utility/bluetooth-serial-port/osx/btScan.mm)
         target_link_libraries(btScan ${FOUNDATION} ${IOBLUETOOTH})
+        # Use a non-ancient C++ version for compilation ...
+        target_compile_features(btScan PRIVATE cxx_variadic_templates)
     else() # Linux
         list (APPEND io_bluetooth_sources
             src/utility/bluetooth-serial-port/linux/BTSerialPortBinding.cc
