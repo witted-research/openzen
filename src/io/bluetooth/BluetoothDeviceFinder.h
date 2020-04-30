@@ -40,7 +40,8 @@ namespace zen
         // Use uppercase here.
         const std::vector<std::string> m_whitelistAddresses = {
             // LPMS-B2 sensor
-            {"00:04:3E"}
+            {"00:04:3E"},
+            {"00-04-3E"}    // On the mac addresses are reported with a hyphen.
         };
     };
 }
