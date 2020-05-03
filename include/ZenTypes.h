@@ -196,6 +196,7 @@ typedef struct ZenImuData
     float r[3];
 
     /// Quaternion orientation data.
+    /// The component order is w, x, y, z
     float q[4];
 
     /// Orientation data as rotation matrix without offset.
