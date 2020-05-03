@@ -102,6 +102,8 @@ namespace zen
 
             desc.baudRate = getDefaultBaudrate();
             outDevices.emplace_back(desc);
+
+            spdlog::debug("Found sensor with name {0} on SiUsb interface", desc.serialNumber);
         }
 
         return ZenError_None;
@@ -123,13 +125,17 @@ namespace zen
             if (auto error = SiUsbSystem::fnTable.getProductStringSafe(idx, serialNumber, sizeof(ZenSensorDesc::serialNumber), SI_RETURN_SERIAL_NUMBER))
                 continue;
 
+            spdlog::debug("Found sensor with name {0} on SiUsb interface", serialNumber);
+
             found = serialNumber == target;
             if (found)
                 break;
         }
 
-        if (!found)
+        if (!found) {
+            spdlog::error("No sensor with name {0} found on SiUsb interface", target);
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
+        }
 
         return make_interface(subscriber, idx);
     }
