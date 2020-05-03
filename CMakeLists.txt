@@ -137,15 +137,15 @@ endif()
 
 if(ZEN_PYTHON)
     # this is only available in cmake 3.12 or newer
-    # libOpenZen.so needs to be renamed to _OpenZen.so so the python module can find it.
-    find_package (Python COMPONENTS Development)
+    # look and build only for python3
+    find_package (Python3 REQUIRED COMPONENTS Development)
     list (APPEND zen_sources
         ## run
         # swig.exe -python -small -c++ -debug-typedef -o OpenZenPython/OpenZen_wrap_python.cxx -outdir OpenZenPython OpenZen.i
         # in the bindings folder to generate
         bindings/OpenZenPython/OpenZen_wrap_python.cxx
     )
-    list (APPEND zen_optional_libs Python::Python)
+    list (APPEND zen_optional_libs Python3::Python)
 endif()
 
 set(zen_optional_test_sources)
