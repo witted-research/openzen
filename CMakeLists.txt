@@ -129,7 +129,7 @@ set(zen_sources
 if(ZEN_CSHARP)
     list (APPEND zen_sources
         ## run
-        # swig.exe -csharp -small -c++ -debug-typedef -DSWIGWORDSIZE64 -o OpenZenCSharp/OpenZen_wrap_csharp.cxx -outdir OpenZenCSharp OpenZen.i
+        # swig.exe -csharp -small -c++ -debug-typedef -o OpenZenCSharp/OpenZen_wrap_csharp.cxx -outdir OpenZenCSharp OpenZen.i
         # in the bindings folder to generate
         bindings/OpenZenCSharp/OpenZen_wrap_csharp.cxx
     )
@@ -141,7 +141,7 @@ if(ZEN_PYTHON)
     find_package (Python COMPONENTS Development)
     list (APPEND zen_sources
         ## run
-        # swig.exe -python -small -c++ -debug-typedef -DSWIGWORDSIZE64 -o OpenZenPython/OpenZen_wrap_python.cxx -outdir OpenZenPython OpenZen.i
+        # swig.exe -python -small -c++ -debug-typedef -o OpenZenPython/OpenZen_wrap_python.cxx -outdir OpenZenPython OpenZen.i
         # in the bindings folder to generate
         bindings/OpenZenPython/OpenZen_wrap_python.cxx
     )
