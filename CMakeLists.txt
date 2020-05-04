@@ -32,9 +32,9 @@ if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
     message(FATAL_ERROR "GCC Version 7.0 is at least need to compile OpenZen")
 endif()
 
-set (ZEN_BLUETOOTH_DEFAULT ${WIN32})
+set (ZEN_BLUETOOTH_DEFAULT ON)
 
-## check if libbluetooth is available on Unix
+## check if libbluetooth is available on non-Apple Unix
 if(UNIX AND NOT APPLE)
     find_library(LIBBLUETOOTH_LIBRARY
         NAMES bluetooth)
@@ -42,14 +42,12 @@ if(UNIX AND NOT APPLE)
     if (NOT LIBBLUETOOTH_LIBRARY)
         set(ZEN_BLUETOOTH_DEFAULT OFF)
 
-        message("Please install libbluetooth for bluetooth support")
+        message("Please install libbluetooth-dev for bluetooth support")
         if (ZEN_BLUETOOTH)
             # give a fatal error message if Bluetooth support was requested
             # by cmake parameters but we cannot fullfil it
-            message(FATAL_ERROR "libbluetooth required to compile with Bluetooth support")
+            message(FATAL_ERROR "libbluetooth-dev required to compile with Bluetooth support")
         endif()
-    else()
-        set(ZEN_BLUETOOTH_DEFAULT ON)
     endif()
 endif()
 
