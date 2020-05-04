@@ -53,6 +53,26 @@ examples/OpenZenExample
 
 An example of how to use the OpenZen API is included with the repository. If you are looking for more information on how to use the API, visit the documentation on the [Wiki](https://bitbucket.org/lpresearch/openzen/wiki/API%20Documentation).
 
+## Available Build Options
+
+These build options can be supplied to the cmake command to customize your OpenZen build. For example
+
+```
+cmake -DZEN_BLUETOOTH=OFF -DZEN_PYTHON=ON ..
+```
+
+| Name                   | Default | Description                                                                     |
+|------------------------|---------|---------------------------------------------------------------------------------|
+| ZEN_USE_STATIC_LIBS    | OFF     | Compile OpenZen as a static library                                             |
+| ZEN_STATIC_LINK_LIBCXX | OFF     | Option to statically link libstdc++ to be portable to older systems (Linux only)|
+| ZEN_BLUETOOTH          | ON      | Compile with bluetooth support                                                  |
+| ZEN_BLUETOOTH_BLE      | OFF     | Compile with bluetooth low-energy support, needs Qt installed                   |
+| ZEN_NETWORK            | OFF     | Compile with support for network streaming of measurement data                  |
+| ZEN_CSHARP             | ON      | Compile C# bindings for OpenZen                                                 |
+| ZEN_PYTHON             | OFF     | Compile Python bindings for OpenZen                                             |
+| ZEN_TESTS              | ON      | Compile with OpenZen tests                                                      |
+| ZEN_EXAMPLES           | ON      | Compile with OpenZen examples                                                   |
+
 ## Deployment
 
 If you want to compile OpenZen and use the binary library on other systems, you can use CMake for that too. To build a standlone version of OpenZen, you can use the following command:
