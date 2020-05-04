@@ -11,7 +11,7 @@ OpenZen Unity plugin connected to a LPMS-CU2 sensor and live visualization of se
 ## Overview
 OpenZen is a framework that allows access to Sensor Hardware from multiple vendors without requiring understanding of the target hardware or communication layer by providing a homogeneous API to application developers and a communication protocol to hardware developers.
 
-Currently, OpenZen has full support for communication over Bluetooth and USB (using the Silabs driver), as well as experimental support for Bluetooth Low-Energy, CAN (using the PCAN Basic driver) and USB (using the Ftdi driver). At the moment OpenZen has only been used with IMU sensors, but is easily extensible to any type of sensor or range of properties.
+Currently, OpenZen has full support for communication over Bluetooth and USB (using the Silabs driver), as well as support for Bluetooth Low-Energy, CAN (using the PCAN Basic driver) and USB (using the Ftdi driver). At the moment OpenZen has only been used with IMU and GPS sensors, but is easily extensible to any type of sensor or range of properties.
 
 Where possible we favour open standards, but as OpenZen finds its origin in [OpenMAT](https://bitbucket.org/lpresearch/openmat-2-os/) it needs to provide backwards compatibility for all sensors that originally worked with its *LpSensor* library. As such, OpenZen still contains some custom protocols which will be phased out over time. Legacy protocols are generally referred to with the v0 indicator.
 
@@ -31,15 +31,7 @@ OpenZen uses CMake (3.11 or higher) as build system, and has been built and test
 
 1. Install MSVC build tools, or the Visual Studio IDE (requires C++17 support)
 2. Install CMake, or a GUI (e.g. Visual Studio) that incorporates CMake
-3. Install Qt (5.11.2 or higher)
-4. Clone the external repositories: `git submodule update --init`
-5. Configure CMake with the environment variable `CMAKE_PREFIX_PATH` pointing towards your Qt bin directory
-
-You can do that by inserting this line (with the correct Qt installation path on your system)
-```
-set(CMAKE_PREFIX_PATH "C://Qt//5.12.3//msvc2017_64//")
-```
-in the topmost CMakeLists.txt file.
+3. Clone the external repositories: `git submodule update --init`
 
 Now you can open and compile OpenZen with Visual Studio. When starting Visual Studio, use the top menu and do File -> Open -> Folder... and select the OpenZen directory.
 
@@ -47,9 +39,8 @@ Now you can open and compile OpenZen with Visual Studio. When starting Visual St
 
 1. Install gcc7 (requires C++17 support): `sudo apt-get install gcc-7`
 2. Install CMake ([instructions](https://peshmerge.io/how-to-install-cmake-3-11-0-on-ubuntu-16-04/))
-3. Install Qt (5.11.2 or higher): `sudo apt-get install qtbase5-dev qtconnectivity5-dev`
-4. Clone the external repositories: `git submodule update --init`
-5. Create a build folder and run cmake:
+3. Clone the external repositories: `git submodule update --init`
+4. Create a build folder and run cmake:
 ```
 mkdir build && cd build
 cmake ..
@@ -71,7 +62,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DZEN_STATIC_LINK_LIBCXX=On -DZEN_BLUETOOTH=OFF
 make -j4 install
 ```
 
-This will compile OpenZen without Bluetooth support (if you don't need it) which makes the library independant of any Qt libraries. Furthermore, it will statically link libstdc++ which increase the size of the library bigger but makes it more portable.
+This will compile OpenZen without Bluetooth support (if you don't need it). Furthermore, it will statically link libstdc++ which increase the size of the library bigger but makes it more portable.
 After calling `make install`, the folder `OpenZenRelease` will contain the binary library, the required interface header files and CMake configuration file to easily integrate the library into your project.
 
 Please see this [CMake file](https://bitbucket.org/lpresearch/openzen/src/master/standalone_example/CMakeLists.txt) for an example how to use OpenZen as an external, binary-only package in your build.
@@ -79,10 +70,8 @@ Please see this [CMake file](https://bitbucket.org/lpresearch/openzen/src/master
 ## Note on Licensing
 
 OpenZen is licensed under a simple MIT-type license and thus is free to use and modify for all purposes.  Please be aware
-that OpenZen relies on the Qt library for Bluetooth functionality and thus Qt's license conditions may apply to the resulting
-binary. If you want to avoid this, OpenZen can be built without Bluetooth support and thus without using Qt. This is
-achieved by setting the CMake option `ZEN_BLUETOOTH` to `OFF`, e.g. by adding `-DZEN_BLUETOOTH=OFF` to the command line while
-configuring.
+that OpenZen relies on the Qt library for Bluetooth BLE functionality and thus Qt's license conditions may apply to the resulting
+binary.
 
 ## Contributing
 
