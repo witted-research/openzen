@@ -68,3 +68,8 @@ add_executable(OpenZenExampleCpp
 
 target_link_libraries(OpenZenExampleCpp
     OpenZen)
+
+target_compile_features(OpenZenExampleCpp
+    PRIVATE
+        cxx_std_11
+)
