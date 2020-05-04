@@ -12,6 +12,7 @@ Contents
     ./io_systems
     ./c_api
     ./cpp_api
+    ./python_api
     ./csharp_api
     ./unity_plugin
     ./ros

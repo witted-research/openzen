@@ -4,8 +4,8 @@ C# API
 
 Overview
 ========
-The OpenZen language bindings allow you to use access sensor data from any C# data.
-The functions names are the same which are used by the OpenZen C API. In order to use
+The OpenZen language bindings allow you to access sensor data from any C# data.
+The function names are the same which are used by the OpenZen C API. In order to use
 C# language bindings, you need to add the C# files in the folder ``bindings/OpenZenCSharp``
 to your project and the dynamic link libraries from the binary OpenZen folder.
 
