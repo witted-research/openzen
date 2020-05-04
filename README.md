@@ -37,8 +37,8 @@ Now you can open and compile OpenZen with Visual Studio. When starting Visual St
 
 ### Linux
 
-1. Install gcc7 (requires C++17 support): `sudo apt-get install gcc-7`
-2. Install CMake ([instructions](https://peshmerge.io/how-to-install-cmake-3-11-0-on-ubuntu-16-04/))
+1. Install gcc7 (requires C++17 support) or newer: `sudo apt-get install gcc-7`
+2. Install CMake (requires version 3.11 or newer)
 3. Clone the external repositories: `git submodule update --init`
 4. Create a build folder and run cmake:
 ```
