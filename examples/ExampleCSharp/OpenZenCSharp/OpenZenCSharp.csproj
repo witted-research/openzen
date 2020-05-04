@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7054465F-91D5-460F-9189-D258EFAA280B}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>OpenZenCSharpBindingTest</RootNamespace>
-    <AssemblyName>OpenZenCSharpBindingTest</AssemblyName>
+    <RootNamespace>OpenZenCSharp</RootNamespace>
+    <AssemblyName>OpenZenCSharp</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -63,109 +63,109 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\OpenZenCSharp\EZenImuProperty.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\EZenImuProperty.cs">
       <Link>EZenImuProperty.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\EZenSensorProperty.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\EZenSensorProperty.cs">
       <Link>EZenSensorProperty.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\OpenZen.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\OpenZen.cs">
       <Link>OpenZen.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\OpenZenFloatArray.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\OpenZenFloatArray.cs">
       <Link>OpenZenFloatArray.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\OpenZenPINVOKE.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\OpenZenPINVOKE.cs">
       <Link>OpenZenPINVOKE.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_bool.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_bool.cs">
       <Link>SWIGTYPE_p_bool.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_float.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_float.cs">
       <Link>SWIGTYPE_p_float.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_int.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_int.cs">
       <Link>SWIGTYPE_p_int.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_p_ZenComponentHandle.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_p_ZenComponentHandle.cs">
       <Link>SWIGTYPE_p_p_ZenComponentHandle.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_size_t.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_size_t.cs">
       <Link>SWIGTYPE_p_size_t.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_unsigned_char.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_unsigned_char.cs">
       <Link>SWIGTYPE_p_unsigned_char.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_unsigned_long.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_unsigned_long.cs">
       <Link>SWIGTYPE_p_unsigned_long.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_unsigned_long_long.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_unsigned_long_long.cs">
       <Link>SWIGTYPE_p_unsigned_long_long.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\SWIGTYPE_p_void.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_void.cs">
       <Link>SWIGTYPE_p_void.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenAsyncStatus.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenAsyncStatus.cs">
       <Link>ZenAsyncStatus.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenClientHandle_t.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenClientHandle_t.cs">
       <Link>ZenClientHandle_t.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenComponentHandle_t.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenComponentHandle_t.cs">
       <Link>ZenComponentHandle_t.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenError.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenError.cs">
       <Link>ZenError.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenEvent.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenEvent.cs">
       <Link>ZenEvent.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenEventData.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenEventData.cs">
       <Link>ZenEventData.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenEventData_SensorDisconnected.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenEventData_SensorDisconnected.cs">
       <Link>ZenEventData_SensorDisconnected.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenEventData_SensorListingProgress.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenEventData_SensorListingProgress.cs">
       <Link>ZenEventData_SensorListingProgress.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenGnssData.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenGnssData.cs">
       <Link>ZenGnssData.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenGnssFixCarrierPhaseSolution.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenGnssFixCarrierPhaseSolution.cs">
       <Link>ZenGnssFixCarrierPhaseSolution.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenGnssFixType.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenGnssFixType.cs">
       <Link>ZenGnssFixType.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenHeaveMotionData.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenHeaveMotionData.cs">
       <Link>ZenHeaveMotionData.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenImuData.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenImuData.cs">
       <Link>ZenImuData.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenImuEvent.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenImuEvent.cs">
       <Link>ZenImuEvent.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenLogLevel.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenLogLevel.cs">
       <Link>ZenLogLevel.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenOrientationOffsetMode.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenOrientationOffsetMode.cs">
       <Link>ZenOrientationOffsetMode.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenPropertyType.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenPropertyType.cs">
       <Link>ZenPropertyType.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenSensorDesc.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenSensorDesc.cs">
       <Link>ZenSensorDesc.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenSensorEvent.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenSensorEvent.cs">
       <Link>ZenSensorEvent.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenSensorHandle_t.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenSensorHandle_t.cs">
       <Link>ZenSensorHandle_t.cs</Link>
     </Compile>
-    <Compile Include="..\..\OpenZenCSharp\ZenSensorInitError.cs">
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenSensorInitError.cs">
       <Link>ZenSensorInitError.cs</Link>
     </Compile>
     <Compile Include="Program.cs" />
@@ -175,4 +175,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y "$(SolutionDir)\..\..\out\build\x64-Release\OpenZen.dll" "$(TargetDir)\OpenZen.dll"
+copy /Y "$(SolutionDir)\..\..\out\build\x64-Release\SiUSBXp.dll" "$(TargetDir)\SiUSBXp.dll"
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>
