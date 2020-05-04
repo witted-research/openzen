@@ -27,6 +27,7 @@ Windows
 - Install CMake, or a GUI (e.g. Visual Studio) that incorporates CMake
 - Install Qt (5.11.2 or higher)
 - Clone the external repositories:
+
 .. code-block:: bash
 
     git submodule update --init
@@ -49,11 +50,13 @@ Linux
 - Install CMake (instructions)
 - Install Qt (5.11.2 or higher): sudo apt-get install qtbase5-dev qtconnectivity5-dev
 - Clone the external repositories:
+
 .. code-block:: bash
 
     git submodule update --init
 
 - Create a build folder and run cmake:
+
 .. code-block:: bash
 
     mkdir build && cd build
@@ -65,3 +68,35 @@ Now you can run the OpenZenExample:
 
     make -j4
     examples/OpenZenExample
+
+OpenZen Build Options
+=====================
+
+These build options can be supplied to the cmake command to customize your OpenZen build. For example
+
+.. code-block:: bash
+
+    cmake -DZEN_BLUETOOTH=OFF -DZEN_PYTHON=ON ..
+
+
++------------------------+---------+---------------------------------------------------------------------------------+
+| Name                   | Default | Description                                                                     |
++========================+=========+=================================================================================+
+| ZEN_USE_STATIC_LIBS    | OFF     | Compile OpenZen as a static library                                             |
++------------------------+---------+---------------------------------------------------------------------------------+
+| ZEN_STATIC_LINK_LIBCXX | OFF     | Option to statically link libstdc++ to be portable to older systems (Linux only)|
++------------------------+---------+---------------------------------------------------------------------------------+
+| ZEN_BLUETOOTH          | ON      | Compile with bluetooth support                                                  |
++------------------------+---------+---------------------------------------------------------------------------------+
+| ZEN_BLUETOOTH_BLE      | OFF     | Compile with bluetooth low-energy support, needs Qt installed                   |
++------------------------+---------+---------------------------------------------------------------------------------+
+| ZEN_NETWORK            | OFF     | Compile with support for network streaming of measurement data                  |
++------------------------+---------+---------------------------------------------------------------------------------+
+| ZEN_CSHARP             | ON      | Compile C# bindings for OpenZen                                                 |
++------------------------+---------+---------------------------------------------------------------------------------+
+| ZEN_PYTHON             | OFF     | Compile Python bindings for OpenZen                                             |
++------------------------+---------+---------------------------------------------------------------------------------+
+| ZEN_TESTS              | ON      | Compile with OpenZen tests                                                      |
++------------------------+---------+---------------------------------------------------------------------------------+
+| ZEN_EXAMPLES           | ON      | Compile with OpenZen examples                                                   |
++------------------------+---------+---------------------------------------------------------------------------------+
