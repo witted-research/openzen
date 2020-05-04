@@ -62,3 +62,9 @@ if (!MSVC)
     target_link_libraries(OpenZenExampleCAPI
         OpenZen)
 endif()
+
+add_executable(OpenZenExampleCpp
+    ExampleCpp.cpp)
+
+target_link_libraries(OpenZenExampleCpp
+    OpenZen)
