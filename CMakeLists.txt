@@ -7,7 +7,7 @@ option(ZEN_MSVC_RUNTIME_STATIC "Link the MSVC runtime statically, useful for lib
 if (MSVC)
     # make sure we link with the static runtime libraries
     # and have no dependencies on VC++ studio DLLs during runtime
-    # We don't have any C++ exposed, so the C++ compatiblity
+    # We don't have any C++ exposed, so the C++ compatibility
     # to the host program of the DLL is not required
 
     # according to
