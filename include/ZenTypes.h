@@ -302,12 +302,14 @@ typedef struct ZenGnssData
     /// height above WGS84 ellipsoid in m
     double height;
 
-    /// Heading of Vehicle in degrees in clockwise counting
+    /// Heading of sensor motion in degrees in clockwise counting
     /// and 0 degree being north, only usable for Dead-reckoning GPS
     double headingOfMotion;
 
     /// Heading of Vehicle in degrees in clockwise counting
     /// and 0 degree being north, only usable for Dead-reckoning GPS
+    /// This heading is not changing if the vehicle drives backwards for
+    /// example as it is aligned with the forward direction of the vehicle
     double headingOfVehicle;
 
     /// Heading Accuracy in degrees for both headingOfVehicle and
