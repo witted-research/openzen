@@ -109,7 +109,10 @@ enum class EDevicePropertyV0 : DeviceProperty_t
     GetSerialNumber = 90,               // char[24]
     GetDeviceName = 91,                 // char[16]
     GetFirmwareInfo = 92,               // char[16]
-    
+
+    StartSync = 96,                     // void
+    StopSync = 97,                      // void
+
     GetPing = 98,                       // uint32
 
     SetCanBaudrate = 46,				// uint32
