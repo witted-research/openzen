@@ -512,8 +512,6 @@ typedef enum EZenImuProperty
     ZenImuProperty_PollSensorData,               // void - Manually request sensor data (when not streaming)
     ZenImuProperty_CalibrateGyro,                // void - Start gyro calibration
     ZenImuProperty_ResetOrientationOffset,       // void - Resets the orientation's offset
-    ZenImuProperty_StartSensorSync,              // void - send start sensor sync command
-    ZenImuProperty_StopSensorSync,               // void - send stop sensor sync command
 
     ZenImuProperty_CentricCompensationRate,      // float
     ZenImuProperty_LinearCompensationRate,       // float
@@ -579,6 +577,10 @@ typedef enum EZenImuProperty
     /* UART output properties */
     ZenImuProperty_UartBaudRate,
     ZenImuProperty_UartFormat,
+
+    /* Sensor sync commands */
+    ZenImuProperty_StartSensorSync,              // void - send start sensor sync command
+    ZenImuProperty_StopSensorSync,               // void - send stop sensor sync command
 
     ZenImuProperty_Max
 } EZenImuProperty;
