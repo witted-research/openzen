@@ -39,6 +39,12 @@ namespace zen
             case ZenImuProperty_ResetOrientationOffset:
                 return EDevicePropertyV0::ResetOrientationOffset;
 
+            case ZenImuProperty_StartSensorSync:
+                return EDevicePropertyV0::StartSync;
+
+            case ZenImuProperty_StopSensorSync:
+                return EDevicePropertyV0::StopSync;
+
             default:
                 return EDevicePropertyV0::Ack;
             }

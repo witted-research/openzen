@@ -864,6 +864,8 @@ namespace zen
         case ZenImuProperty_PollSensorData:
         case ZenImuProperty_CalibrateGyro:
         case ZenImuProperty_ResetOrientationOffset:
+        case ZenImuProperty_StartSensorSync:
+        case ZenImuProperty_StopSensorSync:
             return true;
 
         default:

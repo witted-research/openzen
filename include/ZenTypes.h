@@ -580,6 +580,10 @@ typedef enum EZenImuProperty
     ZenImuProperty_UartBaudRate,
     ZenImuProperty_UartFormat,
 
+    /* Sensor sync commands */
+    ZenImuProperty_StartSensorSync,              // void - send start sensor sync command
+    ZenImuProperty_StopSensorSync,               // void - send stop sensor sync command
+
     ZenImuProperty_Max
 } EZenImuProperty;
 
