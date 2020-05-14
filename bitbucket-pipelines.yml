@@ -68,10 +68,12 @@ pipelines:
             - cmake -DCMAKE_INSTALL_PREFIX=../openzen_install ../build/standalone_example
             - make
             - ./OpenZenStandaloneExample
+  custom:
+    ubuntu-16-04-x64-release:
       - step:
           name: Linux x64 Ubuntu 16.04 Release
           image:
-            name: thauth/buildbox-ubuntu-1604:1
+            name: thauth/buildbox-ubuntu-1604:2
             username: $DOCKER_HUB_USERNAME
             password: $DOCKER_HUB_PASSWORD
             email: $DOCKER_HUB_EMAIL
@@ -92,3 +94,28 @@ pipelines:
           artifacts:
             - openzen_release.tar.gz
 
+    ubuntu-16-04-arm64-release:
+      - step:
+          name: Linux arm64 Ubuntu 16.04 Release
+          image:
+            name: thauth/buildbox-ubuntu-1604:2
+            username: $DOCKER_HUB_USERNAME
+            password: $DOCKER_HUB_PASSWORD
+            email: $DOCKER_HUB_EMAIL
+          script:
+            - git submodule update --init
+            - export XCOMPILER_ROOT=/root/x-tools/aarch64-unknown-linux-gnu/
+            - mkdir linux_arm64_build_release && cd linux_arm64_build_release
+            - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=arm64 -DCMAKE_SYSTEM_VERSION=1 -DCMAKE_C_COMPILER=${XCOMPILER_ROOT}/bin/aarch64-unknown-linux-gnu-gcc -DCMAKE_CXX_COMPILER=${XCOMPILER_ROOT}/bin/aarch64-unknown-linux-gnu-g++ -DCMAKE_FIND_ROOT_PATH=${XCOMPILER_ROOT}/aarch64-unknown-linux-gnu/sysroot/ -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_BUILD_TYPE=Release ..
+            - make install
+            - cd .. && mkdir openzen_release && cd openzen_release
+            - sphinx-build ../docs docs/
+            # copy needed files into the release folder
+            - cp ../README.md .
+            - cp ../LICENSE .
+            - cp -rv ../openzen_release_build/lib/ .
+            - cp -rv ../openzen_release_build/include/ .
+            # compress
+            - cd .. && tar -zcvf openzen_release.tar.gz openzen_release
+          artifacts:
+            - openzen_release.tar.gz
