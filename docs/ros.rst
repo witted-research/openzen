@@ -24,6 +24,7 @@ To compile this driver in your ROS setup, follow these steps:
 
     # get your ROS environment going
     source /opt/ros/melodic/setup.bash
+    cd ..
     catkin_make
     source ./devel/setup.bash
 
