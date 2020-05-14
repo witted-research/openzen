@@ -106,7 +106,7 @@ pipelines:
             - git submodule update --init
             - export XCOMPILER_ROOT=/root/x-tools/aarch64-unknown-linux-gnu/
             - mkdir linux_arm64_build_release && cd linux_arm64_build_release
-            - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=arm64 -DCMAKE_SYSTEM_VERSION=1 -DCMAKE_C_COMPILER=${XCOMPILER_ROOT}/bin/aarch64-unknown-linux-gnu-gcc -DCMAKE_CXX_COMPILER=${XCOMPILER_ROOT}/bin/aarch64-unknown-linux-gnu-g++ -DCMAKE_FIND_ROOT_PATH=${XCOMPILER_ROOT}/aarch64-unknown-linux-gnu/sysroot/ -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_BUILD_TYPE=Release ..
+            - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DCMAKE_INSTALL_PREFIX=../openzen_release_build -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=arm64 -DCMAKE_SYSTEM_VERSION=1 -DCMAKE_C_COMPILER=${XCOMPILER_ROOT}/bin/aarch64-unknown-linux-gnu-gcc -DCMAKE_CXX_COMPILER=${XCOMPILER_ROOT}/bin/aarch64-unknown-linux-gnu-g++ -DCMAKE_FIND_ROOT_PATH=${XCOMPILER_ROOT}/aarch64-unknown-linux-gnu/sysroot/ -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_BUILD_TYPE=Release ..
             - make install
             - cd .. && mkdir openzen_release && cd openzen_release
             - sphinx-build ../docs docs/
