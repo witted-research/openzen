@@ -68,3 +68,27 @@ pipelines:
             - cmake -DCMAKE_INSTALL_PREFIX=../openzen_install ../build/standalone_example
             - make
             - ./OpenZenStandaloneExample
+      - step:
+          name: Linux x64 Ubuntu 16.04 Release
+          image:
+            name: thauth/buildbox-ubuntu-1604:1
+            username: $DOCKER_HUB_USERNAME
+            password: $DOCKER_HUB_PASSWORD
+            email: $DOCKER_HUB_EMAIL
+          script:
+            - git submodule update --init
+            - mkdir linux_x64_build_release && cd linux_x64_build_release
+            - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DCMAKE_INSTALL_PREFIX=../openzen_release_build -DCMAKE_CXX_COMPILER=g++-7 -DCMAKE_C_COMPILER=gcc-7 -DZEN_STATIC_LINK_LIBCXX=ON ..
+            - make install
+            - cd .. && mkdir openzen_release && cd openzen_release
+            - sphinx-build ../docs docs/
+            # copy needed files into the release folder
+            - cp ../README.md .
+            - cp ../LICENSE .
+            - cp -rv ../openzen_release_build/lib/ .
+            - cp -rv ../openzen_release_build/include/ .
+            # compress
+            - cd .. && tar -zcvf openzen_release.tar.gz openzen_release
+          artifacts:
+            - openzen_release.tar.gz
+
