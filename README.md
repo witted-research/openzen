@@ -23,6 +23,8 @@ You can download the newest pre-compiled version of OpenZen for your platform he
 
 <https://bitbucket.org/lpresearch/openzen/downloads/>
 
+At this time, we provide a binary release for Windows x64-bit, Ubuntu 16.04 (and newer) x64-bit and ARM64-bit. Please contact us, if you need a binary release for a platform that is not provided yet.
+
 ## Setup
 
 OpenZen uses CMake (3.11 or higher) as build system, and has been built and tested on Windows (Microsoft Visual Studio 2017 and 2019) and Ubuntu (gcc7). As OpenZen is written in C++17, an up-to-date compiler is required. The following steps guide you through setting up OpenZen in Windows and Linux.
