@@ -5,12 +5,13 @@ Setup
 Dowloading pre-compiled OpenZen
 ===============================
 
-The pre-compiled binaries for OpenZen on Windows are available to download here:
+The pre-compiled binaries for OpenZen for Windows and Linux are available to download here:
 
 `OpenZen Releases <https://bitbucket.org/lpresearch/openzen/downloads/>`_
 
 The folder example in this download contains a full example how to use OpenZen
-together with VisualStudio 2017 on Windows 64-bit.
+together with VisualStudio 2017 on Windows x64-bit. Furthermore, it also contains releases
+of OpenZen for Ubuntu 16.04 (and newer) with support for x64 and ARM64.
 
 Building OpenZen from Source
 ============================
