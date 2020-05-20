@@ -38,6 +38,7 @@ namespace zen
 
     nonstd::expected<std::unique_ptr<SensorComponent>, ZenSensorInitError> ImuComponentFactory::make_component(
         unsigned int version,
+        SpecialOptions specialOptions,
         uint8_t id,
         SyncedModbusCommunicator& communicator
     ) const noexcept
@@ -80,7 +81,10 @@ namespace zen
             {
                 SPDLOG_DEBUG("Loaded output bitset of Ig1 sensor: {}", bitset.value());
                 properties->setOutputDataBitset(*bitset);
-                return std::make_unique<ImuIg1Component>(std::move(properties), communicator, version);
+
+                bool useSecondGyroAsPrimary = specialOptions & SpecialOptions_SecondGyroIsPrimary;
+
+                return std::make_unique<ImuIg1Component>(std::move(properties), communicator, version, useSecondGyroAsPrimary);
             }
             else
             {

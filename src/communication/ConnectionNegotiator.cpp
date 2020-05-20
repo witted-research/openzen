@@ -46,6 +46,14 @@ namespace zen
       }
     });
 
+      m_sensorConfigs.push_back( { {"LPMS-BE1"},
+      {1,
+        {
+            ComponentConfig{1, g_zenSensorType_Imu, SpecialOptions_SecondGyroIsPrimary}
+        }
+      }
+    });
+
       // match every other legacy sensor
       m_sensorConfigs.push_back( { {"*"},
       {0,

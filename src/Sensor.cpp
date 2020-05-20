@@ -218,7 +218,7 @@ namespace zen
                     return ZenSensorInitError_UnsupportedComponent;
                 }
 
-                auto component = factory.value()->make_component(config.version, idx++, *m_communicator);
+                auto component = factory.value()->make_component(config.version, config.specialOptions, idx++, *m_communicator);
                 if (!component) {
                     spdlog::error("Cannot create object for component {0} and version {1}", config.id, config.version);
                     return component.error();

@@ -17,6 +17,7 @@
 #include "nonstd/expected.hpp"
 
 #include "SensorComponent.h"
+#include "SensorConfig.h"
 
 namespace zen
 {
@@ -33,6 +34,7 @@ namespace zen
          */
         virtual nonstd::expected<std::unique_ptr<SensorComponent>, ZenSensorInitError> make_component(
             unsigned int version,
+            SpecialOptions options,
             uint8_t id,
             class SyncedModbusCommunicator& communicator
         ) const noexcept = 0;

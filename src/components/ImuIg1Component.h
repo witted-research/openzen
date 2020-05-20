@@ -24,7 +24,8 @@ namespace zen
     class ImuIg1Component : public SensorComponent
     {
     public:
-        ImuIg1Component(std::unique_ptr<ISensorProperties> properties, SyncedModbusCommunicator& communicator, unsigned int version) noexcept;
+        ImuIg1Component(std::unique_ptr<ISensorProperties> properties, SyncedModbusCommunicator& communicator,
+            unsigned int version, bool secondGyroIsPrimary) noexcept;
 
         /** Tries to initialize settings of the sensor's component that can fail.
          * After succesfully completing init, m_properties should be set.
@@ -60,6 +61,8 @@ namespace zen
         mutable Owner<IMUState> m_cache;
 
         SyncedModbusCommunicator& m_communicator;
+
+        bool m_secondGyroIsPrimary;
     };
 }
 #endif

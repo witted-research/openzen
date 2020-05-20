@@ -24,6 +24,7 @@ namespace zen
     public:
         nonstd::expected<std::unique_ptr<SensorComponent>, ZenSensorInitError> make_component(
             unsigned int version,
+            SpecialOptions options,
             uint8_t id,
             SyncedModbusCommunicator& communicator
         ) const noexcept override;

@@ -33,10 +33,12 @@ namespace zen
         }
     }
 
-    ImuIg1Component::ImuIg1Component(std::unique_ptr<ISensorProperties> properties, SyncedModbusCommunicator& communicator, unsigned int) noexcept
+    ImuIg1Component::ImuIg1Component(std::unique_ptr<ISensorProperties> properties, SyncedModbusCommunicator& communicator, unsigned int,
+        bool secondGyroIsPrimary) noexcept
         : SensorComponent(std::move(properties))
         , m_cache{}
         , m_communicator(communicator)
+        , m_secondGyroIsPrimary(secondGyroIsPrimary)
     {}
 
     nonstd::expected<bool, ZenError> ImuIg1Component::readScalarIfAvailable(ZenProperty_t checkProperty, gsl::span<const std::byte>& data, float * targetArray) const {
@@ -226,7 +228,12 @@ namespace zen
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputRawGyr1, data, &unusedValue[0])) {}
+        // LPMS-BE1 writes its only gyro values in the gyr1 field
+        float * secondGyroTargetRaw = &unusedValue[0];
+        if (m_secondGyroIsPrimary) {
+            secondGyroTargetRaw = &imuData.gRaw[0];
+        }
+        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputRawGyr1, data, secondGyroTargetRaw)) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
@@ -247,7 +254,12 @@ namespace zen
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputGyr1AlignCalib, data, &unusedValue[0])) {}
+        // LPMS-BE1 writes its only gyro values in the gyr1 field
+        float * secondGyroTarget = &unusedValue[0];
+        if (m_secondGyroIsPrimary) {
+            secondGyroTarget = &imuData.g[0];
+        }
+        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputGyr1AlignCalib, data, secondGyroTarget)) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }

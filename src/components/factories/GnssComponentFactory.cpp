@@ -24,6 +24,7 @@ namespace zen
 {
     nonstd::expected<std::unique_ptr<SensorComponent>, ZenSensorInitError> GnssComponentFactory::make_component(
         unsigned int version,
+        SpecialOptions,
         uint8_t,
         SyncedModbusCommunicator& communicator
     ) const noexcept
