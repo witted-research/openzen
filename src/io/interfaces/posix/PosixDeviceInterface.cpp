@@ -33,7 +33,6 @@ namespace zen
         , m_pollingThread(&PosixDeviceInterfaceImpl::run, this)
         , m_fdRead(fdRead)
         , m_fdWrite(fdWrite)
-        
     {
     }
 
@@ -112,6 +111,10 @@ namespace zen
                     return error;
             }
         }
+
+        // cancel and wait for outstanding read operation
+        ::aio_cancel(m_fdWrite, currentCB);
+        ::aio_suspend(&currentCB, 1, nullptr);
 
         return ZenError_None;
     }
