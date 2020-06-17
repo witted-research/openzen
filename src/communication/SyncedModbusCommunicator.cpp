@@ -40,6 +40,15 @@ namespace zen
         return terminateWaitOnPublishOrTimeout();
     }
 
+    ZenError SyncedModbusCommunicator::sendAndDontWait(uint8_t address, uint8_t function, ZenProperty_t property,
+        gsl::span<const std::byte> data) noexcept
+    {
+        if (auto error = m_communicator->send(address, function, data))
+            return error;
+
+        return ZenError_None;
+    }
+
     template <typename T>
     std::pair<ZenError, size_t> SyncedModbusCommunicator::sendAndWaitForArray(uint8_t address, uint8_t function,
         ZenProperty_t property, gsl::span<const std::byte> data, gsl::span<T> outArray) noexcept

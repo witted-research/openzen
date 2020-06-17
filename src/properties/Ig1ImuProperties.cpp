@@ -179,7 +179,15 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
                 });
 
                 const auto function = static_cast<DeviceProperty_t>(imu::v1::mapCommand(command));
-                return m_communicator.sendAndWaitForAck(0, function, function, {});
+                // exception: in case there is a poll request don't wait for reply and return
+                // immediately to maximize polling rate
+                if (function == static_cast<DeviceProperty_t>(EDevicePropertyV1::GetRawImuSensorData)) {
+                    if (auto error = m_communicator.sendAndDontWait(0, function, function, {}))
+                        return error;
+                    return ZenError_None;
+                } else {
+                    return m_communicator.sendAndWaitForAck(0, function, function, {});
+                }
             }
             else
             {
