@@ -43,6 +43,11 @@ if imu_component_handle.handle == 0:
     print("Connected sensor does not have an IMU component")
     exit(1)
 
+# set a sensor property
+# enable output of Orientation of the Sensor in Quaternion
+ZenSensorComponentSetBoolProperty(client_handle, sensor_handle, imu_component_handle,
+    ZenImuProperty_OutputQuat, True)
+
 ## get some events
 for poll_i in range(200):
     zen_event = ZenEvent()
