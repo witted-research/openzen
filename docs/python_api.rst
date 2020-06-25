@@ -107,8 +107,8 @@ If you get an error message of this form:
 the PYTHONPATH for Python to find the OpenZen files is not properly set up. Please follow the instructions above
 to setup the PYTHONPATH.
 
-Conficting Python version
--------------------------
+Conficting Python version I
+---------------------------
 
 If you get an error message of this form:
 
@@ -126,3 +126,19 @@ the Pyton version you intend to use is not supported by the OpenZen binary relea
 version is supported py the binary release of OpenZen. Can can either switch to Python version 3.8 64-bit or compile
 OpenZen with support for the Python version you intent to use. Please see the section above on how to
 compile Python with support for your version.
+
+Conficting Python version II
+----------------------------
+
+If you get an error message of this form:
+
+.. code-block:: bash
+
+    ImportError: dynamic module does not define init function (init_OpenZen)
+
+then OpenZen was compiled with Python 3 and you are trying to use with with Python 2. Make sure you
+call the OpenZen script with Python3:
+
+.. code-block:: bash
+
+    python3 ExamplePython.py
