@@ -18,8 +18,17 @@
 #include "InternalTypes.h"
 #include "ZenTypes.h"
 
+#ifdef GET_OR
+#undef GET_OR
+#endif
 #define GET_OR(x) isGetter ? (x) : EDevicePropertyV0::Ack
+#ifdef SET_OR
+#undef SET_OR
+#endif
 #define SET_OR(x) isGetter ? EDevicePropertyV0::Ack : (x)
+#ifdef GET_SET
+#undef GET_SET
+#endif
 #define GET_SET(x, y) isGetter ? (x) : (y)
 
 namespace zen
