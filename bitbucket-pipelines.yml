@@ -14,7 +14,6 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
-            # disable most of optional components for now
             - cmake ../build
             - make
             - ./OpenZenTests
@@ -23,7 +22,6 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
-            # disable most of optional components for now
             - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DCMAKE_UNITY_BUILD=TRUE ../build
             - make
             - ./OpenZenTests
@@ -32,7 +30,6 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
-            # disable most of optional components for now
             - cmake -DZEN_USE_STATIC_LIBS=ON ../build
             - make
             - ./OpenZenTests
@@ -41,7 +38,6 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
-            # disable most of optional components for now
             - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_C_COMPILER=clang-6.0 ../build
             - make
             - ./OpenZenTests
@@ -50,7 +46,6 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
-            # disable most of optional components for now
             - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DCMAKE_UNITY_BUILD=TRUE -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_C_COMPILER=clang-6.0 ../build
             - make
             - ./OpenZenTests
@@ -59,20 +54,7 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
-            # disable most of optional components for now
             - cmake -DZEN_NETWORK=ON ../build
-            - make
-            - ./OpenZenTests
-      - step:
-          name: Linux x64 Build with Bluetooth
-          script:
-            # install needed Bluetooth library until the build image is updated
-            - apt-get update -y
-            - apt-get install -y libbluetooth-dev
-            - git submodule update --init
-            - mkdir ../linux_x64_build_nobt && cd ../linux_x64_build_nobt
-            # disable most of optional components for now
-            - cmake -DZEN_BLUETOOTH=ON ../build
             - make
             - ./OpenZenTests
       - step:
