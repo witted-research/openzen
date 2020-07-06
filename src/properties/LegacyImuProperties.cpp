@@ -18,7 +18,7 @@
 
 namespace zen
 {
-    namespace
+    namespace LegacyImu
     {
         template <ZenProperty_t type>
         struct OutputDataFlag
@@ -135,7 +135,7 @@ namespace zen
 
         // extract additional configurations, they are read from the
         // config bitset but set via their own command call
-        m_cache.gyrAutoCalibration = getOutputDataFlag< ZenImuProperty_GyrUseAutoCalibration>(m_cache.configBitset);
+        m_cache.gyrAutoCalibration = LegacyImu::getOutputDataFlag< ZenImuProperty_GyrUseAutoCalibration>(m_cache.configBitset);
     }
 
     ZenError LegacyImuProperties::execute(ZenProperty_t command) noexcept
@@ -208,6 +208,7 @@ namespace zen
 
     nonstd::expected<bool, ZenError> LegacyImuProperties::getBool(ZenProperty_t property) noexcept
     {
+        using LegacyImu::getOutputDataFlag;
         if (property == ZenImuProperty_StreamData)
             return m_streaming;
         else if (property == ZenImuProperty_GyrUseAutoCalibration)
@@ -490,6 +491,7 @@ namespace zen
 
     ZenError LegacyImuProperties::setBool(ZenProperty_t property, bool value) noexcept
     {
+        using LegacyImu::setOutputDataFlag;
         if (property == ZenImuProperty_StreamData)
         {
             if (m_streaming != value)
