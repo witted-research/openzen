@@ -15,7 +15,7 @@
 
 namespace zen
 {
-    namespace
+    namespace ComponentFactorySingleton
     {
         static unsigned int g_niftyCounter = 0;
         static std::aligned_storage_t<sizeof(ComponentFactoryManager), alignof(ComponentFactoryManager)> g_singletonBuffer;
@@ -27,19 +27,19 @@ namespace zen
 
     ComponentFactoryManagerInitializer::ComponentFactoryManagerInitializer()
     {
-        if (g_niftyCounter++ == 0)
-            new (&g_singleton) ComponentFactoryManager();
+        if (ComponentFactorySingleton::g_niftyCounter++ == 0)
+            new (&ComponentFactorySingleton::g_singleton) ComponentFactoryManager();
     }
 
     ComponentFactoryManagerInitializer::~ComponentFactoryManagerInitializer()
     {
-        if (--g_niftyCounter == 0)
-            (&g_singleton)->~ComponentFactoryManager();
+        if (--ComponentFactorySingleton::g_niftyCounter == 0)
+            (&ComponentFactorySingleton::g_singleton)->~ComponentFactoryManager();
     }
 
     ComponentFactoryManager& ComponentFactoryManager::get() noexcept
     {
-        return g_singleton;
+        return ComponentFactorySingleton::g_singleton;
     }
 
     void ComponentFactoryManager::initialize()
@@ -56,7 +56,7 @@ namespace zen
 
         return it->second.get();
     }
-    
+
     bool ComponentFactoryManager::registerComponentFactory(std::string_view key, std::unique_ptr<class IComponentFactory> factory) noexcept
     {
         auto result = m_factories.emplace(key, std::move(factory));

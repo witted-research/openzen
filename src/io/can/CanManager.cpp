@@ -15,7 +15,7 @@
 
 namespace zen
 {
-    namespace
+    namespace CanManagerSingleton
     {
         static unsigned int g_niftyCounter = 0;
         static std::aligned_storage_t<sizeof(CanManager), alignof(CanManager)> g_singletonBuffer;
@@ -24,19 +24,19 @@ namespace zen
 
     CanManagerInitializer::CanManagerInitializer()
     {
-        if (g_niftyCounter++ == 0)
-            new (&g_singleton) CanManager();
+        if (CanManagerSingleton::g_niftyCounter++ == 0)
+            new (&CanManagerSingleton::g_singleton) CanManager();
     }
 
     CanManagerInitializer::~CanManagerInitializer()
     {
-        if (--g_niftyCounter == 0)
-            (&g_singleton)->~CanManager();
+        if (--CanManagerSingleton::g_niftyCounter == 0)
+            (&CanManagerSingleton::g_singleton)->~CanManager();
     }
 
     CanManager& CanManager::get()
     {
-        return g_singleton;
+        return CanManagerSingleton::g_singleton;
     }
 
     bool CanManager::registerChannel(ICanChannel& channel)

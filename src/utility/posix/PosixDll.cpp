@@ -19,7 +19,7 @@
 
 namespace zen
 {
-    namespace
+    namespace PosixDllSingleton
     {
         static unsigned int g_niftyCounter = 0;
         static std::aligned_storage_t<sizeof(PosixDll), alignof(PosixDll)> g_singletonBuffer;
@@ -28,19 +28,19 @@ namespace zen
 
     PlatformDllInitializer::PlatformDllInitializer()
     {
-        if (g_niftyCounter++ == 0)
-            new (&g_singleton) PosixDll();
+        if (PosixDllSingleton::g_niftyCounter++ == 0)
+            new (&PosixDllSingleton::g_singleton) PosixDll();
     }
 
     PlatformDllInitializer::~PlatformDllInitializer()
     {
-        if (--g_niftyCounter == 0)
-            (&g_singleton)->~PosixDll();
+        if (--PosixDllSingleton::g_niftyCounter == 0)
+            (&PosixDllSingleton::g_singleton)->~PosixDll();
     }
 
     IPlatformDll& IPlatformDll::get() noexcept
     {
-        return g_singleton;
+        return PosixDllSingleton::g_singleton;
     }
 
     void* PosixDll::load(std::string_view filename)
