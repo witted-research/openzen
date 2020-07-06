@@ -18,20 +18,11 @@
 #include "ZenTypesHelpers.h"
 #include "SensorManager.h"
 #include "properties/ImuSensorPropertiesV0.h"
+#include "components/SensorParsingUtil.h"
 
 namespace zen
 {
-    namespace
-    {
-        float parseFloat32(gsl::span<const std::byte>& data) noexcept
-        {
-            const int32_t temp = ((int32_t(data[3]) * 256 + int32_t(data[2])) * 256 + int32_t(data[1])) * 256 + int32_t(data[0]);
-            data = data.subspan(sizeof(int32_t));
-            float result;
-            std::memcpy(&result, &temp, sizeof(int32_t));
-            return result;
-        }
-    }
+    using sensor_parsing_util::parseFloat32;
 
     ImuIg1Component::ImuIg1Component(std::unique_ptr<ISensorProperties> properties, SyncedModbusCommunicator& communicator, unsigned int,
         bool secondGyroIsPrimary) noexcept
