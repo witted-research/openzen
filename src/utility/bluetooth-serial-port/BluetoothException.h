@@ -9,7 +9,7 @@
 #include <exception>
 #include <string>
 
-class BluetoothException : std::exception
+class BluetoothException : public std::exception
 {
 private:
 	std::string message;
