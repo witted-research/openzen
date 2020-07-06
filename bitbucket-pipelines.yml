@@ -2,7 +2,7 @@
 # -----
 # Custom Docker image which brings C++ compiler and boost libraries
 image:
-  name: thauth/buildbox-multi-platform:10
+  name: thauth/buildbox-multi-platform:15
   username: $DOCKER_HUB_USERNAME
   password: $DOCKER_HUB_PASSWORD
   email: $DOCKER_HUB_EMAIL
@@ -19,6 +19,15 @@ pipelines:
             - make
             - ./OpenZenTests
       - step:
+          name: Linux x64 Unity Build Gcc
+          script:
+            - git submodule update --init
+            - mkdir ../linux_x64_build && cd ../linux_x64_build
+            # disable most of optional components for now
+            - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DCMAKE_UNITY_BUILD=TRUE ../build
+            - make
+            - ./OpenZenTests
+      - step:
           name: Linux x64 Build Gcc Static
           script:
             - git submodule update --init
@@ -26,14 +35,23 @@ pipelines:
             # disable most of optional components for now
             - cmake -DZEN_USE_STATIC_LIBS=ON ../build
             - make
-            - ./OpenZenTests            
+            - ./OpenZenTests
       - step:
           name: Linux x64 Build Clang
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
             # disable most of optional components for now
-            - cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CC_COMPILER=clang ../build
+            - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_C_COMPILER=clang-6.0 ../build
+            - make
+            - ./OpenZenTests
+      - step:
+          name: Linux x64 Unity Build Clang
+          script:
+            - git submodule update --init
+            - mkdir ../linux_x64_build && cd ../linux_x64_build
+            # disable most of optional components for now
+            - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DCMAKE_UNITY_BUILD=TRUE -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_C_COMPILER=clang-6.0 ../build
             - make
             - ./OpenZenTests
       - step:
