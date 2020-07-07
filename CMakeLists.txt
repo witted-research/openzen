@@ -497,11 +497,6 @@ if (MSVC)
         PRIVATE
             /W4
     )
-
-    # this line will only work in CMake => 3.15
-    # https://cmake.org/cmake/help/v3.15/policy/CMP0091.html#policy:CMP0091
-    set_property(TARGET OpenZen PROPERTY
-        MSVC_RUNTIME_LIBRARY "MultiThriaeeaded$<$<CONFIG:Debug>:Debug>")
 else()
     target_compile_options(OpenZen
         PRIVATE
