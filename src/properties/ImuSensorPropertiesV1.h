@@ -18,10 +18,6 @@
 #include "InternalTypes.h"
 #include "ZenTypes.h"
 
-#define GET_OR(x) isGetter ? (x) : EDevicePropertyV1::Ack
-#define SET_OR(x) isGetter ? EDevicePropertyV1::Ack : (x)
-#define GET_SET(x, y) isGetter ? (x) : (y)
-
 namespace zen
 {
     namespace imu::v1
@@ -46,48 +42,55 @@ namespace zen
 
         constexpr EDevicePropertyV1 map(ZenProperty_t property, bool isGetter)
         {
+            const auto set_or = [isGetter](EDevicePropertyV1 prop) {
+                return isGetter ? EDevicePropertyV1::Ack : prop;
+            };
+            const auto get_set = [isGetter] (EDevicePropertyV1 x, EDevicePropertyV1 y) {
+                return isGetter ? x : y;
+            };
+
             switch (property)
             {
             case ZenImuProperty_SamplingRate:
-                return SET_OR(EDevicePropertyV1::SetStreamFreq);
+                return set_or(EDevicePropertyV1::SetStreamFreq);
 
             case ZenImuProperty_FilterMode:
-                return GET_SET(EDevicePropertyV1::GetFilterMode, EDevicePropertyV1::SetFilterMode);
+                return get_set(EDevicePropertyV1::GetFilterMode, EDevicePropertyV1::SetFilterMode);
 
             case ZenImuProperty_OrientationOffsetMode:
-                return SET_OR(EDevicePropertyV1::SetOrientationOffsetMode);
+                return set_or(EDevicePropertyV1::SetOrientationOffsetMode);
 
             case ZenImuProperty_GyrRange:
-                return GET_SET(EDevicePropertyV1::GetGyrRange, EDevicePropertyV1::SetGyrRange);
+                return get_set(EDevicePropertyV1::GetGyrRange, EDevicePropertyV1::SetGyrRange);
 
             case ZenImuProperty_GyrUseAutoCalibration:
-                return GET_SET(EDevicePropertyV1::GetEnableGyrAutoCalibration, EDevicePropertyV1::SetEnableGyrAutoCalibration);
+                return get_set(EDevicePropertyV1::GetEnableGyrAutoCalibration, EDevicePropertyV1::SetEnableGyrAutoCalibration);
 
             case ZenImuProperty_GyrUseThreshold:
-                return GET_SET(EDevicePropertyV1::GetGyrThreshold, EDevicePropertyV1::SetGyrThreshold);
+                return get_set(EDevicePropertyV1::GetGyrThreshold, EDevicePropertyV1::SetGyrThreshold);
 
             case ZenImuProperty_MagRange:
-                return GET_SET(EDevicePropertyV1::GetMagRange, EDevicePropertyV1::SetMagRange);
+                return get_set(EDevicePropertyV1::GetMagRange, EDevicePropertyV1::SetMagRange);
 
             /* CAN bus properties */
             case ZenImuProperty_CanStartId:
-                return GET_SET(EDevicePropertyV1::GetCanStartId, EDevicePropertyV1::SetCanStartId);
+                return get_set(EDevicePropertyV1::GetCanStartId, EDevicePropertyV1::SetCanStartId);
 
             case ZenImuProperty_CanBaudrate:
-                return GET_SET(EDevicePropertyV1::GetCanBaudRate, EDevicePropertyV1::SetCanBaudRate);
+                return get_set(EDevicePropertyV1::GetCanBaudRate, EDevicePropertyV1::SetCanBaudRate);
 
             case ZenImuProperty_CanMapping:
-                return GET_SET(EDevicePropertyV1::GetCanMapping, EDevicePropertyV1::SetCanMapping);
+                return get_set(EDevicePropertyV1::GetCanMapping, EDevicePropertyV1::SetCanMapping);
 
             case ZenImuProperty_CanHeartbeat:
-                return GET_SET(EDevicePropertyV1::GetCanHeartbeat, EDevicePropertyV1::SetCanHeartbeat);
+                return get_set(EDevicePropertyV1::GetCanHeartbeat, EDevicePropertyV1::SetCanHeartbeat);
 
             /* UART output properties */
             case ZenImuProperty_UartBaudRate:
-                return GET_SET(EDevicePropertyV1::GetUartBaudrate, EDevicePropertyV1::SetUartBaudrate);
+                return get_set(EDevicePropertyV1::GetUartBaudrate, EDevicePropertyV1::SetUartBaudrate);
 
             case ZenImuProperty_UartFormat:
-                return GET_SET(EDevicePropertyV1::GetUartBaudrate, EDevicePropertyV1::SetUartFormat);
+                return get_set(EDevicePropertyV1::GetUartBaudrate, EDevicePropertyV1::SetUartFormat);
 
             default:
                 return EDevicePropertyV1::Ack;

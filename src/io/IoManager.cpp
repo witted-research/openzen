@@ -59,7 +59,7 @@ namespace zen
     IAutoIoSystemRegistry* IoManager::head = nullptr;
     IAutoIoSystemRegistry* IoManager::tail = nullptr;
 
-    namespace
+    namespace IoManagerSingleton
     {
         static unsigned int g_niftyCounter = 0;
         static std::aligned_storage_t<sizeof(IoManager), alignof(IoManager)> g_singletonBuffer;
@@ -68,19 +68,19 @@ namespace zen
 
     IoManagerInitializer::IoManagerInitializer()
     {
-        if (g_niftyCounter++ == 0)
-            new (&g_singleton) IoManager();
+        if (IoManagerSingleton::g_niftyCounter++ == 0)
+            new (&IoManagerSingleton::g_singleton) IoManager();
     }
 
     IoManagerInitializer::~IoManagerInitializer()
     {
-        if (--g_niftyCounter == 0)
-            (&g_singleton)->~IoManager();
+        if (--IoManagerSingleton::g_niftyCounter == 0)
+            (&IoManagerSingleton::g_singleton)->~IoManager();
     }
 
     IoManager& IoManager::get() noexcept
     {
-        return g_singleton;
+        return IoManagerSingleton::g_singleton;
     }
 
     void IoManager::initialize() noexcept

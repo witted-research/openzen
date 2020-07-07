@@ -19,14 +19,14 @@
 
 namespace zen
 {
-    namespace
+    namespace Ig1
     {
         template <ZenProperty_t type>
         struct OutputDataFlag
         {};
 
         // change here for the new output flags of IG1
-/*      
+/*
 not supported by Ig1 atm
 template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
         {
@@ -250,6 +250,7 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
 
     nonstd::expected<bool, ZenError> Ig1ImuProperties::getBool(ZenProperty_t property) noexcept
     {
+        using Ig1::getOutputDataFlag;
         if (property == ZenImuProperty_StreamData)
             return m_streaming;
         // this is a Int32 on the device side but treated as a bool in OpenZen
@@ -270,7 +271,7 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
             return getOutputDataFlag<ZenImuProperty_OutputAngularVel>(m_cache.outputDataBitset);
         else if (property == ZenImuProperty_OutputTemperature)
             return getOutputDataFlag<ZenImuProperty_OutputTemperature>(m_cache.outputDataBitset);
-        
+
         // Gyr 0
         else if (property == ZenImuProperty_OutputRawGyr0)
             return getOutputDataFlag<ZenImuProperty_OutputRawGyr0>(m_cache.outputDataBitset);
@@ -290,7 +291,7 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
         // calibrated acceleration
         else if (property == ZenImuProperty_OutputAccCalibrated)
             return getOutputDataFlag<ZenImuProperty_OutputAccCalibrated>(m_cache.outputDataBitset);
-        
+
         else if (property == ZenImuProperty_OutputRawAcc)
             return getOutputDataFlag<ZenImuProperty_OutputRawAcc>(m_cache.outputDataBitset);
         else if (property == ZenImuProperty_OutputRawMag)
@@ -400,6 +401,7 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
 
     ZenError Ig1ImuProperties::setBool(ZenProperty_t property, bool value) noexcept
     {
+        using Ig1::setOutputDataFlag;
         if (property == ZenImuProperty_StreamData)
         {
             if (m_streaming != value)

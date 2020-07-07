@@ -18,10 +18,6 @@
 #include "InternalTypes.h"
 #include "ZenTypes.h"
 
-#define GET_OR(x) isGetter ? (x) : EDevicePropertyV1::Ack
-#define SET_OR(x) isGetter ? EDevicePropertyV1::Ack : (x)
-#define GET_SET(x, y) isGetter ? (x) : (y)
-
 namespace zen
 {
     namespace imu::v1

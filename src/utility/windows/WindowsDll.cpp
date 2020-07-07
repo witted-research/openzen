@@ -25,7 +25,7 @@ namespace fs = std::filesystem;
 
 namespace zen
 {
-    namespace
+    namespace WindowsDllSingleton
     {
         static unsigned int g_niftyCounter = 0;
         static typename std::aligned_storage_t<sizeof(WindowsDll), alignof(WindowsDll)> g_singletonBuffer;
@@ -34,19 +34,19 @@ namespace zen
 
     PlatformDllInitializer::PlatformDllInitializer()
     {
-        if (g_niftyCounter++ == 0)
-            new (&g_singleton) WindowsDll();
+        if (WindowsDllSingleton::g_niftyCounter++ == 0)
+            new (&WindowsDllSingleton::g_singleton) WindowsDll();
     }
 
     PlatformDllInitializer::~PlatformDllInitializer()
     {
-        if (--g_niftyCounter == 0)
-            (&g_singleton)->~WindowsDll();
+        if (--WindowsDllSingleton::g_niftyCounter == 0)
+            (&WindowsDllSingleton::g_singleton)->~WindowsDll();
     }
 
     IPlatformDll& IPlatformDll::get() noexcept
     {
-        return g_singleton;
+        return WindowsDllSingleton::g_singleton;
     }
 
     void* WindowsDll::load(std::string_view filename)

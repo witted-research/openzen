@@ -24,7 +24,17 @@ namespace zen {
     namespace sensor_parsing_util {
 
         /**
-        Parse a float32 froma byte stream and return the float
+        Parse a float16 from a byte stream, advance the stream and return the float
+        */
+        inline float parseFloat16(gsl::span<const std::byte>& data, float denominator) noexcept
+        {
+            const int16_t temp = int16_t(data[0]) + int16_t(data[1]) * 256;
+            data = data.subspan(sizeof(int16_t));
+            return static_cast<float>(temp) / denominator;
+        }
+
+        /**
+        Parse a float32 from a byte stream, advance the stream and return the float
         */
         inline float parseFloat32(gsl::span<const std::byte>& data) noexcept
         {
