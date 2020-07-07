@@ -17,10 +17,6 @@
 #include <array>
 #include <optional>
 
-#define GET_OR(x) isGetter ? (x) : EDevicePropertyV0::Ack
-#define SET_OR(x) isGetter ? EDevicePropertyV0::Ack : (x)
-#define GET_SET(x, y) isGetter ? (x) : (y)
-
 namespace zen
 {
     namespace base::v0
@@ -55,34 +51,44 @@ namespace zen
 
         constexpr EDevicePropertyV0 map(ZenProperty_t property, bool isGetter)
         {
+            const auto get_or = [isGetter](EDevicePropertyV0 prop) {
+                return isGetter ? prop : EDevicePropertyV0::Ack;
+            };
+            const auto set_or = [isGetter](EDevicePropertyV0 prop) {
+                return isGetter ? EDevicePropertyV0::Ack : prop;
+            };
+            const auto get_set = [isGetter] (EDevicePropertyV0 x, EDevicePropertyV0 y) {
+                return isGetter ? x : y;
+            };
+
             switch (property)
             {
             case ZenSensorProperty_DeviceName:
-                return GET_OR(EDevicePropertyV0::GetDeviceName);
+                return get_or(EDevicePropertyV0::GetDeviceName);
 
             case ZenSensorProperty_FirmwareInfo:
-                return GET_OR(EDevicePropertyV0::GetFirmwareInfo);
+                return get_or(EDevicePropertyV0::GetFirmwareInfo);
 
             case ZenSensorProperty_FirmwareVersion:
-                return GET_OR(EDevicePropertyV0::GetFirmwareVersion);
+                return get_or(EDevicePropertyV0::GetFirmwareVersion);
 
             case ZenSensorProperty_SerialNumber:
-                return GET_OR(EDevicePropertyV0::GetSerialNumber);
+                return get_or(EDevicePropertyV0::GetSerialNumber);
 
             case ZenSensorProperty_BatteryCharging:
-                return GET_OR(EDevicePropertyV0::GetBatteryCharging);
+                return get_or(EDevicePropertyV0::GetBatteryCharging);
 
             case ZenSensorProperty_BatteryLevel:
-                return GET_OR(EDevicePropertyV0::GetBatteryLevel);
+                return get_or(EDevicePropertyV0::GetBatteryLevel);
 
             case ZenSensorProperty_BatteryVoltage:
-                return GET_OR(EDevicePropertyV0::GetBatteryVoltage);
+                return get_or(EDevicePropertyV0::GetBatteryVoltage);
 
             case ZenSensorProperty_DataMode:
-                return SET_OR(EDevicePropertyV0::SetDataMode);
+                return set_or(EDevicePropertyV0::SetDataMode);
 
             case ZenSensorProperty_TimeOffset:
-                return GET_SET(EDevicePropertyV0::GetPing, EDevicePropertyV0::SetTimestamp);
+                return get_set(EDevicePropertyV0::GetPing, EDevicePropertyV0::SetTimestamp);
 
             default:
                 return EDevicePropertyV0::Ack;
