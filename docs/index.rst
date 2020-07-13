@@ -8,6 +8,7 @@ Contents
 
     ./setup
     ./getting_started
+    ./examples
     ./supported_sensors
     ./io_systems
     ./c_api
