@@ -118,3 +118,40 @@ Example to obtain a bluetooth sensor which has the name lpmscu2000573
 .. code-block:: cpp
 
     auto sensorPair = client.obtainSensorByName("LinuxDevice", "lpmscu2000573");
+
+Network Streaming with ZeroMQ
+=============================
+This interface system allows to receive sensor data from another OpenZen instance over the network. Therefore,
+it does not connect to any local sensor but opens a network connection. Still, the received events are provided
+via the OpenZen event loop to the user and therefore appear like regular events from a local sensor.
+The ZeroMQ interface has some limitations in the features its provides for sensor access. For example, it does
+not support to start or stop streaming of the sensor or to reconfigure any settings on the sensor. This needs to
+be done by the OpenZen instance which is physically connected to the sensor. Furthermore, ZeroMQ  can not be used
+to query the components connected to the sensor.
+
+On the machine where the sensor is physically connected to:
+
+.. code-block:: cpp
+
+    // connect to the sensor via the physical interface
+    auto sensorPair = client.obtainSensorByName("SiUsb", "lpmscu2000573");
+    auto& sensor = sensorPair.second;
+    // publish sensor data via TCP to all hosts on port 8877
+    sensor.publishEvents("tcp://*:8877");
+
+On the machine which should receive the sensor data over the network:
+
+.. code-block:: cpp
+
+    // connect to the remote instance of OpenZen running on the machine with the IP address 192.168.1.34
+    auto sensorPair = client.obtainSensorByName("ZeroMQ", "tcp://192.168.1.34:8877");
+
+    // now events received over the network can be queried via the normal OpenZen
+    // waitForNextEvent() call
+    const auto pair = client.get().waitForNextEvent();
+
+=======================     ===================
+Name in OpenZen             ZeroMQ
+Supported Platforms         Linux, Windows, Mac
+Supports auto-discovery     no
+=======================     ===================
