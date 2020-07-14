@@ -36,6 +36,6 @@ by the interface using the following method:
     // read quaternion
     OpenZenFloatArray fq = OpenZenFloatArray.frompointer(zenEvent.data.imuData.q);
 
-    Console.WriteLine("Sensor data\n -> Acceleration a = " + fa.getitem(0) + " " + +fa.getitem(1) + " " + fa.getitem(2));
-    Console.WriteLine(" -> Euler angles r = " + fr.getitem(0) + " " + +fr.getitem(1) + " " + fr.getitem(2));
-    Console.WriteLine(" -> Quaternion w = " + fq.getitem(0) + " x " + +fq.getitem(1) + " y " + +fq.getitem(2) + " z " + + fq.getitem(3));
+    Console.WriteLine("Sensor data\n -> Acceleration a = " + fa.getitem(0) + " " + fa.getitem(1) + " " + fa.getitem(2));
+    Console.WriteLine(" -> Euler angles r = " + fr.getitem(0) + " " + fr.getitem(1) + " " + fr.getitem(2));
+    Console.WriteLine(" -> Quaternion w = " + fq.getitem(0) + " x " + fq.getitem(1) + " y " + fq.getitem(2) + " z " + fq.getitem(3));
