@@ -60,9 +60,9 @@ namespace zen
         // with all their serial names coming directly from the USB SiLabs driver
         const auto siLabsDevices = LinuxDeviceQuery::getSiLabsDevices();
 
-        for (const auto siLabsSerialDevs : siLabsDevices ) {
+        for (const auto& siLabsSerialDevs : siLabsDevices ) {
             // one serial name can be on multiple ports
-            for (const auto siLabsDevs: siLabsSerialDevs.second) {
+            for (const auto& siLabsDevs: siLabsSerialDevs.second) {
                 ZenSensorDesc desc;
                 auto const siLabsSerialNumber = siLabsSerialDevs.first;
 
