@@ -56,15 +56,15 @@ ZenEvents about sensor discovery results and incoming measurement data.
 #include <string_view>
 #endif
 
-bool operator==(const ZenSensorHandle& lhs, const ZenSensorHandle& rhs) {
+inline bool operator==(const ZenSensorHandle& lhs, const ZenSensorHandle& rhs) {
     return lhs.handle == rhs.handle;
 }
 
-bool operator==(const ZenClientHandle& lhs, const ZenClientHandle& rhs) {
+inline bool operator==(const ZenClientHandle& lhs, const ZenClientHandle& rhs) {
     return lhs.handle == rhs.handle;
 }
 
-bool operator==(const ZenComponentHandle& lhs, const ZenComponentHandle& rhs) {
+inline bool operator==(const ZenComponentHandle& lhs, const ZenComponentHandle& rhs) {
     return lhs.handle == rhs.handle;
 }
 
