@@ -76,7 +76,7 @@ namespace zen
         // will not be in the input buffer.
         for (size_t retries = 0; retries < m_connectRetryAttempts; retries++) {
             m_terminated = false;
-            SPDLOG_DEBUG("Attempting to set sensor in command mode for connection negotiaton");
+            spdlog::debug("Attempting to set sensor in command mode for connection negotiaton");
             // disable streaming during connection negotiation, command same for legacy and Ig1
             if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV0::SetCommandMode), gsl::span<std::byte>()))
             {
@@ -87,7 +87,7 @@ namespace zen
                 std::unique_lock<std::mutex> lock(m_mutex);
                 if (m_cv.wait_for(lock, IO_TIMEOUT, [this]() { return m_terminated; }) == false) {
                     // hit timeout, will retry
-                    SPDLOG_DEBUG("Time out while attempting to set sensor in command mode for connection negotiaton");
+                    spdlog::debug("Time out while attempting to set sensor in command mode for connection negotiaton");
 
                     // reset parser because if the data transmission of the sensor stopped without
                     // sending the full package payload, we might still think we are parsing the payload
@@ -107,7 +107,7 @@ namespace zen
 
         // will send command 21, which is GET_IMU_ID for legacy sensors. So legacy sensors will return one 32-bit
         // result while its the GET_FIRMWARE_INFO for version 1 sensors, which is a 24-byte long string.
-        SPDLOG_DEBUG("Attempting to query firmware version");
+        spdlog::debug("Attempting to query firmware version");
         m_terminated = false;
         if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV1::GetFirmwareInfo), gsl::span<std::byte>()))
         {
@@ -135,7 +135,7 @@ namespace zen
         }
 
         if (m_deviceName) {
-            SPDLOG_DEBUG("Device name from Ig1 protocol: {0}", *m_deviceName);
+            spdlog::debug("Device name from Ig1 protocol: {0}", *m_deviceName);
         }
 
         return loadDeviceConfig();
