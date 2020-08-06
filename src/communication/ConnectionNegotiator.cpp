@@ -101,7 +101,7 @@ namespace zen
         }
 
         if (commandModeReply == false) {
-            spdlog::error("Timout when setting sensor to command mode before configuration.");
+            spdlog::error("Time out when setting sensor to command mode before configuration.");
             return nonstd::make_unexpected(ZenSensorInitError_Timeout);
         }
 
