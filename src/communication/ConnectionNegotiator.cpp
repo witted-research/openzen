@@ -72,6 +72,9 @@ namespace zen
 
         bool commandModeReply = false;
 
+        // wait for some io messages to come in
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
         // try two times because in some cases, the reply of the first command send to the sensor
         // will not be in the input buffer.
         for (size_t retries = 0; retries < m_connectRetryAttempts; retries++) {
