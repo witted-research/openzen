@@ -496,11 +496,9 @@ namespace zen
         {
             if (m_streaming != value)
             {
-                uint32_t temp;
                 const auto propertyV0 = value ? EDevicePropertyV0::SetStreamMode : EDevicePropertyV0::SetCommandMode;
                 if (auto error = m_communicator.sendAndWaitForAck(0, static_cast<DeviceProperty_t>(propertyV0),
-                    static_cast<ZenProperty_t>(propertyV0),
-                    gsl::make_span(reinterpret_cast<const std::byte*>(&temp), sizeof(temp))))
+                    static_cast<ZenProperty_t>(propertyV0), {}))
                     return error;
 
                 m_streaming = value;
