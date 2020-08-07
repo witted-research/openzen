@@ -521,7 +521,8 @@ namespace zen
 
                 uint32_t iValue = value ? 1 : 0;
                 const auto function = static_cast<DeviceProperty_t>(EDevicePropertyV0::SetGyrUseAutoCalibration);
-                if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
+                if (auto error = m_communicator.sendAndWaitForAck(0, function, function,
+                    gsl::span(reinterpret_cast<const std::byte*>(&iValue), sizeof(iValue))))
                     return error;
 
                 m_cache.gyrAutoCalibration = value;
