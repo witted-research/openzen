@@ -19,6 +19,8 @@
 #include "properties/ImuSensorPropertiesV0.h"
 #include "components/SensorParsingUtil.h"
 
+#include <spdlog/spdlog.h>
+
 namespace zen
 {
     using sensor_parsing_util::parseFloat16;
@@ -203,8 +205,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)(3 * floatSize)) {
+                        spdlog::error("Can't parse gyroscope because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.gRaw[idx] = (180.f / float(M_PI)) * (*lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
@@ -227,8 +231,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)(3 * floatSize)) {
+                        spdlog::error("Can't parse acceleration because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.aRaw[idx] = *lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
@@ -251,8 +257,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)(3 * floatSize)) {
+                        spdlog::error("Can't parse magnetometer because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.bRaw[idx] = *lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
@@ -275,8 +283,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)(3 * floatSize)) {
+                        spdlog::error("Can't parse angular velocity because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.w[idx] = (180.f / float(M_PI)) * (*lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data));
@@ -291,8 +301,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + 4 * floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)(4 * floatSize)) {
+                        spdlog::error("Can't parse quaternion because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     for (unsigned idx = 0; idx < 4; ++idx)
                         imuData.q[idx] = *lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data);
@@ -313,8 +325,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)(3 * floatSize)) {
+                        spdlog::error("Can't parse euler angles because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.r[idx] = (180.f / float(M_PI)) * (*lowPrec ? parseFloat16(data, 10000.f) : parseFloat32(data));
@@ -329,8 +343,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + 3 * floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)(3 * floatSize)) {
+                        spdlog::error("Can't parse linear acceleration because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     for (unsigned idx = 0; idx < 3; ++idx)
                         imuData.linAcc[idx] = *lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
@@ -345,8 +361,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)floatSize) {
+                        spdlog::error("Can't parse pressure because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     imuData.pressure = *lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
                 }
@@ -360,8 +378,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)floatSize) {
+                        spdlog::error("Can't parse altitude because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     imuData.altitude = *lowPrec ? parseFloat16(data, 10.f) : parseFloat32(data);
                 }
@@ -375,8 +395,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)floatSize) {
+                        spdlog::error("Can't parse temperature because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     imuData.temperature = *lowPrec ? parseFloat16(data, 100.f) : parseFloat32(data);
                 }
@@ -390,8 +412,10 @@ namespace zen
             {
                 if (*enabled)
                 {
-                    if (std::distance(begin, data.begin() + floatSize) > size)
-                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
+                    if (data.size() < (long int)floatSize) {
+                        spdlog::error("Can't parse heave motion because data entries missing.");
+                        return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
+                    }
 
                     imuData.hm.yHeave = *lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
                 }
