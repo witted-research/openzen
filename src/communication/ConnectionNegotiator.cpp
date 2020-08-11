@@ -72,14 +72,13 @@ namespace zen
 
         bool commandModeReply = false;
 
-        // wait for some io messages to come in
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
         // try two times because in some cases, the reply of the first command send to the sensor
         // will not be in the input buffer.
         for (size_t retries = 0; retries < m_connectRetryAttempts; retries++) {
             m_terminated = false;
             spdlog::debug("Attempting to set sensor in command mode for connection negotiaton");
+            // wait for some io messages to come in
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             // disable streaming during connection negotiation, command same for legacy and Ig1
             if (ZenError_None != communicator.send(0, uint8_t(EDevicePropertyV0::SetCommandMode), gsl::span<std::byte>()))
             {
