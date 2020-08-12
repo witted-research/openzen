@@ -26,35 +26,25 @@ Windows
 
 - Install MSVC build tools, or the Visual Studio IDE (requires C++17 support)
 - Install CMake, or a GUI (e.g. Visual Studio) that incorporates CMake
-- Install Qt (5.11.2 or higher)
-- Clone the external repositories:
+- Clone the repository:
 
 .. code-block:: bash
 
-    git submodule update --init
+    git clone --recurse-submodules https://bitbucket.org/lpresearch/openzen.git
 
-- Configure CMake with the environment variable CMAKE_PREFIX_PATH pointing towards your Qt bin directory
-
-You can do that by inserting this line (with the correct Qt installation path on your system)
-
-.. code-block:: cmake
-
-   set(CMAKE_PREFIX_PATH "C://Qt//5.12.3//msvc2017_64//")
-
-in the topmost CMakeLists.txt
-Now you can run the OpenZenExample using MSVC.
+Open the folder OpenZen in Visual Studio and compile the library. You will then be
+able to run the the command line tool OpenZenExample in the output folder of Visual Studio.
 
 Linux
 -----
 
 - Install gcc7 (requires C++17 support): sudo apt-get install gcc-7
 - Install CMake (instructions)
-- Install Qt (5.11.2 or higher): sudo apt-get install qtbase5-dev qtconnectivity5-dev
-- Clone the external repositories:
+- Clone the repository:
 
 .. code-block:: bash
 
-    git submodule update --init
+    git clone --recurse-submodules https://bitbucket.org/lpresearch/openzen.git
 
 - Create a build folder and run cmake:
 
