@@ -44,6 +44,7 @@ Now you can open and compile OpenZen with Visual Studio. When starting Visual St
 3. Clone the OpenZen repository: `git clone --recurse-submodules https://bitbucket.org/lpresearch/openzen.git`
 4. Create a build folder and run cmake:
 ```
+cd openzen
 mkdir build && cd build
 cmake ..
 ```

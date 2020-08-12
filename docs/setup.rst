@@ -50,6 +50,7 @@ Linux
 
 .. code-block:: bash
 
+    cd openzen
     mkdir build && cd build
     cmake ..
 
