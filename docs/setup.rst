@@ -2,6 +2,12 @@
 Setup
 #####
 
+..
+   The following gives us :bash:`highlight as if this were a bash command.`
+
+.. role:: bash(code)
+    :language: bash
+
 Dowloading pre-compiled OpenZen
 ===============================
 
@@ -17,7 +23,7 @@ Building OpenZen from Source
 ============================
 
 OpenZen uses CMake (3.11 or higher) as build system, and has been built
-and tested on Windows (MSVC) and Ubuntu (gcc7). As OpenZen is written in
+and tested on Windows (MSVC), Ubuntu (gcc7) and Mac (XCode). As OpenZen is written in
 C++17, an up-to-date compiler is required. The following steps guide you
 through building OpenZen for Windows and Linux.
 
@@ -38,8 +44,12 @@ able to run the the command line tool OpenZenExample in the output folder of Vis
 Linux
 -----
 
-- Install gcc7 (requires C++17 support): sudo apt-get install gcc-7
-- Install CMake (instructions)
+- Install gcc7 or higher (requires C++17 support): :bash:`sudo apt-get install gcc-7`
+- Install CMake, git: :bash:`sudo apt-get install git cmake`
+- Install the Bluetooth libraries if you need Bluetooth support:
+  :bash:`sudo apt-get install libbluetooth-dev`
+- Install Qt (5.11.2 or higher) if you need Bluetooth Low Energy support:
+  :bash:`sudo apt-get install qtbase5-dev qtconnectivity5-dev`
 - Clone the repository:
 
 .. code-block:: bash
