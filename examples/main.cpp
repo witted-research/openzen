@@ -153,6 +153,7 @@ int main(int argc, char *argv[])
 
     if (g_discoveredSensors.empty())
     {
+        std::cout << " -- no sensors found -- " << std::endl;
         g_terminate = true;
         client.close();
         pollingThread.join();
