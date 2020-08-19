@@ -37,18 +37,6 @@ namespace zen
     {
         auto & local_cache = m_cache;
 
-        if (m_version == 0)
-            local_cache.borrow()->samplingRate = 200;
-        else if (auto result = m_properties->getInt32(ZenImuProperty_SamplingRate))
-            local_cache.borrow()->samplingRate = *result;
-        else
-            return ZenSensorInitError_InvalidConfig;
-
-        m_properties->subscribeToPropertyChanges(ZenImuProperty_SamplingRate,
-            [&local_cache](SensorPropertyValue value) {
-            local_cache.borrow()->samplingRate = std::get<int32_t>(value);
-        });
-
         {
             const auto result = m_properties->getArray(ZenImuProperty_AccAlignment, ZenPropertyType_Float,
                 gsl::make_span(reinterpret_cast<std::byte*>(local_cache.borrow()->accAlignMatrix.data), 9));
@@ -207,7 +195,20 @@ namespace zen
             return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);;
 
         imuData.frameCount = *reinterpret_cast<const uint32_t*>(data.data());
-        imuData.timestamp = imuData.frameCount / static_cast<double>(m_cache.borrow()->samplingRate);
+
+        float timestampMultiplier = 0.0f;
+        if (const auto samplingRate = m_properties->getInt32(ZenImuProperty_SamplingRate)){
+            // When the VR firmware runs with 800 Hz, it also runs with an internal
+            // frequency of 800 Hz which means we need to multiply wtih 0.00125 to comput the
+            // correct timestamp.
+            // therefore, this value is set depending on the IMU variant.
+            timestampMultiplier = samplingRate.value() > 400 ? 0.00125f : 0.0025f;
+        } else {
+            spdlog::error("Cannot query sampling rate to comput timestamp");
+            return nonstd::make_unexpected(samplingRate.error());;
+        }
+
+        imuData.timestamp = imuData.frameCount * timestampMultiplier;
         data = data.subspan(sizeof(uint32_t));
 
         if (auto lowPrec = m_properties->getBool(ZenImuProperty_OutputLowPrecision))

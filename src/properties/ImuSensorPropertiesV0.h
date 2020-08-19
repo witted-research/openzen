@@ -162,8 +162,10 @@ namespace zen
                 return 100;
             else if (value <= 200)
                 return 200;
-            else
+            else if (value <= 400)
                 return 400;
+            else
+                return 800;
         }
 
         inline std::pair<ZenError, size_t> supportedSamplingRates(gsl::span<int32_t> buffer)

@@ -48,7 +48,6 @@ namespace zen
             LpVector3f accBias;
             LpVector3f gyrBias;
             LpVector3f hardIronOffset;
-            int32_t samplingRate;
         };
         mutable Owner<IMUState> m_cache;
 
