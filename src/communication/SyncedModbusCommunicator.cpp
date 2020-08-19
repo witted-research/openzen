@@ -40,7 +40,7 @@ namespace zen
         return terminateWaitOnPublishOrTimeout();
     }
 
-    ZenError SyncedModbusCommunicator::sendAndDontWait(uint8_t address, uint8_t function, ZenProperty_t property,
+    ZenError SyncedModbusCommunicator::sendAndDontWait(uint8_t address, uint8_t function, ZenProperty_t,
         gsl::span<const std::byte> data) noexcept
     {
         if (auto error = m_communicator->send(address, function, data))
