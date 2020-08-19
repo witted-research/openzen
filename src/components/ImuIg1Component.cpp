@@ -27,7 +27,6 @@ namespace zen
     ImuIg1Component::ImuIg1Component(std::unique_ptr<ISensorProperties> properties, SyncedModbusCommunicator& communicator, unsigned int,
         bool secondGyroIsPrimary) noexcept
         : SensorComponent(std::move(properties))
-        , m_cache{}
         , m_communicator(communicator)
         , m_secondGyroIsPrimary(secondGyroIsPrimary)
     {}
@@ -70,80 +69,8 @@ namespace zen
         return enabled;
     }
 
-
     ZenSensorInitError ImuIg1Component::init() noexcept
     {
-        auto cache = m_cache.borrow();
-
-        // command mode was set by the ImuComponentFactory
-        // so we don't need to set it here again.
-        // Sampling rate fixed for IG1
-        cache->samplingRate = 500;
-
-        //return ZenSensorInitError_None;
-/*        m_properties->subscribeToPropertyChanges(ZenImuProperty_SamplingRate, [=](SensorPropertyValue value) {
-            m_cache.borrow()->samplingRate = std::get<int32_t>(value);
-        });
-            {
-                const auto result = m_properties->getArray(ZenImuProperty_AccAlignment, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->accAlignMatrix.data), 9));
-                if (result.first)
-                    return ZenSensorInitError_RetrieveFailed;
-            }*/
-/*
-            m_properties->subscribeToPropertyChanges(ZenImuProperty_AccAlignment, [=](SensorPropertyValue value) {
-                const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
-                convertArrayToLpMatrix(data, &cache->accAlignMatrix);
-            });
-            {
-                const auto result = m_properties->getArray(ZenImuProperty_GyrAlignment, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->gyrAlignMatrix.data), 9));
-                if (result.first)
-                    return ZenSensorInitError_RetrieveFailed;
-            }
-            m_properties->subscribeToPropertyChanges(ZenImuProperty_GyrAlignment, [=](SensorPropertyValue value) {
-                const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
-                convertArrayToLpMatrix(data, &cache->gyrAlignMatrix);
-            });
-            {
-                const auto result = m_properties->getArray(ZenImuProperty_MagSoftIronMatrix, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->softIronMatrix.data), 9));
-                if (result.first)
-                    return ZenSensorInitError_RetrieveFailed;
-            }
-            m_properties->subscribeToPropertyChanges(ZenImuProperty_MagSoftIronMatrix, [=](SensorPropertyValue value) {
-                const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
-                convertArrayToLpMatrix(data, &cache->softIronMatrix);
-            });
-            {
-                const auto result = m_properties->getArray(ZenImuProperty_AccBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->accBias.data), 3));
-                if (result.first)
-                    return ZenSensorInitError_RetrieveFailed;
-
-                m_properties->subscribeToPropertyChanges(ZenImuProperty_AccBias, [=](SensorPropertyValue value) {
-                    const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
-                    std::copy(data, data + 3, cache->accBias.data);
-                });
-            }
-            {
-                const auto result = m_properties->getArray(ZenImuProperty_GyrBias, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->gyrBias.data), 3));
-                if (result.first)
-                    return ZenSensorInitError_RetrieveFailed;
-
-                m_properties->subscribeToPropertyChanges(ZenImuProperty_GyrBias, [=](SensorPropertyValue value) {
-                    const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
-                    std::copy(data, data + 3, cache->gyrBias.data);
-                });
-            }
-            {
-                const auto result = m_properties->getArray(ZenImuProperty_MagHardIronOffset, ZenPropertyType_Float, gsl::make_span(reinterpret_cast<std::byte*>(cache->hardIronOffset.data), 3));
-                if (result.first)
-                    return ZenSensorInitError_RetrieveFailed;
-
-                m_properties->subscribeToPropertyChanges(ZenImuProperty_MagHardIronOffset, [=](SensorPropertyValue value) {
-                    const float* data = reinterpret_cast<const float*>(std::get<gsl::span<const std::byte>>(value).data());
-                    std::copy(data, data + 3, cache->hardIronOffset.data);
-                });
-            }
-        }*/
-
         // Once setup is done, reset to streaming
         if (ZenError_None != m_properties->setBool(ZenImuProperty_StreamData, true))
             return ZenSensorInitError_RetrieveFailed;
@@ -198,9 +125,11 @@ namespace zen
         if (std::distance(begin, data.begin() + sizeof(uint32_t)) > size)
             return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
 
-        // Internal sampling rate is fixed to 500Hz
-        imuData.timestamp = (double)*reinterpret_cast<const uint32_t*>(data.data()) / static_cast<float>(m_cache.borrow()->samplingRate);
-        data = data.subspan(sizeof(uint32_t));
+        // Timestamp needs to be multiplied by 0.002 to convert to seconds
+        // according to the IG1 User Manual
+        // also output the raw framecount as provided by the sensor
+        imuData.frameCount = *reinterpret_cast<const uint32_t*>(data.data());
+        imuData.timestamp = imuData.frameCount * 0.002;
 
         // to store sensor values which are not forwaded to the ImuData class for Ig1
         float unusedValue[3];

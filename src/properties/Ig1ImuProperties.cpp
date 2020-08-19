@@ -155,12 +155,9 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
         }
     }
 
-    Ig1ImuProperties::Ig1ImuProperties(SyncedModbusCommunicator& communicator) noexcept
-        : m_cache{}
-        , m_communicator(communicator)
-        , m_streaming(true)
+    Ig1ImuProperties::Ig1ImuProperties(SyncedModbusCommunicator& communicator) noexcept :
+        m_communicator(communicator), m_streaming(true)
     {
-        m_cache.samplingRate = 200;
     }
 
     ZenError Ig1ImuProperties::execute(ZenProperty_t command) noexcept
@@ -331,34 +328,27 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
     {
         if (!isArray(property) && type(property) == ZenPropertyType_Int32)
         {
-            if (property == ZenImuProperty_SamplingRate)
+            if (auto streaming = getBool(ZenImuProperty_StreamData))
             {
-                return m_cache.samplingRate;
+                if (*streaming)
+                    if (auto error = setBool(ZenImuProperty_StreamData, false))
+                        return nonstd::make_unexpected(error);
+
+                auto guard = finally([&]() {
+                    if (*streaming)
+                        setBool(ZenImuProperty_StreamData, true);
+                });
+
+                // Communication protocol only supports uint32_t
+                const auto function = static_cast<DeviceProperty_t>(imu::v1::map(property, true));
+                if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
+                    return static_cast<int32_t>(*result);
+                else
+                    return result.error();
             }
             else
             {
-                if (auto streaming = getBool(ZenImuProperty_StreamData))
-                {
-                    if (*streaming)
-                        if (auto error = setBool(ZenImuProperty_StreamData, false))
-                            return nonstd::make_unexpected(error);
-
-                    auto guard = finally([&]() {
-                        if (*streaming)
-                            setBool(ZenImuProperty_StreamData, true);
-                    });
-
-                    // Communication protocol only supports uint32_t
-                    const auto function = static_cast<DeviceProperty_t>(imu::v1::map(property, true));
-                    if (auto result = m_communicator.sendAndWaitForResult<uint32_t>(0, function, function, {}))
-                        return static_cast<int32_t>(*result);
-                    else
-                        return result.error();
-                }
-                else
-                {
-                    return streaming.error();
-                }
+                return streaming.error();
             }
         }
 
@@ -525,9 +515,6 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
                 const auto function = static_cast<DeviceProperty_t>(imu::v1::map(property, false));
                 if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&uiValue), sizeof(uiValue))))
                     return error;
-
-                if (property == ZenImuProperty_SamplingRate)
-                    m_cache.samplingRate = uiValue;
 
                 notifyPropertyChange(property, value);
                 return ZenError_None;

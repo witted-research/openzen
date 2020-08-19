@@ -84,7 +84,6 @@ namespace zen
 
         struct IMUState
         {
-            std::atomic_uint32_t samplingRate;
             std::atomic_uint32_t outputDataBitset;
         } m_cache;
 

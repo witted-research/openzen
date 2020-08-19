@@ -48,18 +48,6 @@ namespace zen
 
         nonstd::expected<bool, ZenError> readScalarIfAvailable(ZenProperty_t checkProperty, gsl::span<const std::byte>& data, float * targetArray) const;
 
-        struct IMUState
-        {
-            LpMatrix3x3f accAlignMatrix;
-            LpMatrix3x3f gyrAlignMatrix;
-            LpMatrix3x3f softIronMatrix;
-            LpVector3f accBias;
-            LpVector3f gyrBias;
-            LpVector3f hardIronOffset;
-            int32_t samplingRate;
-        };
-        mutable Owner<IMUState> m_cache;
-
         SyncedModbusCommunicator& m_communicator;
 
         bool m_secondGyroIsPrimary;
