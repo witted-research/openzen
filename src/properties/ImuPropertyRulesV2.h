@@ -120,6 +120,7 @@ namespace zen
             case ZenImuProperty_MagSoftIronMatrix:
                 return ZenPropertyType_Float;
 
+            case ZenImuProperty_SamplingRate:
             case ZenImuProperty_FilterMode:
             case ZenImuProperty_OrientationOffsetMode:
             case ZenImuProperty_AccRange:

@@ -52,7 +52,7 @@ namespace zen
             switch (property)
             {
             case ZenImuProperty_SamplingRate:
-                return set_or(EDevicePropertyV1::SetStreamFreq);
+                return get_set(EDevicePropertyV1::GetStreamFreq, EDevicePropertyV1::SetStreamFreq);
 
             case ZenImuProperty_FilterMode:
                 return get_set(EDevicePropertyV1::GetFilterMode, EDevicePropertyV1::SetFilterMode);

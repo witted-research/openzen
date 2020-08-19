@@ -90,6 +90,7 @@ namespace zen
         case EDevicePropertyV1::GetGyrThreshold:
         case EDevicePropertyV1::GetEnableGyrAutoCalibration:
         case EDevicePropertyV1::GetImuTransmitData:
+        case EDevicePropertyV1::GetStreamFreq:
             if (data.size() != sizeof(uint32_t))
                 return ZenError_Io_MsgCorrupt;
             return m_communicator.publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
