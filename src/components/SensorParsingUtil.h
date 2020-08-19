@@ -20,8 +20,18 @@
 #include <nonstd/expected.hpp>
 #include <cmath>
 
+#include <spdlog/spdlog.h>
+
 namespace zen {
     namespace sensor_parsing_util {
+        inline void safe_subspan(gsl::span<const std::byte>& data, size_t shortenBy) {
+            if (int(shortenBy) >= data.size()) {
+                // subspan with zero cannot be made, so nullify the span here;
+                data = {};
+            } else {
+                data = data.subspan(shortenBy);
+            }
+        }
 
         /**
         Parse a float16 from a byte stream, advance the stream and return the float
@@ -29,7 +39,7 @@ namespace zen {
         inline float parseFloat16(gsl::span<const std::byte>& data, float denominator) noexcept
         {
             const int16_t temp = int16_t(data[0]) + int16_t(data[1]) * 256;
-            data = data.subspan(sizeof(int16_t));
+            safe_subspan(data, 2);
             return static_cast<float>(temp) / denominator;
         }
 
@@ -39,9 +49,9 @@ namespace zen {
         inline float parseFloat32(gsl::span<const std::byte>& data) noexcept
         {
             const int32_t temp = ((int32_t(data[3]) * 256 + int32_t(data[2])) * 256 + int32_t(data[1])) * 256 + int32_t(data[0]);
-            data = data.subspan(sizeof(int32_t));
+            safe_subspan(data, 4);
             float result;
-            std::memcpy(&result, &temp, sizeof(int32_t));
+            std::memcpy(&result, &temp, 4);
             return result;
         }
 
@@ -57,14 +67,40 @@ namespace zen {
         }
 
         inline nonstd::expected<bool, ZenError> readVector3IfAvailable(ZenProperty_t checkProperty,
-            std::unique_ptr<ISensorProperties> & properties,
+            std::unique_ptr<ISensorProperties> const& properties,
             gsl::span<const std::byte>& data, float * targetArray) {
             auto enabled = properties->getBool(checkProperty);
             if (!enabled)
                 return enabled;
 
             if (*enabled) {
+                if (data.size() < int(3 * sizeof(float))) {
+                    std::cout << "data size " << data.size() << std::endl;
+                    spdlog::error("Cannot parse Vector3 because data buffer too small");
+                    return ZenError_Io_MsgCorrupt;
+                }
+
                 for (unsigned idx = 0; idx < 3; ++idx)
+                    targetArray[idx] = parseFloat32(data);
+            }
+
+            return enabled;
+        }
+
+        inline nonstd::expected<bool, ZenError> readVector4IfAvailable(ZenProperty_t checkProperty,
+            std::unique_ptr<ISensorProperties> const& properties,
+            gsl::span<const std::byte>& data, float * targetArray) {
+            auto enabled = properties->getBool(checkProperty);
+            if (!enabled)
+                return enabled;
+
+            if (*enabled) {
+                if (data.size() < int(4 * sizeof(float))) {
+                    spdlog::error("Cannot parse Vector4 because data buffer too small");
+                    return ZenError_Io_MsgCorrupt;
+                }
+
+                for (unsigned idx = 0; idx < 4; ++idx)
                     targetArray[idx] = parseFloat32(data);
             }
 
@@ -83,7 +119,7 @@ namespace zen {
         template <>
         inline void parseAndStoreScalar(gsl::span<const std::byte>& data, uint32_t *target) {
             (*target) = *reinterpret_cast<const uint32_t*>(data.data());
-            data = data.subspan(sizeof(uint32_t));
+            safe_subspan(data, sizeof(uint32_t));
         }
 
         /**
@@ -92,7 +128,7 @@ namespace zen {
         template <>
         inline void parseAndStoreScalar(gsl::span<const std::byte>& data, uint16_t *target) {
             (*target) = *reinterpret_cast<const uint16_t*>(data.data());
-            data = data.subspan(sizeof(uint16_t));
+            safe_subspan(data, sizeof(uint16_t));
         }
 
         /**
@@ -101,7 +137,7 @@ namespace zen {
         template <>
         inline void parseAndStoreScalar(gsl::span<const std::byte>& data, uint8_t *target) {
             (*target) = *reinterpret_cast<const uint8_t*>(data.data());
-            data = data.subspan(sizeof(uint8_t));
+            safe_subspan(data, sizeof(uint8_t));
         }
 
         /**
@@ -110,7 +146,16 @@ namespace zen {
         template <>
         inline void parseAndStoreScalar(gsl::span<const std::byte>& data, int32_t *target) {
             (*target) = *reinterpret_cast<const int32_t*>(data.data());
-            data = data.subspan(sizeof(int32_t));
+            safe_subspan(data, sizeof(int32_t));
+        }
+
+        /**
+        Specialization for float
+        */
+        template <>
+        inline void parseAndStoreScalar(gsl::span<const std::byte>& data, float *target) {
+            (*target) = parseFloat32(data);
+            safe_subspan(data, sizeof(float));
         }
 
         /**
@@ -118,14 +163,19 @@ namespace zen {
         data type from the span byte buffer.
         */
         template <class TTypeToRead>
-        inline bool readScalarIfAvailable(ZenProperty_t checkProperty,
+        inline nonstd::expected<bool, ZenError> readScalarIfAvailable(ZenProperty_t checkProperty,
             std::unique_ptr<ISensorProperties> const& properties,
             gsl::span<const std::byte>& data, TTypeToRead * target) {
             auto enabled = properties->getBool(checkProperty);
             if (!enabled)
-                return false;
+                return enabled;
 
             if (*enabled) {
+                if (data.size() < int(sizeof(TTypeToRead))) {
+                    spdlog::error("Cannot parse scaler value because data buffer too small");
+                    return ZenError_Io_MsgCorrupt;
+                }
+
                 parseAndStoreScalar<TTypeToRead>(data, target);
                 return true;
             }

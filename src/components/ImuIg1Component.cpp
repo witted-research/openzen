@@ -22,52 +22,12 @@
 
 namespace zen
 {
-    using sensor_parsing_util::parseFloat32;
-
     ImuIg1Component::ImuIg1Component(std::unique_ptr<ISensorProperties> properties, SyncedModbusCommunicator& communicator, unsigned int,
         bool secondGyroIsPrimary) noexcept
         : SensorComponent(std::move(properties))
         , m_communicator(communicator)
         , m_secondGyroIsPrimary(secondGyroIsPrimary)
     {}
-
-    nonstd::expected<bool, ZenError> ImuIg1Component::readScalarIfAvailable(ZenProperty_t checkProperty, gsl::span<const std::byte>& data, float * targetArray) const {
-        auto enabled = m_properties->getBool(checkProperty);
-        if (!enabled)
-            return enabled;
-
-        if (*enabled) {
-            targetArray[0] = parseFloat32(data);
-        }
-
-        return enabled;
-    }
-
-    nonstd::expected<bool, ZenError> ImuIg1Component::readVector3IfAvailable(ZenProperty_t checkProperty, gsl::span<const std::byte>& data, float * targetArray) const {
-        auto enabled = m_properties->getBool(checkProperty);
-        if (!enabled)
-            return enabled;
-
-        if (*enabled) {
-            for (unsigned idx = 0; idx < 3; ++idx)
-                targetArray[idx] = parseFloat32(data);
-        }
-
-        return enabled;
-    }
-
-    nonstd::expected<bool, ZenError> ImuIg1Component::readVector4IfAvailable(ZenProperty_t checkProperty, gsl::span<const std::byte>& data, float * targetArray) const {
-        auto enabled = m_properties->getBool(checkProperty);
-        if (!enabled)
-            return enabled;
-
-        if (*enabled) {
-            for (unsigned idx = 0; idx < 4; ++idx)
-                targetArray[idx] = parseFloat32(data);
-        }
-
-        return enabled;
-    }
 
     ZenSensorInitError ImuIg1Component::init() noexcept
     {
@@ -121,30 +81,33 @@ namespace zen
         imuDataReset(imuData);
 
         const auto begin = data.begin();
-
         const auto size = data.size();
+
         if (std::distance(begin, data.begin() + sizeof(uint32_t)) > size)
             return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
 
         // Timestamp needs to be multiplied by 0.002 to convert to seconds
         // according to the IG1 User Manual
         // also output the raw framecount as provided by the sensor
-        imuData.frameCount = *reinterpret_cast<const uint32_t*>(data.data());
+        sensor_parsing_util::parseAndStoreScalar(data, &imuData.frameCount);
         imuData.timestamp = imuData.frameCount * 0.002;
 
         // to store sensor values which are not forwaded to the ImuData class for Ig1
         float unusedValue[3];
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputRawAcc, data, &imuData.aRaw[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputRawAcc,
+            m_properties, data, &imuData.aRaw[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputAccCalibrated, data, &imuData.a[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputAccCalibrated,
+            m_properties, data, &imuData.a[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputRawGyr0, data, &imuData.gRaw[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputRawGyr0,
+            m_properties, data, &imuData.gRaw[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
@@ -154,23 +117,27 @@ namespace zen
         if (m_secondGyroIsPrimary) {
             secondGyroTargetRaw = &imuData.gRaw[0];
         }
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputRawGyr1, data, secondGyroTargetRaw)) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputRawGyr1,
+            m_properties, data, secondGyroTargetRaw)) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputGyr0BiasCalib, data, &unusedValue[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputGyr0BiasCalib,
+            m_properties, data, &unusedValue[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputGyr1BiasCalib, data, &unusedValue[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputGyr1BiasCalib,
+            m_properties, data, &unusedValue[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
         // alignment calibration also contains the static calibration correction
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputGyr0AlignCalib, data, &imuData.g[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputGyr0AlignCalib,
+            m_properties, data, &imuData.g[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
@@ -180,52 +147,62 @@ namespace zen
         if (m_secondGyroIsPrimary) {
             secondGyroTarget = &imuData.g[0];
         }
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputGyr1AlignCalib, data, secondGyroTarget)) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputGyr1AlignCalib,
+            m_properties, data, secondGyroTarget)) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputRawMag, data, &imuData.bRaw[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputRawMag,
+            m_properties, data, &imuData.bRaw[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputMagCalib, data, &imuData.b[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputMagCalib,
+            m_properties, data, &imuData.b[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputAngularVel, data, &imuData.w[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputAngularVel,
+            m_properties, data, &imuData.w[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector4IfAvailable(ZenImuProperty_OutputQuat, data, &imuData.q[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector4IfAvailable(ZenImuProperty_OutputQuat,
+            m_properties, data, &imuData.q[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputEuler, data, &imuData.r[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputEuler,
+            m_properties, data, &imuData.r[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readVector3IfAvailable(ZenImuProperty_OutputLinearAcc, data, &imuData.linAcc[0])) {}
+        if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputLinearAcc,
+            m_properties, data, &imuData.linAcc[0])) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readScalarIfAvailable(ZenImuProperty_OutputPressure, data, &imuData.pressure)) {}
+        if (auto enabled = sensor_parsing_util::readScalarIfAvailable(ZenImuProperty_OutputPressure,
+            m_properties, data, &imuData.pressure)) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readScalarIfAvailable(ZenImuProperty_OutputAltitude, data, &imuData.altitude)) {}
+        if (auto enabled = sensor_parsing_util::readScalarIfAvailable(ZenImuProperty_OutputAltitude,
+            m_properties, data, &imuData.altitude)) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }
 
-        if (auto enabled = readScalarIfAvailable(ZenImuProperty_OutputTemperature, data, &imuData.temperature)) {}
+        if (auto enabled = sensor_parsing_util::readScalarIfAvailable(ZenImuProperty_OutputTemperature,
+            m_properties, data, &imuData.temperature)) {}
         else {
             return nonstd::make_unexpected(enabled.error());
         }

@@ -41,13 +41,6 @@ namespace zen
     private:
         nonstd::expected<ZenEventData, ZenError> parseSensorData(gsl::span<const std::byte> data) const noexcept;
 
-        // todo: use span for target array
-        nonstd::expected<bool, ZenError> readVector3IfAvailable(ZenProperty_t checkProperty, gsl::span<const std::byte>& data, float * targetArray) const;
-
-        nonstd::expected<bool, ZenError> readVector4IfAvailable(ZenProperty_t checkProperty, gsl::span<const std::byte>& data, float * targetArray) const;
-
-        nonstd::expected<bool, ZenError> readScalarIfAvailable(ZenProperty_t checkProperty, gsl::span<const std::byte>& data, float * targetArray) const;
-
         SyncedModbusCommunicator& m_communicator;
 
         bool m_secondGyroIsPrimary;
