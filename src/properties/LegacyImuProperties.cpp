@@ -763,7 +763,7 @@ namespace zen
             return 20;
         else if (value <= 30000)
             return 30;
-        else if (value <= 500000)
+        else if (value <= 50000)
             return 50;
         else if (value <= 125000)
             return 125;
