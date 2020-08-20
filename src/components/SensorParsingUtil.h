@@ -75,7 +75,6 @@ namespace zen {
 
             if (*enabled) {
                 if (data.size() < int(3 * sizeof(float))) {
-                    std::cout << "data size " << data.size() << std::endl;
                     spdlog::error("Cannot parse Vector3 because data buffer too small");
                     return ZenError_Io_MsgCorrupt;
                 }
