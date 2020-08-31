@@ -58,11 +58,11 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
             {
                 switch (event.eventType)
                 {
-                case ZenSensorEvent_SensorFound:
+                case ZenEventType_SensorFound:
                     addDiscoveredSensor(event.data.sensorFound);
                     break;
 
-                case ZenSensorEvent_SensorListingProgress:
+                case ZenEventType_SensorListingProgress:
                     if (event.data.sensorListingProgress.progress == 1.0f)
                         g_discoverCv.notify_one();
                     break;
@@ -72,7 +72,7 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
             {
                 switch (event.eventType)
                 {
-                case ZenImuEvent_Sample:
+                case ZenEventType_ImuSample:
                     if (i++ % 100 == 0) {
                         std::cout << "Event type: " << event.eventType << std::endl;
                         std::cout << "> Event component: " << uint32_t(event.component.handle) << std::endl;
@@ -90,7 +90,7 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
             {
                 switch (event.eventType)
                 {
-                case ZenGnssEvent_Sample:
+                case ZenEventType_GnssSample:
                         std::cout << "Event type: " << event.eventType << std::endl;
                         std::cout << "> Event component: " << uint32_t(event.component.handle) << std::endl;
                         std::cout << "> GPS Fix: \t = " << event.data.gnssData.fixType << std::endl;

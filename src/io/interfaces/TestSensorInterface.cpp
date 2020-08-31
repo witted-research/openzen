@@ -53,7 +53,7 @@ namespace zen
             // simulate 100 Hz
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
             ZenEvent evt;
-            evt.eventType = ZenImuEvent_Sample;
+            evt.eventType = ZenEventType_ImuSample;
 
             evt.data.imuData.q[0] = 0.5;
             evt.data.imuData.q[1] = -0.5;

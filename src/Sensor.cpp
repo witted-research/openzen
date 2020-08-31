@@ -182,7 +182,7 @@ namespace zen
         // After that we can guarantee to subscribers that the sensor has shut down
         ZenEventData eventData{};
         eventData.sensorDisconnected.error = ZenError_None;
-        ZenEvent disconnected{ ZenSensorEvent_SensorDisconnected, {m_token}, {0}, eventData };
+        ZenEvent disconnected{ ZenEventType_SensorDisconnected, {m_token}, {0}, eventData };
 
         for (auto subscriber : m_subscribers)
             subscriber.get().push(disconnected);
@@ -410,8 +410,8 @@ namespace zen
                 case EDevicePropertyV0::GetRawSensorData:
                     if (m_initialized)
                     {
-                        if (auto eventData = m_components[0]->processEventData(ZenImuEvent_Sample, data))
-                            publishEvent({ ZenImuEvent_Sample, {m_token}, {1}, std::move(*eventData) });
+                        if (auto eventData = m_components[0]->processEventData(ZenEventType_ImuSample, data))
+                            publishEvent({ ZenEventType_ImuSample, {m_token}, {1}, std::move(*eventData) });
                         else
                             return eventData.error();
                     }
@@ -465,8 +465,8 @@ namespace zen
                 case EDevicePropertyV1::GetRawImuSensorData:
                     if (m_initialized)
                     {
-                        if (auto eventData = m_components[0]->processEventData(ZenImuEvent_Sample, data))
-                            publishEvent({ ZenImuEvent_Sample, {m_token}, {1}, std::move(*eventData) });
+                        if (auto eventData = m_components[0]->processEventData(ZenEventType_ImuSample, data))
+                            publishEvent({ ZenEventType_ImuSample, {m_token}, {1}, std::move(*eventData) });
                         else
                             return eventData.error();
                     }
@@ -475,8 +475,8 @@ namespace zen
                 case EDevicePropertyV1::GetRawGpsSensorData:
                     if (m_initialized)
                     {
-                        if (auto eventData = m_components[1]->processEventData(ZenGnssEvent_Sample, data))
-                            publishEvent({ ZenGnssEvent_Sample, {m_token}, {2}, std::move(*eventData) });
+                        if (auto eventData = m_components[1]->processEventData(ZenEventType_GnssSample, data))
+                            publishEvent({ ZenEventType_GnssSample, {m_token}, {2}, std::move(*eventData) });
                         else
                             return eventData.error();
                     }

@@ -41,7 +41,7 @@ namespace zen
     {
         switch (eventType)
         {
-        case ZenGnssEvent_Sample:
+        case ZenEventType_GnssSample:
             return parseSensorData(data);
             break;
 

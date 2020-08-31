@@ -419,6 +419,33 @@ typedef union
 
 typedef int ZenEvent_t;
 
+typedef enum ZenEventType
+{
+    ZenEventType_None = 0,
+
+    ZenEventType_SensorFound = 1,
+    ZenEventType_SensorListingProgress = 2,
+    ZenEventType_SensorDisconnected = 3,
+
+    ZenEventType_ImuSample = 100,
+
+    ZenEventType_GnssSample = 200,
+
+    // Sensors are free to expose private events in this reserved region
+    ZenEventType_SensorSpecific_Start = 1000,
+    ZenEventType_SensorSpecific_End = 1999,
+
+    // IMU Components are free to expose private events in this reserved region
+    ZenEventType_ImuComponentSpecific_Start = 2000,
+    ZenEventType_ImuComponentSpecific_End = 2999,
+
+    // Components are free to expose private events in this reserved region
+    ZenEventType_GnssComponentSpecific_Start = 3000,
+    ZenEventType_GnssComponentSpecific_End = 3999,
+
+    ZenSensorEvent_Max
+} ZenEventType;
+
 typedef struct ZenEvent
 {
     ZenEvent_t eventType;
@@ -426,50 +453,6 @@ typedef struct ZenEvent
     ZenComponentHandle_t component;
     ZenEventData data;
 } ZenEvent;
-
-typedef enum ZenSensorEvent
-{
-    ZenSensorEvent_None = 0,
-
-    ZenSensorEvent_SensorFound = 1,
-    ZenSensorEvent_SensorListingProgress = 2,
-    ZenSensorEvent_SensorDisconnected = 3,
-
-    // Sensors are free to expose private events in this reserved region
-    ZenSensorEvent_SensorSpecific_Start = 10000,
-    ZenSensorEvent_SensorSpecific_End = 19999,
-
-    ZenSensorEvent_Max
-} ZenSensorEvent;
-
-typedef enum ZenImuEvent
-{
-    ZenImuEvent_None = 0,
-
-    ZenImuEvent_Sample = 1,
-
-    // Components are free to expose private events in this reserved region
-    ZenImuEvent_ComponentSpecific_Start = 10000,
-    ZenImuEvent_ComponentSpecific_End = 19999,
-
-    ZenImuEvent_Max
-} ZenImuEvent;
-
-/**
-Measurement event of the Global navigation satellite system
-*/
-typedef enum ZenGnssEvent
-{
-    ZenGnssEvent_None = 0,
-
-    ZenGnssEvent_Sample = 1,
-
-    // Components are free to expose private events in this reserved region
-    ZenGnssEvent_ComponentSpecific_Start = 10000,
-    ZenGnssEvent_ComponentSpecific_End = 19999,
-
-    ZenGnssEvent_Max
-} ZenGnssEvent;
 
 typedef int ZenProperty_t;
 

@@ -63,7 +63,7 @@ namespace zen
     {
         switch (eventType)
         {
-        case ZenImuEvent_Sample:
+        case ZenEventType_ImuSample:
             return parseSensorData(data);
             break;
 

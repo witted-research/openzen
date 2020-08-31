@@ -27,7 +27,7 @@ namespace zen
         void notifyProgress(std::set<std::reference_wrapper<SensorClient>, ReferenceWrapperCmp<SensorClient>>& subscribers, float progress)
         {
             ZenEvent event{};
-            event.eventType = ZenSensorEvent_SensorListingProgress;
+            event.eventType = ZenEventType_SensorListingProgress;
             event.data.sensorListingProgress.progress = progress;
             event.data.sensorListingProgress.complete = progress == 1.0f;
 
@@ -212,7 +212,7 @@ namespace zen
             for (auto& device : m_devices)
             {
                 ZenEvent event{};
-                event.eventType = ZenSensorEvent_SensorFound;
+                event.eventType = ZenEventType_SensorFound;
                 event.data.sensorFound = device;
 
                 for (auto& subscriber : m_discoverySubscribers)
