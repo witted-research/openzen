@@ -14,6 +14,8 @@ endif()
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
 
+add_subdirectory(pybind11)
+
 # tells cereal to not build any tests
 set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
 # we don't want cereals install targets, so use

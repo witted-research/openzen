@@ -141,9 +141,10 @@ if(ZEN_PYTHON)
         ## run
         # swig.exe -python -small -c++ -debug-typedef -o OpenZenPython/OpenZen_wrap_python.cxx -outdir OpenZenPython OpenZen.i
         # in the bindings folder to generate
-        bindings/OpenZenPython/OpenZen_wrap_python.cxx
+        #bindings/OpenZenPython/OpenZen_wrap_python.cxx
+        src/bindings/OpenZenPython.cpp
     )
-    list (APPEND zen_optional_libs Python3::Python)
+    list (APPEND zen_optional_libs Python3::Python pybind11::headers)
 endif()
 
 set(zen_optional_test_sources)
@@ -570,14 +571,14 @@ if (ZEN_PYTHON)
     if(UNIX)
         # rename file to be used as python module in Linux/Max
         add_custom_command(TARGET OpenZen POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenZen> ${CMAKE_CURRENT_BINARY_DIR}/_OpenZen.so
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenZen> ${CMAKE_CURRENT_BINARY_DIR}/openzen.so
         )
     endif()
 
     # copy python interface file
-    add_custom_command(TARGET OpenZen POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/bindings/OpenZenPython/OpenZen.py ${CMAKE_CURRENT_BINARY_DIR}/OpenZen.py
-    )
+    #add_custom_command(TARGET OpenZen POST_BUILD
+    #    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/bindings/OpenZenPython/OpenZen.py ${CMAKE_CURRENT_BINARY_DIR}/OpenZen.py
+    #)
 endif()
 
 if (ZEN_TESTS)
