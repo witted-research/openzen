@@ -144,7 +144,7 @@ if(ZEN_PYTHON)
         #bindings/OpenZenPython/OpenZen_wrap_python.cxx
         src/bindings/OpenZenPython.cpp
     )
-    list (APPEND zen_optional_libs Python3::Python pybind11::headers)
+    list (APPEND zen_optional_libs Python3::Python pybind11)
 endif()
 
 set(zen_optional_test_sources)
