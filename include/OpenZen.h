@@ -163,11 +163,7 @@ namespace zen
          * Returns the type name of this component. At this point, this method
          * will return either g_zenSensorType_Imu or g_zenSensorType_Gnss
          */
-#ifdef OPENZEN_CXX17
-        std::string_view type() const noexcept
-#else
-        const char* type() const noexcept
-#endif
+        std::string type() const noexcept
         {
             return ZenSensorComponentType(m_clientHandle, m_sensorHandle, m_componentHandle);
         }
@@ -377,14 +373,7 @@ namespace zen
             return ZenSensorUpdateIAPAsync(m_clientHandle, m_sensorHandle, iap.data(), iap.size());
         }
 
-#ifdef OPENZEN_CXX17
-        /**
-         * Returns the IO sytem name used for this sensor connection
-         */
-        std::string_view ioType() const noexcept
-#else
-        const char* ioType() const noexcept
-#endif
+        std::string ioType() const noexcept
         {
             return ZenSensorIoType(m_clientHandle, m_sensorHandle);
         }
@@ -550,35 +539,16 @@ namespace zen
             return ZenSensorSetUInt64Property(m_clientHandle, m_sensorHandle, property, value);
         }
 
-#ifdef OPENZEN_CXX17
-        /**
-         * Returns an instance of a sensor component on this sensor. type can be either
-         * g_zenSensorType_Imu or g_zenSensorType_Gnss. If a requested sensor component
-         * is not available on a sensor, the std::optional object is empty.
-         */
-        std::optional<ZenSensorComponent> getAnyComponentOfType(std::string_view type) noexcept
-        {
-            ZenComponentHandle_t* handles = nullptr;
-            size_t nComponents;
-            if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type.data(), &handles, &nComponents))
-                return std::nullopt;
-
-            if (nComponents == 0)
-                return std::nullopt;
-
-            return ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]);
-        }
-#else
         /**
          * Returns an instance of a sensor component on this sensor. type can be either
          * g_zenSensorType_Imu or g_zenSensorType_Gnss. If a requested sensor component
          * is not available on a sensor, the bool entry of the std::pair is false.
          */
-        std::pair<bool, ZenSensorComponent> getAnyComponentOfType(const char* type) noexcept
+        std::pair<bool, ZenSensorComponent> getAnyComponentOfType(std::string const& type) noexcept
         {
             ZenComponentHandle_t* handles = nullptr;
             size_t nComponents;
-            if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type, &handles, &nComponents))
+            if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type.c_str(), &handles, &nComponents))
                 return std::make_pair(false, ZenSensorComponent(m_clientHandle, m_sensorHandle, ZenComponentHandle_t{ 0 }));
 
             if (nComponents == 0)
@@ -586,7 +556,6 @@ namespace zen
 
             return std::make_pair(true, ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]));
         }
-#endif
     };
 
     /**
