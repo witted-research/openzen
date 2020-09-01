@@ -388,7 +388,8 @@ ZEN_API ZenError ZenSensorExecuteProperty(ZenClientHandle_t clientHandle, ZenSen
     }
 }
 
-ZEN_API ZenError ZenSensorGetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property, ZenPropertyType type, void* const buffer, size_t* bufferSize)
+ZEN_API ZenError ZenSensorGetArrayProperty(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenProperty_t property,
+    ZenPropertyType type, void* const buffer, size_t* bufferSize)
 {
     if (bufferSize == nullptr)
         return ZenError_IsNull;
