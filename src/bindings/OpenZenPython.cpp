@@ -102,68 +102,6 @@ typedef union
         .def_readonly("sensor_found", &ZenEventData::sensorFound)
         .def_readonly("sensor_listing_progress", &ZenEventData::sensorListingProgress);
 
-/* 
-typedef struct ZenImuData
-{
-    /// Calibrated accelerometer sensor data.
-    float a[3];
-
-    /// Calibrated gyroscope sensor data.
-    float g[3];
-
-    /// Calibrated magnetometer sensor data.
-    float b[3];
-
-    /// Raw accelerometer sensor data.
-    float aRaw[3];
-
-    /// Raw gyroscope sensor data.
-    float gRaw[3];
-
-    /// Raw magnetometer sensor data.
-    float bRaw[3];
-
-    /// Angular velocity data.
-    float w[3];
-
-    /// Euler angle data.
-    float r[3];
-
-    /// Quaternion orientation data.
-    /// The component order is w, x, y, z
-    float q[4];
-
-    /// Orientation data as rotation matrix without offset.
-    float rotationM[9];
-
-    /// Orientation data as rotation matrix after zeroing.
-    float rotOffsetM[9];
-
-    /// Barometric pressure.
-    float pressure;
-
-    /// Index of the data frame.
-    int frameCount;
-
-    /// Linear acceleration x, y and z.
-    float linAcc[3];
-
-    /// Gyroscope temperature.
-    float gTemp;
-
-    /// Altitude.
-    float altitude;
-
-    /// Temperature.
-    float temperature;
-
-    /// Sampling time of the data in seconds
-    double timestamp;
-
-    ZenHeaveMotionData hm;
-} ZenImuData;
-
-*/
     py::class_<ZenImuData>(m,"ZenImuData")
         .def_property_readonly("a", [](const ZenImuData & data) {
             return OpenZenPythonHelper::toStlArray<float, 3>(data.a);
@@ -224,16 +162,89 @@ typedef struct ZenImuData
         .value("Debug", ZenLogLevel_Debug)
         .value("Max", ZenLogLevel_Max);
 
-    m.def("set_log_level", &ZenSetLogLevel, "Sets the loglevel to the console of the whole OpenZen library");
-
-    // C++ part of the interface from OpenZen.h
-    m.def("make_client", &make_client);
-
     py::class_<ZenEvent>(m, "ZenEvent")
         .def_readonly("event_type", &ZenEvent::eventType)
         .def_readonly("sensor", &ZenEvent::sensor)
         .def_readonly("component", &ZenEvent::component)
         .def_readonly("data", &ZenEvent::data);
+
+    m.def("set_log_level", &ZenSetLogLevel, "Sets the loglevel to the console of the whole OpenZen library");
+
+    // C++ part of the interface from OpenZen.h
+    // starting here
+    py::class_<ZenSensorComponent>(m,"ZenSensorComponent")
+        .def_property_readonly("sensor", &ZenSensorComponent::sensor)
+        .def_property_readonly("component", &ZenSensorComponent::component)
+        .def_property_readonly("type", &ZenSensorComponent::type)
+
+        .def("execute_property", &ZenSensorComponent::executeProperty)
+
+        // get properties
+        // array properties
+        .def("get_array_property_float", &ZenSensorComponent::getArrayProperty<float>)
+        .def("get_array_property_int32", &ZenSensorComponent::getArrayProperty<int32_t>)
+        .def("get_array_property_byte", &ZenSensorComponent::getArrayProperty<std::byte>)
+        .def("get_array_property_uint64", &ZenSensorComponent::getArrayProperty<uint64_t>)
+
+        // scalar properties
+        .def("get_bool_property", &ZenSensorComponent::getBoolProperty)
+        .def("get_float_property", &ZenSensorComponent::getFloatProperty)
+        .def("get_int32_property", &ZenSensorComponent::getInt32Property)
+        .def("get_uint64_property", &ZenSensorComponent::getUInt64Property)
+
+        // set properties
+        // array properties
+        .def("set_array_property_float", &ZenSensorComponent::setArrayProperty<float>)
+        .def("set_array_property_int32", &ZenSensorComponent::setArrayProperty<int32_t>)
+        .def("set_array_property_byte", &ZenSensorComponent::setArrayProperty<std::byte>)
+        .def("set_array_property_uint64", &ZenSensorComponent::setArrayProperty<uint64_t>)
+
+        // scalar properties
+        .def("set_bool_property", &ZenSensorComponent::setBoolProperty)
+        .def("set_float_property", &ZenSensorComponent::setFloatProperty)
+        .def("set_int32_property", &ZenSensorComponent::setInt32Property)
+        .def("set_uint64_property", &ZenSensorComponent::setUInt64Property)
+
+        .def("forward_rtk_corrections", &ZenSensorComponent::forwardRtkCorrections);
+
+    py::class_<ZenSensor>(m,"ZenSensor")
+        .def("release", &ZenSensor::release)
+
+        // updateFirmwareAsync and
+        // updateIAPAsync not available via python interface at this time
+
+        .def_property_readonly("io_type", &ZenSensor::ioType)
+        .def("equals", &ZenSensor::equals)
+        .def_property_readonly("sensor", &ZenSensor::sensor)
+        .def("publish_events", &ZenSensor::publishEvents)
+        .def("execute_property", &ZenSensor::executeProperty)
+
+        .def("get_array_property_float", &ZenSensor::getArrayProperty<float>)
+        .def("get_array_property_int32", &ZenSensor::getArrayProperty<int32_t>)
+        .def("get_array_property_byte", &ZenSensor::getArrayProperty<std::byte>)
+        .def("get_array_property_uint64", &ZenSensor::getArrayProperty<uint64_t>)
+        .def("get_string_property", &ZenSensor::getStringProperty)
+
+        .def_property_readonly("sensor", &ZenSensor::sensor)
+
+        // scalar properties
+        .def("get_bool_property", &ZenSensor::getBoolProperty)
+        .def("get_float_property", &ZenSensor::getFloatProperty)
+        .def("get_int32_property", &ZenSensor::getInt32Property)
+        .def("get_uint64_property", &ZenSensor::getUInt64Property)
+
+        // array property access
+        .def("set_array_property_float", &ZenSensor::setArrayProperty<float>)
+        .def("set_array_property_int32", &ZenSensor::setArrayProperty<int32_t>)
+        .def("set_array_property_myte", &ZenSensor::setArrayProperty<std::byte>)
+        .def("set_array_property_uint64", &ZenSensor::setArrayProperty<uint64_t>)
+
+        .def("set_bool_property", &ZenSensor::setBoolProperty)
+        .def("set_float_property", &ZenSensor::setFloatProperty)
+        .def("set_int32_property", &ZenSensor::setInt32Property)
+        .def("set_uint64_property", &ZenSensor::setUInt64Property)
+
+        .def("get_any_component_of_type", &ZenSensor::getAnyComponentOfType);
 
     py::class_<ZenClient>(m,"ZenClient")
         .def("close", &ZenClient::close)
@@ -243,65 +254,5 @@ typedef struct ZenImuData
         .def("poll_next_event", &ZenClient::pollNextEvent)
         .def("wait_for_next_event", &ZenClient::waitForNextEvent);
 
-    py::class_<ZenSensor>(m,"ZenSensor")
-        .def("release", &ZenSensor::release)
-        .def_property_readonly("io_type", &ZenSensor::ioType)
-
-        .def("publish_events", &ZenSensor::publishEvents)
-
-        .def("get_any_component_of_type", &ZenSensor::getAnyComponentOfType)
-
-        .def_property_readonly("sensor", &ZenSensor::sensor)
-
-        .def("execute_property", &ZenSensor::executeProperty)
-
-        // scalar properties
-        .def("get_string_property", &ZenSensor::getStringProperty)
-        .def("get_bool_property", &ZenSensor::getBoolProperty)
-        .def("set_bool_property", &ZenSensor::setBoolProperty)
-        .def("get_float_property", &ZenSensor::getFloatProperty)
-        .def("set_float_property", &ZenSensor::setFloatProperty)
-        .def("get_int32_property", &ZenSensor::getInt32Property)
-        .def("set_int32_property", &ZenSensor::setInt32Property)
-        .def("get_uint64_property", &ZenSensor::getUInt64Property)
-        .def("set_uint64_property", &ZenSensor::setUInt64Property)
-
-        // array property access
-        .def("set_array_property_float", &ZenSensor::setArrayProperty<float>)
-        .def("get_array_property_float", &ZenSensor::getArrayProperty<float>)
-        .def("set_array_property_int32", &ZenSensor::setArrayProperty<int32_t>)
-        .def("get_array_property_int32", &ZenSensor::getArrayProperty<int32_t>)
-        .def("set_array_property_myte", &ZenSensor::setArrayProperty<std::byte>)
-        .def("get_array_property_byte", &ZenSensor::getArrayProperty<std::byte>)
-        .def("set_array_property_uint64", &ZenSensor::setArrayProperty<uint64_t>)
-        .def("get_array_property_uint64", &ZenSensor::getArrayProperty<uint64_t>);
-
-    py::class_<ZenSensorComponent>(m,"ZenSensorComponent")
-        .def_property_readonly("type", &ZenSensorComponent::type)
-        .def_property_readonly("sensor", &ZenSensorComponent::sensor)
-        .def_property_readonly("component", &ZenSensorComponent::component)
-
-        .def("execute_property", &ZenSensorComponent::executeProperty)
-
-        // scalar properties
-        .def("get_bool_property", &ZenSensorComponent::getBoolProperty)
-        .def("set_bool_property", &ZenSensorComponent::setBoolProperty)
-        .def("get_float_property", &ZenSensorComponent::getFloatProperty)
-        .def("set_float_property", &ZenSensorComponent::setFloatProperty)
-        .def("get_int32_property", &ZenSensorComponent::getInt32Property)
-        .def("set_int32_property", &ZenSensorComponent::setInt32Property)
-        .def("get_uint64_property", &ZenSensorComponent::getUInt64Property)
-        .def("set_uint64_property", &ZenSensorComponent::setUInt64Property)
-
-        // array property access
-        .def("set_array_property_float", &ZenSensorComponent::setArrayProperty<float>)
-        .def("get_array_property_float", &ZenSensorComponent::getArrayProperty<float>)
-        .def("set_array_property_int32", &ZenSensorComponent::setArrayProperty<int32_t>)
-        .def("get_array_property_int32", &ZenSensorComponent::getArrayProperty<int32_t>)
-        .def("set_array_property_byte", &ZenSensorComponent::setArrayProperty<std::byte>)
-        .def("get_array_property_byte", &ZenSensorComponent::getArrayProperty<std::byte>)
-        .def("set_array_property_uint64", &ZenSensorComponent::setArrayProperty<uint64_t>)
-        .def("get_array_property_uint64", &ZenSensorComponent::getArrayProperty<uint64_t>)
-
-        .def("forward_rtk_corrections", &ZenSensorComponent::forwardRtkCorrections);
+    m.def("make_client", &make_client);
 }
