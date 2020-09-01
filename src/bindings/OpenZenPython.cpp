@@ -22,7 +22,7 @@ namespace OpenZenPythonHelper {
         std::copy_n(std::begin(from), TSize, stl_array.begin());
         return stl_array;
     }
-};
+}
 
 PYBIND11_MODULE(openzen, m) {
 
@@ -32,9 +32,28 @@ PYBIND11_MODULE(openzen, m) {
         .value("IsNull", ZenError_IsNull)
         .value("NotNull", ZenError_NotNull);
 
-    py::enum_<EZenImuProperty>(m, "ZenSensorPropertry")
+    py::enum_<EZenImuProperty>(m, "ZenImuProperty")
         .value("Invalid", ZenImuProperty_Invalid)
-        .value("StreamData", ZenImuProperty_StreamData);
+        .value("StreamData", ZenImuProperty_StreamData)
+
+        .value("SamplingRate", ZenImuProperty_SamplingRate)
+        .value("SupportedSamplingRates", ZenImuProperty_SupportedSamplingRates)
+
+        .value("PollSensorData", ZenImuProperty_PollSensorData)
+        .value("CalibrateGyro", ZenImuProperty_CalibrateGyro)
+        .value("ResetOrientationOffset", ZenImuProperty_ResetOrientationOffset)
+
+        .value("CentricCompensationRate", ZenImuProperty_CentricCompensationRate)
+        .value("LinearCompensationRate", ZenImuProperty_LinearCompensationRate)
+
+        .value("FieldRadius", ZenImuProperty_FieldRadius)
+        .value("FilterMode", ZenImuProperty_FilterMode)
+        .value("SupportedFilterModes", ZenImuProperty_SupportedFilterModes)
+        .value("FilterPreset", ZenImuProperty_FilterPreset)
+
+        .value("OrientationOffsetMode", ZenImuProperty_OrientationOffsetMode)
+
+        .value("AccAlignment", ZenImuProperty_AccAlignment);
 
     py::enum_<ZenSensorInitError>(m, "ZenSensorInitError")
         .value("NoError", ZenSensorInitError_None)
@@ -58,8 +77,30 @@ typedef union
     ZenEventData_SensorListingProgress sensorListingProgress;
 } ZenEventData;
 */
+
+
+    py::class_<ZenSensorDesc>(m,"ZenSensorDesc")
+        .def_readonly("name", &ZenSensorDesc::name)
+        .def_readonly("io_type", &ZenSensorDesc::ioType);
+/*        .def_property_readonly("complete", [](const ZenEventData_SensorListingProgress & data) -> bool {
+            return data.complete > 0;
+        });*/
+
+    py::class_<ZenEventData_SensorDisconnected>(m,"SensorDisconnected")
+        .def_readonly("error", &ZenEventData_SensorDisconnected::error);
+
+    py::class_<ZenEventData_SensorListingProgress>(m,"SensorListingProgress")
+        .def_readonly("progress", &ZenEventData_SensorListingProgress::progress)
+        .def_property_readonly("complete", [](const ZenEventData_SensorListingProgress & data) -> bool {
+            return data.complete > 0;
+        });
+
     py::class_<ZenEventData>(m, "ZenEventData")
-        .def_readonly("imuData", &ZenEventData::imuData);
+        .def_readonly("imu_data", &ZenEventData::imuData)
+        .def_readonly("gnss_data", &ZenEventData::gnssData)
+        .def_readonly("sensor_disconnected", &ZenEventData::sensorDisconnected)
+        .def_readonly("sensor_found", &ZenEventData::sensorFound)
+        .def_readonly("sensor_listing_progress", &ZenEventData::sensorListingProgress);
 
 /* 
 typedef struct ZenImuData
@@ -131,27 +172,96 @@ typedef struct ZenImuData
             return OpenZenPythonHelper::toStlArray<float, 3>(data.g);
         });
 
+
+    py::enum_<ZenLogLevel>(m,"ZenLogLevel")
+        .value("Off", ZenLogLevel_Off)
+        .value("Error", ZenLogLevel_Error)
+        .value("Warning", ZenLogLevel_Warning)
+        .value("Info", ZenLogLevel_Info)
+        .value("Debug", ZenLogLevel_Debug)
+        .value("Max", ZenLogLevel_Max);
+
+    m.def("set_log_level", &ZenSetLogLevel);
+
     // C++ part of the interface from OpenZen.h
-    m.def("make_client", &make_client);    
+    m.def("make_client", &make_client);
 
     py::class_<ZenEvent>(m, "ZenEvent")
-        .def_readonly("eventType", &ZenEvent::eventType)
+        .def_readonly("event_type", &ZenEvent::eventType)
         .def_readonly("sensor", &ZenEvent::sensor)
         .def_readonly("component", &ZenEvent::component)
         .def_readonly("data", &ZenEvent::data);
 
     py::class_<ZenClient>(m,"ZenClient")
-        .def("obtainSensorByName", &ZenClient::obtainSensorByName)
-        .def("pollNextEvent", &ZenClient::pollNextEvent)
-        .def("waitForNextEvent", &ZenClient::waitForNextEvent);
+        .def("close", &ZenClient::close)
+        .def("list_sensors_async", &ZenClient::listSensorsAsync)
+        .def("obtain_sensor", &ZenClient::obtainSensor)
+        .def("obtain_sensor_by_name", &ZenClient::obtainSensorByName)
+        .def("poll_next_event", &ZenClient::pollNextEvent)
+        .def("wait_for_next_event", &ZenClient::waitForNextEvent);
 
     py::class_<ZenSensor>(m,"ZenSensor")
+        .def("release", &ZenSensor::release)
+        .def_property_readonly("ioType", &ZenSensor::ioType)
+
+        .def("publish_events", &ZenSensor::publishEvents)
+
         .def("getAnyComponentOfType", &ZenSensor::getAnyComponentOfType)
+
+        .def_property_readonly("sensor", &ZenSensor::sensor)
+
+        .def("executeProperty", &ZenSensor::executeProperty)
+
+        // scalar properties
+        .def("getStringProperty", &ZenSensor::getStringProperty)
         .def("getBoolProperty", &ZenSensor::getBoolProperty)
-        .def("setBoolProperty", &ZenSensor::setBoolProperty);
+        .def("setBoolProperty", &ZenSensor::setBoolProperty)
+        .def("getFloatProperty", &ZenSensor::getFloatProperty)
+        .def("setFloatProperty", &ZenSensor::setFloatProperty)
+        .def("getInt32Property", &ZenSensor::getInt32Property)
+        .def("setInt32Property", &ZenSensor::setInt32Property)
+        .def("getUInt64Property", &ZenSensor::getUInt64Property)
+        .def("setUInt64Property", &ZenSensor::setUInt64Property)
+
+        // array property access
+        .def("setArrayPropertyFloat", &ZenSensor::setArrayProperty<float>)
+        .def("getArrayPropertyFloat", &ZenSensor::getArrayProperty<float>)
+        .def("setArrayPropertyInt32", &ZenSensor::setArrayProperty<int32_t>)
+        .def("getArrayPropertyInt32", &ZenSensor::getArrayProperty<int32_t>)
+        .def("setArrayPropertyByte", &ZenSensor::setArrayProperty<std::byte>)
+        .def("getArrayPropertyByte", &ZenSensor::getArrayProperty<std::byte>)
+        .def("setArrayPropertyUInt64", &ZenSensor::setArrayProperty<uint64_t>)
+        .def("getArrayPropertyUInt64", &ZenSensor::getArrayProperty<uint64_t>);
 
     py::class_<ZenSensorComponent>(m,"ZenSensorComponent")
         .def("getBoolProperty", &ZenSensorComponent::getBoolProperty)
-        .def("setBoolProperty", &ZenSensorComponent::setBoolProperty);
-}
+        .def("setBoolProperty", &ZenSensorComponent::setBoolProperty)
 
+        .def_property_readonly("type", &ZenSensorComponent::type)
+        .def_property_readonly("sensor", &ZenSensorComponent::sensor)
+        .def_property_readonly("component", &ZenSensorComponent::component)
+
+        .def("executeProperty", &ZenSensorComponent::executeProperty)
+
+        // scalar properties
+        .def("getBoolProperty", &ZenSensorComponent::getBoolProperty)
+        .def("setBoolProperty", &ZenSensorComponent::setBoolProperty)
+        .def("getFloatProperty", &ZenSensorComponent::getFloatProperty)
+        .def("setFloatProperty", &ZenSensorComponent::setFloatProperty)
+        .def("getInt32Property", &ZenSensorComponent::getInt32Property)
+        .def("setInt32Property", &ZenSensorComponent::setInt32Property)
+        .def("getUInt64Property", &ZenSensorComponent::getUInt64Property)
+        .def("setUInt64Property", &ZenSensorComponent::setUInt64Property)
+
+        // array property access
+        .def("setArrayPropertyFloat", &ZenSensorComponent::setArrayProperty<float>)
+        .def("getArrayPropertyFloat", &ZenSensorComponent::getArrayProperty<float>)
+        .def("setArrayPropertyInt32", &ZenSensorComponent::setArrayProperty<int32_t>)
+        .def("getArrayPropertyInt32", &ZenSensorComponent::getArrayProperty<int32_t>)
+        .def("setArrayPropertyByte", &ZenSensorComponent::setArrayProperty<std::byte>)
+        .def("getArrayPropertyByte", &ZenSensorComponent::getArrayProperty<std::byte>)
+        .def("setArrayPropertyUInt64", &ZenSensorComponent::setArrayProperty<uint64_t>)
+        .def("getArrayPropertyUInt64", &ZenSensorComponent::getArrayProperty<uint64_t>)
+
+        .def("forwardRtkCorrections", &ZenSensorComponent::forwardRtkCorrections);
+}
