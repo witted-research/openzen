@@ -167,11 +167,54 @@ typedef struct ZenImuData
     py::class_<ZenImuData>(m,"ZenImuData")
         .def_property_readonly("a", [](const ZenImuData & data) {
             return OpenZenPythonHelper::toStlArray<float, 3>(data.a);
-        })
+        }, "Calibrated accelerometer sensor data")
         .def_property_readonly("g", [](const ZenImuData & data) {
             return OpenZenPythonHelper::toStlArray<float, 3>(data.g);
-        });
-
+        }, "Calibrated gyroscope sensor data")
+        .def_property_readonly("b", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 3>(data.b);
+        }, "Calibrated magnetometer sensor data")
+        .def_property_readonly("a_raw", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 3>(data.aRaw);
+        }, "Raw accelerometer sensor data")
+        .def_property_readonly("g_raw", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 3>(data.gRaw);
+        }, "Raw gyroscope sensor data")
+        .def_property_readonly("b_raw", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 3>(data.bRaw);
+        }, "Raw magnetometer sensor data")
+        .def_property_readonly("w", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 3>(data.w);
+        }, "Angular velocity data")
+        .def_property_readonly("r", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 3>(data.r);
+        }, "Euler angle data")
+        .def_property_readonly("q", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 4>(data.q);
+        }, "Quaternion orientation data. The component order is w, x, y, z")
+        .def_property_readonly("rotation_m", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 9>(data.rotationM);
+        }, "Orientation data as rotation matrix without offset")
+        .def_property_readonly("rot_offset_m", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 9>(data.rotOffsetM);
+        }, "Orientation data as rotation matrix after zeroing")
+        .def_readonly("pressure", &ZenImuData::pressure,
+            "Barometric pressure")
+        .def_readonly("frame_count", &ZenImuData::frameCount,
+            "Index of the data frame")
+        .def_property_readonly("lin_acc", [](const ZenImuData & data) {
+            return OpenZenPythonHelper::toStlArray<float, 3>(data.linAcc);
+        }, "Linear acceleration x, y and z")
+        .def_readonly("g_temp", &ZenImuData::gTemp,
+            "Gyroscope temperature")
+        .def_readonly("altitude", &ZenImuData::altitude,
+            "Altitude")
+        .def_readonly("temperature", &ZenImuData::temperature,
+            "Temperature")
+        .def_readonly("timestamp", &ZenImuData::timestamp,
+            "Sampling time of the data in seconds")
+        .def_readonly("heave_y", &ZenImuData::heaveY,
+            "heave motion in y direction");
 
     py::enum_<ZenLogLevel>(m,"ZenLogLevel")
         .value("Off", ZenLogLevel_Off)
@@ -181,7 +224,7 @@ typedef struct ZenImuData
         .value("Debug", ZenLogLevel_Debug)
         .value("Max", ZenLogLevel_Max);
 
-    m.def("set_log_level", &ZenSetLogLevel);
+    m.def("set_log_level", &ZenSetLogLevel, "Sets the loglevel to the console of the whole OpenZen library");
 
     // C++ part of the interface from OpenZen.h
     m.def("make_client", &make_client);
