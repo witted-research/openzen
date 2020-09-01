@@ -57,7 +57,9 @@ namespace zen
             return std::make_pair(error, outArray.size());
 
         m_resultPtr = outArray.data();
-        m_resultSize = outArray.size();
+        // size() returns the number of elements in the span
+        // and not the buffer size in bytes;
+        m_resultSize = outArray.size() * sizeof(T);
 
         auto guard = finally([this]() {
             m_resultPtr = nullptr;
@@ -129,7 +131,9 @@ namespace zen
             return m_resultError = ZenError_Io_MsgCorrupt;
 
         const auto bufferLength = m_resultSize;
-        m_resultSize = array.size();
+        // size() returns the number of elements in the span
+        // and not the buffer size in bytes;
+        m_resultSize = array.size() * sizeof(T);
 
         auto guard2 = finally([this]() {
             m_fence.terminate();
