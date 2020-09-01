@@ -14,7 +14,9 @@ endif()
 add_subdirectory(pcanbasic)
 add_subdirectory(siusb)
 
-add_subdirectory(pybind11)
+if (ZEN_PYTHON)
+    add_subdirectory(pybind11)
+endif()
 
 # tells cereal to not build any tests
 set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
