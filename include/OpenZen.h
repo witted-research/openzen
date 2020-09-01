@@ -346,7 +346,12 @@ namespace zen
          */
         ZenError release() noexcept
         {
-            return ZenReleaseSensor(m_clientHandle, m_sensorHandle);
+            auto err = ZenReleaseSensor(m_clientHandle, m_sensorHandle);
+            if (err == ZenError_None) {
+                // invalidate sensor handle if closing was successful
+                m_sensorHandle.handle = 0;
+            }
+            return err;
         }
 
         /** On first call, tries to initialises a firmware update, and returns an error on failure.
@@ -618,7 +623,12 @@ namespace zen
          */
         ZenError close() noexcept
         {
-            return ZenShutdown(m_handle);
+            auto err = ZenShutdown(m_handle);
+            if (err == ZenError_None) {
+                // invalidate client handle if closing was successful
+                m_handle.handle = 0;
+            }
+            return err;
         }
 
         /** call the method ZenClient::listSensorsAsync to start the query for available sensors.
