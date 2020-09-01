@@ -164,11 +164,6 @@ typedef enum ZenLogLevel
     ZenLogLevel_Max
 } ZenLogLevel;
 
-typedef struct ZenHeaveMotionData
-{
-    float yHeave;
-} ZenHeaveMotionData;
-
 typedef struct ZenImuData
 {
     /// Calibrated accelerometer sensor data.
@@ -226,7 +221,8 @@ typedef struct ZenImuData
     /// Sampling time of the data in seconds
     double timestamp;
 
-    ZenHeaveMotionData hm;
+    /// heave motion in y direction
+    float heaveY;
 } ZenImuData;
 
 typedef ZenImuData ZenEventData_Imu;

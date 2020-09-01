@@ -52,12 +52,6 @@ namespace zen {
 }
 
 template <class Archive>
-void serialize(Archive& ar, ZenHeaveMotionData& hmData)
-{
-    ar(hmData.yHeave);
-}
-
-template <class Archive>
 void serialize(Archive& ar, ZenSensorHandle_t& sensorHandle)
 {
     ar(sensorHandle.handle);
@@ -90,7 +84,7 @@ void serialize(Archive& ar, ZenImuData & imuData)
         imuData.altitude,
         imuData.temperature,
         imuData.timestamp, 
-        imuData.hm);
+        imuData.heaveY);
 }
 
 template <class Archive>
