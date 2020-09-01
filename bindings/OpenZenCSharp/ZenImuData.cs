@@ -235,13 +235,12 @@ public class ZenImuData : global::System.IDisposable {
     } 
   }
 
-  public ZenHeaveMotionData hm {
+  public float heaveY {
     set {
-      OpenZenPINVOKE.ZenImuData_hm_set(swigCPtr, ZenHeaveMotionData.getCPtr(value));
+      OpenZenPINVOKE.ZenImuData_heaveY_set(swigCPtr, value);
     } 
     get {
-      global::System.IntPtr cPtr = OpenZenPINVOKE.ZenImuData_hm_get(swigCPtr);
-      ZenHeaveMotionData ret = (cPtr == global::System.IntPtr.Zero) ? null : new ZenHeaveMotionData(cPtr, false);
+      float ret = OpenZenPINVOKE.ZenImuData_heaveY_get(swigCPtr);
       return ret;
     } 
   }

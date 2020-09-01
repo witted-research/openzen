@@ -377,16 +377,6 @@ SWIGEXPORT void * SWIGSTDCALL CSharp_new_ZenComponentHandle_t() { void * jresult
   result = (ZenComponentHandle *)new ZenComponentHandle(); jresult = (void *)result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_delete_ZenComponentHandle_t(void * jarg1) {
   ZenComponentHandle *arg1 = (ZenComponentHandle *) 0 ; arg1 = (ZenComponentHandle *)jarg1;  delete arg1; }
-SWIGEXPORT void SWIGSTDCALL CSharp_ZenHeaveMotionData_yHeave_set(void * jarg1, float jarg2) {
-  ZenHeaveMotionData *arg1 = (ZenHeaveMotionData *) 0 ; float arg2 ; arg1 = (ZenHeaveMotionData *)jarg1;  arg2 = (float)jarg2; 
-  if (arg1) (arg1)->yHeave = arg2; }
-SWIGEXPORT float SWIGSTDCALL CSharp_ZenHeaveMotionData_yHeave_get(void * jarg1) { float jresult ;
-  ZenHeaveMotionData *arg1 = (ZenHeaveMotionData *) 0 ; float result; arg1 = (ZenHeaveMotionData *)jarg1; 
-  result = (float) ((arg1)->yHeave); jresult = result;  return jresult; }
-SWIGEXPORT void * SWIGSTDCALL CSharp_new_ZenHeaveMotionData() { void * jresult ; ZenHeaveMotionData *result = 0 ;
-  result = (ZenHeaveMotionData *)new ZenHeaveMotionData(); jresult = (void *)result;  return jresult; }
-SWIGEXPORT void SWIGSTDCALL CSharp_delete_ZenHeaveMotionData(void * jarg1) {
-  ZenHeaveMotionData *arg1 = (ZenHeaveMotionData *) 0 ; arg1 = (ZenHeaveMotionData *)jarg1;  delete arg1; }
 SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_a_set(void * jarg1, void * jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
   float *arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (float *)jarg2;  { size_t ii; float *b = (float *) arg1->a;
     for (ii = 0; ii < (size_t)3; ii++) b[ii] = *((float *) arg2 + ii); }  }
@@ -481,12 +471,10 @@ SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_timestamp_set(void * jarg1, double
 SWIGEXPORT double SWIGSTDCALL CSharp_ZenImuData_timestamp_get(void * jarg1) { double jresult ;
   ZenImuData *arg1 = (ZenImuData *) 0 ; double result; arg1 = (ZenImuData *)jarg1;  result = (double) ((arg1)->timestamp);
   jresult = result;  return jresult; }
-SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_hm_set(void * jarg1, void * jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
-  ZenHeaveMotionData *arg2 = (ZenHeaveMotionData *) 0 ; arg1 = (ZenImuData *)jarg1;  arg2 = (ZenHeaveMotionData *)jarg2; 
-  if (arg1) (arg1)->hm = *arg2; }
-SWIGEXPORT void * SWIGSTDCALL CSharp_ZenImuData_hm_get(void * jarg1) { void * jresult ; ZenImuData *arg1 = (ZenImuData *) 0 ;
-  ZenHeaveMotionData *result = 0 ; arg1 = (ZenImuData *)jarg1;  result = (ZenHeaveMotionData *)& ((arg1)->hm);
-  jresult = (void *)result;  return jresult; }
+SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_heaveY_set(void * jarg1, float jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
+  float arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (float)jarg2;  if (arg1) (arg1)->heaveY = arg2; }
+SWIGEXPORT float SWIGSTDCALL CSharp_ZenImuData_heaveY_get(void * jarg1) { float jresult ; ZenImuData *arg1 = (ZenImuData *) 0 ;
+  float result; arg1 = (ZenImuData *)jarg1;  result = (float) ((arg1)->heaveY); jresult = result;  return jresult; }
 SWIGEXPORT void * SWIGSTDCALL CSharp_new_ZenImuData() { void * jresult ; ZenImuData *result = 0 ;
   result = (ZenImuData *)new ZenImuData(); jresult = (void *)result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_delete_ZenImuData(void * jarg1) { ZenImuData *arg1 = (ZenImuData *) 0 ;
