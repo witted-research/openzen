@@ -121,6 +121,8 @@ namespace zen
         ZenSensorHandle_t m_sensorHandle;
         ZenComponentHandle_t m_componentHandle;
 
+        static constexpr size_t m_getArrayBufferSize = 9;
+
     protected:
         ZenSensorComponent(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle, ZenComponentHandle_t componentHandle) noexcept
             : m_clientHandle(clientHandle)
@@ -182,12 +184,20 @@ namespace zen
         /**
          * Loads an array property from this sensor component
          */
-        template <typename T>
-        std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length) noexcept
+        template <class TDataType>
+        std::pair<ZenError, std::vector<TDataType>> getArrayProperty(ZenProperty_t property) noexcept
         {
-            auto result = std::make_pair(ZenError_None, length);
-            result.first = ZenSensorComponentGetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type::value, array, &result.second);
-            return result;
+            std::vector<TDataType> outputArray(m_getArrayBufferSize);
+
+            size_t outputSize = outputArray.size() * sizeof(TDataType);
+            auto error = ZenSensorComponentGetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle,
+                property,
+                details::PropertyType<TDataType>::type::value,
+                outputArray.data(), &outputSize);
+            outputSize /= sizeof(TDataType);
+            // resize output size
+            outputArray.resize(outputSize);
+            return {error, outputArray};
         }
 
         /**
@@ -233,10 +243,12 @@ namespace zen
         /**
          * Sets an array property on this sensor component
          */
-        template <typename T>
-        ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length) noexcept
+        template <typename TDataType>
+        ZenError setArrayProperty(ZenProperty_t property, std::vector<TDataType> & inputArray) noexcept
         {
-            return ZenSensorComponentSetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property, details::PropertyType<T>::type::value, array, length);
+            return ZenSensorComponentSetArrayProperty(m_clientHandle, m_sensorHandle, m_componentHandle, property,
+                details::PropertyType<TDataType>::type::value, inputArray.data(),
+                    inputArray.size() * sizeof(TDataType));
         }
 
         /**
@@ -302,6 +314,8 @@ namespace zen
     private:
         ZenClientHandle_t m_clientHandle;
         ZenSensorHandle_t m_sensorHandle;
+
+        static constexpr size_t m_getArrayBufferSize = 9;
 
     protected:
         ZenSensor(ZenClientHandle_t clientHandle, ZenSensorHandle_t sensorHandle)
@@ -405,14 +419,21 @@ namespace zen
         /**
          * Loads an array property from this sensor component
          */
-        template <typename T>
-        std::pair<ZenError, size_t> getArrayProperty(ZenProperty_t property, T* const array, size_t length) noexcept
+        template <class TDataType>
+        std::pair<ZenError, std::vector<TDataType>> getArrayProperty(ZenProperty_t property) noexcept
         {
-            auto result = std::make_pair(ZenError_None, length);
-            result.first = ZenSensorGetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type::value, array, &result.second);
-            return result;
-        }
+            std::vector<TDataType> outputArray(m_getArrayBufferSize);
 
+            size_t outputSize = outputArray.size() * sizeof(TDataType);
+            auto error = ZenSensorGetArrayProperty(m_clientHandle, m_sensorHandle,
+                property,
+                details::PropertyType<TDataType>::type::value,
+                outputArray.data(), &outputSize);
+            outputSize /= sizeof(TDataType);
+            // resize output size
+            outputArray.resize(outputSize);
+            return {error, outputArray};
+        }
         /**
          * Loads a string property from this sensor component
          */
@@ -483,10 +504,12 @@ namespace zen
         /**
          * Sets an array property for this sensor component
          */
-        template <typename T>
-        ZenError setArrayProperty(ZenProperty_t property, const T* array, size_t length) noexcept
+        template <typename TDataType>
+        ZenError setArrayProperty(ZenProperty_t property, std::vector<TDataType> & inputArray) noexcept
         {
-            return ZenSensorSetArrayProperty(m_clientHandle, m_sensorHandle, property, details::PropertyType<T>::type::value, array, length);
+            return ZenSensorSetArrayProperty(m_clientHandle, m_sensorHandle, property,
+                details::PropertyType<TDataType>::type::value, inputArray.data(),
+                    inputArray.size() * sizeof(TDataType));
         }
 
         /**
