@@ -295,10 +295,11 @@ namespace zen
          *
          *      component.forwardRtkCorrections("RTCM3Serial", "COM11", 57600)
          */
-        ZenError forwardRtkCorrections(const char* const rtkCorrectionSource,
-            const char* const hostname,
+        ZenError forwardRtkCorrections(std::string const& rtkCorrectionSource,
+            std::string const& hostname,
             uint32_t port) noexcept {
-            return ZenSensorComponentGnnsForwardRtkCorrections(m_clientHandle, m_sensorHandle, m_componentHandle, rtkCorrectionSource, hostname, port);
+            return ZenSensorComponentGnnsForwardRtkCorrections(m_clientHandle, m_sensorHandle, m_componentHandle,
+                rtkCorrectionSource.c_str(), hostname.c_str(), port);
         }
     };
 
