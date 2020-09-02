@@ -8,8 +8,6 @@ if not error == openzen.ZenError.NoError:
     print ("Error")
     sys.exit(1)
 
-#error, sensor = client.obtainSensorByName("LinuxDevice", "LPMSCU2000003", 0)
-
 error = client.list_sensors_async()
 
 # check for events
@@ -23,17 +21,21 @@ while True:
         sensor_desc_connect = zenEvent.data.sensor_found
 
     if zenEvent.event_type == openzen.ZenEventType.SensorListingProgress:
-        print (zenEvent.data.sensor_listing_progress)
-        if zenEvent.data.sensor_listing_progress.complete > 0:
-            print ("Sensor listing complete")
+        lst_data = zenEvent.data.sensor_listing_progress
+        print ("Sensor listing progress: {} %".format(lst_data.progress * 100))
+        if lst_data.complete > 0:
             break
-print ("all sensors listed")
+print ("Sensor Listing complete")
 
 if sensor_desc_connect is None:
     print("No sensor found")
     sys.exit(1)
 
-error, sensor = client.obtain_sensor(sensor_desc_connect)
+# connect to the first sensor found
+#error, sensor = client.obtain_sensor(sensor_desc_connect)
+
+# connect to a sensor by name
+error, sensor = client.obtain_sensor_by_name("LinuxDevice", "LPMSCU2000003")
 
 if not error == openzen.ZenSensorInitError.NoError:
     print ("Error connecting")
@@ -42,56 +44,50 @@ if not error == openzen.ZenSensorInitError.NoError:
 
 print ("Connected to sensor")
 
-imu = sensor.getAnyComponentOfType("imu")
-
-print("type is " + imu.type)
-#print("sensor is " + imu.sensor)
-
-print(imu)
+imu = sensor.get_any_component_of_type(openzen.component_type_imu)
 if imu is None:
     print ("No IMU found")
     sys.exit(1)
 
-is_streaming = imu.getBoolProperty(openzen.ZenImuProperty.StreamData)
-print ("is_streaming " + str(is_streaming))
+## read bool property
+error, is_streaming = imu.get_bool_property(openzen.ZenImuProperty.StreamData)
+if not error == openzen.ZenError.NoError:
+    print ("Can't load streaming settings")
+    sys.exit(1)
 
-accAlign = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+print ("Is streaming: {}".format(is_streaming))
 
-errSetting = imu.setArrayPropertyFloat(openzen.ZenImuProperty.AccAlignment, accAlign)
-print("Stored alignement", errSetting)
+error, accAlignment = imu.get_array_property_float(openzen.ZenImuProperty.AccAlignment)
+if not error == openzen.ZenError.NoError:
+    print ("Can't load alignment")
+    sys.exit(1)
 
-#print(type(imu.getArrayProperty(openzen.ZenImuProperty.AccAlignment)))
-#print(imu.getArrayProperty(openzen.ZenImuProperty.AccAlignment))
-arrErr, accAlignment = imu.getArrayPropertyFloat(openzen.ZenImuProperty.AccAlignment)
+if not len(accAlignment) == 9:
+    print ("Loaded Alignment has incosistent size")
 
-print ("Alignment: {}", accAlignment)
+print ("Alignment loaded: {}".format(accAlignment))
 
-#sys.exit(0)
+# store float array
+#error = imu.set_array_property_float(openzen.ZenImuProperty.AccAlignment, accAlignment)
 
+#if not error == openzen.ZenError.NoError:
+#    print ("Can't store alignment")
+#    sys.exit(1)
+
+#print("Stored alignment {} to sensor".format(accAlignment))
+
+# start streaming data
 runSome = 0
 while True:
     zenEvent = client.wait_for_next_event()
 
-    print(zenEvent.event_type)
     if (zenEvent.event_type == openzen.ZenEventType.ImuSample):
-        print ("Got IMU data !")
         imu_data = zenEvent.data.imu_data
-        print(imu_data.a)
-        print(type(imu_data.a))
         print ("A: {} m/s^2".format(imu_data.a))
         print ("G: {} degree/s".format(imu_data.g))
 
     runSome = runSome + 1
-    if runSome > 400:
+    if runSome > 50:
         break
-print("Copying sensor")
-anotherSensor = sensor
-print("releasing")
-anotherSensor.release()
-print("release done")
 
-print ("releasing client")
-client.close()
-print("done")
 
-print("exiting")
