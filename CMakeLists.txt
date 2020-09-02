@@ -565,31 +565,20 @@ target_link_libraries(OpenZen
         ${zen_libs}
 )
 
-# copy library to a name with underscore to conform with python naming conventions
-# http://www.swig.org/Doc1.3/Python.html#Python_nn7
-#message(FATAL_ERROR "Will copy from $<TARGET_FILE:OpenZen> to ${CMAKE_CURRENT_BINARY_DIR}/lib/_OpenZen.pyd")
-#message(FATAL_ERROR "Will ${ZEN_PYTHON} and ${WIN32}")
-
 if (ZEN_PYTHON)
     if(WIN32)
-        # rename file to be used as python module in Windows
-        #message(FATAL_ERROR "Will copy from ${<TARGET_FILE:OpenZen>} to ${CMAKE_CURRENT_BINARY_DIR}/lib/_OpenZen.pyd")
+        # copy file to be used as python module in Windows
         add_custom_command(TARGET OpenZen POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenZen> ${CMAKE_CURRENT_BINARY_DIR}/_OpenZen.pyd
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenZen> ${CMAKE_CURRENT_BINARY_DIR}/openzen.pyd
         )
     endif()
 
     if(UNIX)
-        # rename file to be used as python module in Linux/Max
+        # copy file to be used as python module in Linux/Max
         add_custom_command(TARGET OpenZen POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenZen> ${CMAKE_CURRENT_BINARY_DIR}/openzen.so
         )
     endif()
-
-    # copy python interface file
-    #add_custom_command(TARGET OpenZen POST_BUILD
-    #    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/bindings/OpenZenPython/OpenZen.py ${CMAKE_CURRENT_BINARY_DIR}/OpenZen.py
-    #)
 endif()
 
 if (ZEN_TESTS)
