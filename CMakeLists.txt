@@ -76,6 +76,15 @@ option(ZEN_EXAMPLES "Compile with OpenZen examples" ON)
 # Find includes in corresponding build include_directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+if(ZEN_PYTHON)
+    # this is only available in cmake 3.12 or newer
+    # look and build only for python3
+    find_package (Python3 REQUIRED COMPONENTS Development Interpreter)
+    # let the pybind11 cmake scripts know which Python version
+    # we intdent to use
+    set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE} CACHE STRING "")
+endif()
+
 add_subdirectory(external)
 
 # contains additional C/C++ precompiler defines
@@ -124,6 +133,22 @@ set(zen_sources
     src/LpMatrix.h
 )
 
+# source files which only get compiled into the
+# library and not into the unit tests
+set(zen_library_only_sources)
+
+if(ZEN_PYTHON)
+    list (APPEND zen_library_only_sources
+        src/bindings/OpenZenPython.cpp
+    )
+    list (APPEND zen_optional_libs Python3::Python pybind11)
+    # select C++17 if we do a Python build because the C++17 interface of OpenZen.h
+    # is more convenient than the C++11 version
+    list (APPEND zen_optional_compile_definitions_private
+        OPENZEN_CXX17
+    )
+endif()
+
 if(ZEN_CSHARP)
     list (APPEND zen_sources
         ## run
@@ -131,20 +156,6 @@ if(ZEN_CSHARP)
         # in the bindings folder to generate
         bindings/OpenZenCSharp/OpenZen_wrap_csharp.cxx
     )
-endif()
-
-if(ZEN_PYTHON)
-    # this is only available in cmake 3.12 or newer
-    # look and build only for python3
-    find_package (Python3 REQUIRED COMPONENTS Development)
-    list (APPEND zen_sources
-        ## run
-        # swig.exe -python -small -c++ -debug-typedef -o OpenZenPython/OpenZen_wrap_python.cxx -outdir OpenZenPython OpenZen.i
-        # in the bindings folder to generate
-        #bindings/OpenZenPython/OpenZen_wrap_python.cxx
-        src/bindings/OpenZenPython.cpp
-    )
-    list (APPEND zen_optional_libs Python3::Python pybind11)
 endif()
 
 set(zen_optional_test_sources)
@@ -465,9 +476,9 @@ set(zen_all_sources
 )
 
 if(ZEN_USE_STATIC_LIBS)
-    add_library(OpenZen STATIC ${zen_all_sources})
+    add_library(OpenZen STATIC ${zen_all_sources} ${zen_library_only_sources})
 else()
-    add_library(OpenZen SHARED ${zen_all_sources})
+    add_library(OpenZen SHARED ${zen_all_sources} ${zen_library_only_sources})
 
     # hide all non-exported symbols in the build
     set_target_properties(OpenZen PROPERTIES CXX_VISIBILITY_PRESET hidden)
