@@ -14,7 +14,7 @@ public enum ZenGnssFixType {
   ZenGnssFixType_DeadReckoningOnly = 1,
   ZenGnssFixType_2dFix = 2,
   ZenGnssFixType_3dFix = 3,
-  ZenGnssFixType_GnnsAndDeadReckoning = 4,
+  ZenGnssFixType_GnssAndDeadReckoning = 4,
   ZenGnssFixType_TimeOnlyFix = 5,
   ZenGnssFixType_Max
 }
