@@ -22,7 +22,7 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
-            - cmake ../build -DZEN_PYTHON=ON
+            - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake ../build -DZEN_PYTHON=ON
             - make
             - ./OpenZenTests
       - step:
