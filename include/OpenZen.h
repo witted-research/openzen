@@ -544,6 +544,20 @@ namespace zen
          * g_zenSensorType_Imu or g_zenSensorType_Gnss. If a requested sensor component
          * is not available on a sensor, the bool entry of the std::pair is false.
          */
+#ifdef OPENZEN_CXX17
+        std::optional<ZenSensorComponent> getAnyComponentOfType(std::string const& type) noexcept
+        {
+            ZenComponentHandle_t* handles = nullptr;
+            size_t nComponents;
+            if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type.c_str(), &handles, &nComponents))
+                return std::nullopt;
+
+            if (nComponents == 0)
+                return std::nullopt;
+
+            return ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]);
+        }
+#else
         std::pair<bool, ZenSensorComponent> getAnyComponentOfType(std::string const& type) noexcept
         {
             ZenComponentHandle_t* handles = nullptr;
@@ -556,6 +570,7 @@ namespace zen
 
             return std::make_pair(true, ZenSensorComponent(m_clientHandle, m_sensorHandle, handles[0]));
         }
+#endif
     };
 
     /**
