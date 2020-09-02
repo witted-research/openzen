@@ -18,6 +18,14 @@ pipelines:
             - make
             - ./OpenZenTests
       - step:
+          name: Linux x64 Build Gcc Python support
+          script:
+            - git submodule update --init
+            - mkdir ../linux_x64_build && cd ../linux_x64_build
+            - cmake ../build -DZEN_PYTHON=ON
+            - make
+            - ./OpenZenTests
+      - step:
           name: Linux x64 Unity Build Gcc
           script:
             - git submodule update --init
