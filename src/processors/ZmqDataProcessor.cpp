@@ -20,7 +20,7 @@ ZmqDataProcessor::ZmqDataProcessor() :
     bool terminate = !eventResult.has_value();
     if (eventResult.has_value()) {
         // check for disconnect
-        terminate = terminate || eventResult->eventType == ZenSensorEvent_SensorDisconnected;
+        terminate = terminate || eventResult->eventType == ZenEventType_SensorDisconnected;
     }
 
     if (terminate) {
@@ -71,7 +71,7 @@ LockingQueue<ZenEvent>& ZmqDataProcessor::getEventQueue() {
 void ZmqDataProcessor::release() {
     ZenEvent evt;
 
-    evt.eventType = ZenSensorEvent_SensorDisconnected;
+    evt.eventType = ZenEventType_SensorDisconnected;
     m_queue.push(evt);
     // wait for the thread to terminate
     m_senderThread.stop();
