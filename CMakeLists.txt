@@ -29,7 +29,7 @@ if (MSVC)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
-    message(FATAL_ERROR "GCC Version 7.0 is at least need to compile OpenZen")
+    message(FATAL_ERROR "GCC Version 7.0 or newer is needed to compile OpenZen")
 endif()
 
 set (ZEN_BLUETOOTH_DEFAULT ON)
