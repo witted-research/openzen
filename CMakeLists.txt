@@ -120,7 +120,7 @@ set(zen_sources
     src/SensorProperties.cpp
     src/SensorProperties.h
 
-    src/LpMatrix.c
+    src/LpMatrix.cpp
     src/LpMatrix.h
 )
 
