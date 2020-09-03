@@ -3,7 +3,6 @@
 # output folder when "make install" is used
 
 add_subdirectory(expected-lite EXCLUDE_FROM_ALL)
-add_subdirectory(ftdi)
 add_subdirectory(gsl EXCLUDE_FROM_ALL)
 
 if (ZEN_TESTS)
@@ -11,8 +10,30 @@ if (ZEN_TESTS)
     add_subdirectory(googletest EXCLUDE_FROM_ALL)
 endif()
 
-add_subdirectory(pcanbasic)
-add_subdirectory(siusb)
+# download binary driver libraries for windows if
+# we compile for Win32 and we are allowed by the build
+# options todo so
+if (WIN32 AND ZEN_USE_BINARY_LIBRARIES)
+    message("Binary libraries will be downloaded")
+
+    # FetchContent is supported since CMake Version 3.11
+    include(FetchContent)
+    set(FETCHCONTENT_QUIET OFF)
+    FetchContent_Declare(
+        binary_libraries
+        GIT_REPOSITORY https://bitbucket.org/lpresearch/openzenbinarylibraries.git
+        GIT_TAG        v1.0.0
+    )
+
+    FetchContent_GetProperties(binary_libraries)
+
+    if (NOT binary_libraries_POPULATED)
+      FetchContent_Populate(binary_libraries)
+      add_subdirectory(${binary_libraries_SOURCE_DIR} ${binary_libraries_BINARY_DIR})
+    endif()
+else()
+    message("Binary libraries will not be downloaded")
+endif()
 
 # tells cereal to not build any tests
 set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
