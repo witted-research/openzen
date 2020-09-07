@@ -109,3 +109,6 @@ We welcome any contributions to OpenZen through pull requests. The most up-to-da
 * Prepend `g_` to global variables: `g_fooBar`
 
 In general, we ask you to prefer legible code with descriptive variable names over comments, but to not shy away from using commands where necessary. Apart from this you are free to write code the way you like it. It is however left to the code reviewers judgement whether your pull request complies with the standards of OpenZen.
+
+Currently, OpenZen is required to be compileable on Ubuntu 18.04 (CMake 3.10 and GCC 7.4.0) and Microsoft Visual Studio 2017. So don't introduce any
+C++ or CMake features which are not supported by these build tools.
