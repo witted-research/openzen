@@ -18,7 +18,8 @@ while True:
     if zenEvent.event_type == openzen.ZenEventType.SensorFound:
         print ("Found sensor {} on IoType {}".format( zenEvent.data.sensor_found.name,
             zenEvent.data.sensor_found.io_type))
-        sensor_desc_connect = zenEvent.data.sensor_found
+        if sensor_desc_connect is None:
+            sensor_desc_connect = zenEvent.data.sensor_found
 
     if zenEvent.event_type == openzen.ZenEventType.SensorListingProgress:
         lst_data = zenEvent.data.sensor_listing_progress
@@ -32,17 +33,17 @@ if sensor_desc_connect is None:
     sys.exit(1)
 
 # connect to the first sensor found
-#error, sensor = client.obtain_sensor(sensor_desc_connect)
+error, sensor = client.obtain_sensor(sensor_desc_connect)
 
 # connect to a sensor by name
-error, sensor = client.obtain_sensor_by_name("LinuxDevice", "LPMSCU2000003")
+#error, sensor = client.obtain_sensor_by_name("LinuxDevice", "LPMSCU2000003")
 
 if not error == openzen.ZenSensorInitError.NoError:
     print ("Error connecting")
     sys.exit(1)
 
 
-print ("Connected to sensor")
+print ("Connected to sensor !")
 
 imu = sensor.get_any_component_of_type(openzen.component_type_imu)
 if imu is None:
@@ -55,7 +56,7 @@ if not error == openzen.ZenError.NoError:
     print ("Can't load streaming settings")
     sys.exit(1)
 
-print ("Is streaming: {}".format(is_streaming))
+print ("Sensor is streaming data: {}".format(is_streaming))
 
 error, accAlignment = imu.get_array_property_float(openzen.ZenImuProperty.AccAlignment)
 if not error == openzen.ZenError.NoError:
@@ -81,7 +82,12 @@ runSome = 0
 while True:
     zenEvent = client.wait_for_next_event()
 
-    if (zenEvent.event_type == openzen.ZenEventType.ImuSample):
+    # check if its an IMU sample event and if it
+    # comes from our IMU and sensor component
+    if zenEvent.event_type == openzen.ZenEventType.ImuSample and \
+        zenEvent.sensor == imu.sensor and \
+        zenEvent.component.handle == imu.component.handle:
+
         imu_data = zenEvent.data.imu_data
         print ("A: {} m/s^2".format(imu_data.a))
         print ("G: {} degree/s".format(imu_data.g))
@@ -90,4 +96,7 @@ while True:
     if runSome > 50:
         break
 
-
+print ("Streaming of sensor data complete")
+sensor.release()
+client.close()
+print("OpenZen library was closed")
