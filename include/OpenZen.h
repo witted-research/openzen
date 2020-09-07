@@ -690,7 +690,7 @@ namespace zen
             if (ZenPollNextEvent(m_handle, &event))
             {
 #ifdef OPENZEN_CXX17
-                return std::move(event);
+                return event;
 #else
                 return std::make_pair(true, std::move(event));
 #endif
@@ -729,7 +729,7 @@ namespace zen
             if (ZenWaitForNextEvent(m_handle, &event))
             {
 #ifdef OPENZEN_CXX17
-                return std::move(event);
+                return event;
 #else
                 return std::make_pair(true, std::move(event));
 #endif
