@@ -549,7 +549,7 @@ namespace zen
         {
             ZenComponentHandle_t* handles = nullptr;
             size_t nComponents;
-            if (auto error = ZenSensorComponents(m_clientHandle, m_sensorHandle, type.c_str(), &handles, &nComponents))
+            if (ZenSensorComponents(m_clientHandle, m_sensorHandle, type.c_str(), &handles, &nComponents) != ZenError_None)
                 return std::nullopt;
 
             if (nComponents == 0)
