@@ -26,6 +26,27 @@ namespace OpenZenPythonHelper {
 
 PYBIND11_MODULE(openzen, m) {
 
+    py::class_<ZenClientHandle>(m, "ZenClientHandle")
+        .def_readonly("handle", &ZenClientHandle::handle)
+        .def("__eq__", [](ZenClientHandle const & self, ZenClientHandle const & other) {
+            return self.handle == other.handle;}, py::is_operator())
+        .def("__ne__", [](ZenClientHandle const & self, ZenClientHandle const & other) {
+            return self.handle != other.handle;}, py::is_operator());
+
+    py::class_<ZenSensorHandle>(m, "ZenSensorHandle")
+        .def_readonly("handle", &ZenSensorHandle::handle)
+        .def("__eq__", [](ZenSensorHandle const & self, ZenSensorHandle const & other) {
+            return self.handle == other.handle;}, py::is_operator())
+        .def("__ne__", [](ZenSensorHandle const & self, ZenSensorHandle const & other) {
+            return self.handle != other.handle;}, py::is_operator());
+
+    py::class_<ZenComponentHandle>(m, "ZenComponentHandle")
+        .def_readonly("handle", &ZenComponentHandle::handle)
+        .def("__eq__", [](ZenComponentHandle const & self, ZenComponentHandle const & other) {
+            return self.handle == other.handle;}, py::is_operator())
+        .def("__ne__", [](ZenComponentHandle const & self, ZenComponentHandle const & other) {
+            return self.handle != other.handle;}, py::is_operator());
+
     // C part of the data types from ZenTypes.h
     py::enum_<ZenError>(m, "ZenError")
         .value("NoError", ZenError_None)
