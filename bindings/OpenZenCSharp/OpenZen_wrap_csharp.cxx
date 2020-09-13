@@ -327,10 +327,6 @@ SWIGINTERN OpenZenFloatArray *OpenZenFloatArray_frompointer(float *t){
 #ifndef LONG_MAX
 #include <limits.h>
 #endif
-#if (__WORDSIZE == 32) || (LONG_MAX == INT_MAX)
-# error "SWIG wrapped code invalid in 32 bit architecture, regenerate code using -DSWIGWORDSIZE32"
-#endif
-
 
 #include "../include/ZenTypes.h"
 #include "../include/OpenZenCAPI.h"
