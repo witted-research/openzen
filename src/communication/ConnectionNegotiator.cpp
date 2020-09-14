@@ -10,9 +10,6 @@
 
 #include "ConnectionNegotiator.h"
 
-#include <chrono>
-#include <gsl/string_span>
-
 #include "spdlog/spdlog.h"
 
 #include "ZenProtocol.h"
@@ -21,6 +18,11 @@
 #include "utility/StringView.h"
 
 #include "properties/BaseSensorPropertiesV0.h"
+
+#include <gsl/string_span>
+
+#include <chrono>
+#include <thread>
 
 namespace zen
 {
