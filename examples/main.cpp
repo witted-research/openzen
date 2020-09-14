@@ -72,7 +72,7 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
             {
                 switch (event.eventType)
                 {
-                case ZenEventType_ImuSample:
+                case ZenEventType_ImuData:
                     if (i++ % 100 == 0) {
                         std::cout << "Event type: " << event.eventType << std::endl;
                         std::cout << "> Event component: " << uint32_t(event.component.handle) << std::endl;
@@ -90,7 +90,7 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
             {
                 switch (event.eventType)
                 {
-                case ZenEventType_GnssSample:
+                case ZenEventType_GnssData:
                         std::cout << "Event type: " << event.eventType << std::endl;
                         std::cout << "> Event component: " << uint32_t(event.component.handle) << std::endl;
                         std::cout << "> GPS Fix: \t = " << event.data.gnssData.fixType << std::endl;

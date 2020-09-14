@@ -410,8 +410,8 @@ namespace zen
                 case EDevicePropertyV0::GetRawSensorData:
                     if (m_initialized)
                     {
-                        if (auto eventData = m_components[0]->processEventData(ZenEventType_ImuSample, data))
-                            publishEvent({ ZenEventType_ImuSample, {m_token}, {1}, std::move(*eventData) });
+                        if (auto eventData = m_components[0]->processEventData(ZenEventType_ImuData, data))
+                            publishEvent({ ZenEventType_ImuData, {m_token}, {1}, std::move(*eventData) });
                         else
                             return eventData.error();
                     }
@@ -465,8 +465,8 @@ namespace zen
                 case EDevicePropertyV1::GetRawImuSensorData:
                     if (m_initialized)
                     {
-                        if (auto eventData = m_components[0]->processEventData(ZenEventType_ImuSample, data))
-                            publishEvent({ ZenEventType_ImuSample, {m_token}, {1}, std::move(*eventData) });
+                        if (auto eventData = m_components[0]->processEventData(ZenEventType_ImuData, data))
+                            publishEvent({ ZenEventType_ImuData, {m_token}, {1}, std::move(*eventData) });
                         else
                             return eventData.error();
                     }
@@ -475,8 +475,8 @@ namespace zen
                 case EDevicePropertyV1::GetRawGpsSensorData:
                     if (m_initialized)
                     {
-                        if (auto eventData = m_components[1]->processEventData(ZenEventType_GnssSample, data))
-                            publishEvent({ ZenEventType_GnssSample, {m_token}, {2}, std::move(*eventData) });
+                        if (auto eventData = m_components[1]->processEventData(ZenEventType_GnssData, data))
+                            publishEvent({ ZenEventType_GnssData, {m_token}, {2}, std::move(*eventData) });
                         else
                             return eventData.error();
                     }

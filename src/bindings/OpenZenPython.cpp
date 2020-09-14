@@ -254,8 +254,8 @@ PYBIND11_MODULE(openzen, m) {
         .value("SensorFound", ZenEventType_SensorFound)
         .value("SensorListingProgress", ZenEventType_SensorListingProgress)
         .value("SensorDisconnected", ZenEventType_SensorDisconnected)
-        .value("ImuSample", ZenEventType_ImuSample)
-        .value("GnssSample", ZenEventType_GnssSample);
+        .value("ImuData", ZenEventType_ImuData)
+        .value("GnssData", ZenEventType_GnssData);
 
     py::class_<ZenEvent>(m, "ZenEvent")
         .def_readonly("event_type", &ZenEvent::eventType)

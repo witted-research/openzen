@@ -413,8 +413,6 @@ typedef union
     ZenEventData_SensorListingProgress sensorListingProgress;
 } ZenEventData;
 
-typedef int ZenEvent_t;
-
 typedef enum ZenEventType
 {
     ZenEventType_None = 0,
@@ -423,9 +421,9 @@ typedef enum ZenEventType
     ZenEventType_SensorListingProgress = 2,
     ZenEventType_SensorDisconnected = 3,
 
-    ZenEventType_ImuSample = 100,
+    ZenEventType_ImuData = 100,
 
-    ZenEventType_GnssSample = 200,
+    ZenEventType_GnssData = 200,
 
     // Sensors are free to expose private events in this reserved region
     ZenEventType_SensorSpecific_Start = 1000,
@@ -444,7 +442,7 @@ typedef enum ZenEventType
 
 typedef struct ZenEvent
 {
-    ZenEvent_t eventType;
+    ZenEventType eventType;
     ZenSensorHandle_t sensor;
     ZenComponentHandle_t component;
     ZenEventData data;

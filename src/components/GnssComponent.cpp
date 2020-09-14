@@ -37,11 +37,11 @@ namespace zen
         return ZenError_Io_UnsupportedFunction;
     }
 
-    nonstd::expected<ZenEventData, ZenError> GnssComponent::processEventData(ZenEvent_t eventType, gsl::span<const std::byte> data) noexcept
+    nonstd::expected<ZenEventData, ZenError> GnssComponent::processEventData(ZenEventType eventType, gsl::span<const std::byte> data) noexcept
     {
         switch (eventType)
         {
-        case ZenEventType_GnssSample:
+        case ZenEventType_GnssData:
             return parseSensorData(data);
             break;
 

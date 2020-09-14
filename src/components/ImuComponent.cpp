@@ -168,11 +168,11 @@ namespace zen
         }
     }
 
-    nonstd::expected<ZenEventData, ZenError> ImuComponent::processEventData(ZenEvent_t eventType, gsl::span<const std::byte> data) noexcept
+    nonstd::expected<ZenEventData, ZenError> ImuComponent::processEventData(ZenEventType eventType, gsl::span<const std::byte> data) noexcept
     {
         switch (eventType)
         {
-        case ZenEventType_ImuSample:
+        case ZenEventType_ImuData:
             return parseSensorData(data);
 
         default:

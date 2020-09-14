@@ -41,7 +41,7 @@ namespace zen
         virtual ZenError close() noexcept { return ZenError_None; }
 
         virtual ZenError processData(uint8_t function, gsl::span<const std::byte> data) noexcept = 0;
-        virtual nonstd::expected<ZenEventData, ZenError> processEventData(ZenEvent_t eventType, gsl::span<const std::byte> data) noexcept = 0;
+        virtual nonstd::expected<ZenEventData, ZenError> processEventData(ZenEventType eventType, gsl::span<const std::byte> data) noexcept = 0;
 
         virtual std::string_view type() const noexcept = 0;
 

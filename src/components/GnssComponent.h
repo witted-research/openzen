@@ -70,7 +70,7 @@ namespace zen
         /**
         Parses and publishes incomping sensor data
         */
-        nonstd::expected<ZenEventData, ZenError> processEventData(ZenEvent_t eventType,
+        nonstd::expected<ZenEventData, ZenError> processEventData(ZenEventType eventType,
             gsl::span<const std::byte> data) noexcept override;
 
         std::string_view type() const noexcept override { return g_zenSensorType_Gnss; }
