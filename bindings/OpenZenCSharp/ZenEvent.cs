@@ -43,12 +43,12 @@ public class ZenEvent : global::System.IDisposable {
     }
   }
 
-  public int eventType {
+  public ZenEventType eventType {
     set {
-      OpenZenPINVOKE.ZenEvent_eventType_set(swigCPtr, value);
+      OpenZenPINVOKE.ZenEvent_eventType_set(swigCPtr, (int)value);
     } 
     get {
-      int ret = OpenZenPINVOKE.ZenEvent_eventType_get(swigCPtr);
+      ZenEventType ret = (ZenEventType)OpenZenPINVOKE.ZenEvent_eventType_get(swigCPtr);
       return ret;
     } 
   }

@@ -14,13 +14,13 @@ public enum ZenEventType {
   ZenEventType_SensorFound = 1,
   ZenEventType_SensorListingProgress = 2,
   ZenEventType_SensorDisconnected = 3,
-  ZenEventType_ImuSample = 100,
-  ZenEventType_GnssSample = 200,
+  ZenEventType_ImuData = 100,
+  ZenEventType_GnssData = 200,
   ZenEventType_SensorSpecific_Start = 1000,
   ZenEventType_SensorSpecific_End = 1999,
   ZenEventType_ImuComponentSpecific_Start = 2000,
   ZenEventType_ImuComponentSpecific_End = 2999,
   ZenEventType_GnssComponentSpecific_Start = 3000,
   ZenEventType_GnssComponentSpecific_End = 3999,
-  ZenSensorEvent_Max
+  ZenEventType_Max
 }

@@ -481,10 +481,11 @@ SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_timestamp_set(void * jarg1, double
 SWIGEXPORT double SWIGSTDCALL CSharp_ZenImuData_timestamp_get(void * jarg1) { double jresult ;
   ZenImuData *arg1 = (ZenImuData *) 0 ; double result; arg1 = (ZenImuData *)jarg1;  result = (double) ((arg1)->timestamp);
   jresult = result;  return jresult; }
-SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_heaveY_set(void * jarg1, float jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
-  float arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (float)jarg2;  if (arg1) (arg1)->heaveY = arg2; }
-SWIGEXPORT float SWIGSTDCALL CSharp_ZenImuData_heaveY_get(void * jarg1) { float jresult ; ZenImuData *arg1 = (ZenImuData *) 0 ;
-  float result; arg1 = (ZenImuData *)jarg1;  result = (float) ((arg1)->heaveY); jresult = result;  return jresult; }
+SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_heaveMotion_set(void * jarg1, float jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
+  float arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (float)jarg2;  if (arg1) (arg1)->heaveMotion = arg2; }
+SWIGEXPORT float SWIGSTDCALL CSharp_ZenImuData_heaveMotion_get(void * jarg1) { float jresult ;
+  ZenImuData *arg1 = (ZenImuData *) 0 ; float result; arg1 = (ZenImuData *)jarg1;  result = (float) ((arg1)->heaveMotion);
+  jresult = result;  return jresult; }
 SWIGEXPORT void * SWIGSTDCALL CSharp_new_ZenImuData() { void * jresult ; ZenImuData *result = 0 ;
   result = (ZenImuData *)new ZenImuData(); jresult = (void *)result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_delete_ZenImuData(void * jarg1) { ZenImuData *arg1 = (ZenImuData *) 0 ;
@@ -722,9 +723,10 @@ SWIGEXPORT void * SWIGSTDCALL CSharp_new_ZenEventData() { void * jresult ; ZenEv
 SWIGEXPORT void SWIGSTDCALL CSharp_delete_ZenEventData(void * jarg1) { ZenEventData *arg1 = (ZenEventData *) 0 ;
   arg1 = (ZenEventData *)jarg1;  delete arg1; }
 SWIGEXPORT void SWIGSTDCALL CSharp_ZenEvent_eventType_set(void * jarg1, int jarg2) { ZenEvent *arg1 = (ZenEvent *) 0 ;
-  ZenEvent_t arg2 ; arg1 = (ZenEvent *)jarg1;  arg2 = (ZenEvent_t)jarg2;  if (arg1) (arg1)->eventType = arg2; }
+  ZenEventType arg2 ; arg1 = (ZenEvent *)jarg1;  arg2 = (ZenEventType)jarg2;  if (arg1) (arg1)->eventType = arg2; }
 SWIGEXPORT int SWIGSTDCALL CSharp_ZenEvent_eventType_get(void * jarg1) { int jresult ; ZenEvent *arg1 = (ZenEvent *) 0 ;
-  ZenEvent_t result; arg1 = (ZenEvent *)jarg1;  result = (ZenEvent_t) ((arg1)->eventType); jresult = result;  return jresult; }
+  ZenEventType result; arg1 = (ZenEvent *)jarg1;  result = (ZenEventType) ((arg1)->eventType); jresult = (int)result; 
+  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_ZenEvent_sensor_set(void * jarg1, void * jarg2) { ZenEvent *arg1 = (ZenEvent *) 0 ;
   ZenSensorHandle_t *arg2 = (ZenSensorHandle_t *) 0 ; arg1 = (ZenEvent *)jarg1;  arg2 = (ZenSensorHandle_t *)jarg2; 
   if (arg1) (arg1)->sensor = *arg2; }

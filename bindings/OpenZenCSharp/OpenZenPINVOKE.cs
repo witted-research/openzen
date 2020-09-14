@@ -354,11 +354,11 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_timestamp_get")]
   public static extern double ZenImuData_timestamp_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
-  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_heaveY_set")]
-  public static extern void ZenImuData_heaveY_set(global::System.Runtime.InteropServices.HandleRef jarg1, float jarg2);
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_heaveMotion_set")]
+  public static extern void ZenImuData_heaveMotion_set(global::System.Runtime.InteropServices.HandleRef jarg1, float jarg2);
 
-  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_heaveY_get")]
-  public static extern float ZenImuData_heaveY_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_heaveMotion_get")]
+  public static extern float ZenImuData_heaveMotion_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_new_ZenImuData")]
   public static extern global::System.IntPtr new_ZenImuData();
