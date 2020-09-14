@@ -125,7 +125,7 @@ namespace zen
             return nonstd::make_unexpected(error);
         if (ZenSensorInitError error = setupFD(fdWrite); error != ZenSensorInitError_None)
             return nonstd::make_unexpected(error);
-        return std::move(ioInterface);
+        return ioInterface;
     }
 
     nonstd::expected<std::vector<int32_t>, ZenError> LinuxDeviceSystem::supportedBaudRates() noexcept

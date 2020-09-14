@@ -91,7 +91,7 @@ namespace zen
         if (auto error = sensor->init())
             return nonstd::make_unexpected(error);
 
-        return std::move(sensor);
+        return sensor;
     }
 
     nonstd::expected<std::shared_ptr<Sensor>, ZenSensorInitError> make_high_level_sensor(SensorConfig config,
@@ -102,7 +102,7 @@ namespace zen
         if (auto error = sensor->init())
             return nonstd::make_unexpected(error);
 
-        return std::move(sensor);
+        return sensor;
     }
 
     Sensor::Sensor(SensorConfig config, std::unique_ptr<ModbusCommunicator> communicator, uintptr_t token)

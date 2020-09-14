@@ -20,8 +20,7 @@ namespace zen
         nonstd::expected<std::unique_ptr<IIoEventInterface>, ZenSensorInitError> make_interface(IIoEventSubscriber& subscriber,
              std::string const& endpoint)
         {
-            auto ioInterface = std::make_unique<TestSensorInterface>(subscriber, endpoint);
-            return std::move(ioInterface);
+            return std::make_unique<TestSensorInterface>(subscriber, endpoint);
         }
     }
 
