@@ -221,8 +221,8 @@ typedef struct ZenImuData
     /// Sampling time of the data in seconds
     double timestamp;
 
-    /// heave motion in y direction
-    float heaveY;
+    /// heave motion
+    float heaveMotion;
 } ZenImuData;
 
 typedef ZenImuData ZenEventData_Imu;

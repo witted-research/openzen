@@ -429,7 +429,7 @@ namespace zen
                         return nonstd::make_unexpected(ZenError_Io_MsgCorrupt);
                     }
 
-                    imuData.heaveY = *lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
+                    imuData.heaveMotion = *lowPrec ? parseFloat16(data, 1000.f) : parseFloat32(data);
                 }
             }
             else

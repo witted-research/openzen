@@ -84,7 +84,7 @@ void serialize(Archive& ar, ZenImuData & imuData)
         imuData.altitude,
         imuData.temperature,
         imuData.timestamp, 
-        imuData.heaveY);
+        imuData.heaveMotion);
 }
 
 template <class Archive>

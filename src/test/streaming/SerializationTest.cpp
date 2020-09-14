@@ -44,7 +44,7 @@ TEST(Serialization, serializeAndDeserializeImu) {
     imuData.w[1] = 2.0f;
     imuData.w[2] = 3.0f;
 
-    imuData.heaveY = 55.1f;
+    imuData.heaveMotion = 55.1f;
 
     {
         cereal::BinaryOutputArchive imu_archive(buffer);
@@ -61,7 +61,7 @@ TEST(Serialization, serializeAndDeserializeImu) {
     ASSERT_EQ(imuData.altitude, imuDataLoaded.altitude);
     checkArray3(imuData.g, imuDataLoaded.g);
     checkArray3(imuData.w, imuDataLoaded.w);
-    ASSERT_EQ(imuData.heaveY, imuDataLoaded.heaveY);
+    ASSERT_EQ(imuData.heaveMotion, imuDataLoaded.heaveMotion);
 }
 
 TEST(Serialization, serializeAndDeserializeGps) {

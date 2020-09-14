@@ -187,8 +187,8 @@ PYBIND11_MODULE(openzen, m) {
             "Temperature")
         .def_readonly("timestamp", &ZenImuData::timestamp,
             "Sampling time of the data in seconds")
-        .def_readonly("heave_y", &ZenImuData::heaveY,
-            "heave motion in y direction");
+        .def_readonly("heave_motion", &ZenImuData::heaveMotion,
+            "heave motion (not supported by all sensor firmware versions)");
 
     py::enum_<ZenGnssFixType>(m, "ZenGnssFixType")
         .value("NoFix", ZenGnssFixType_NoFix)
