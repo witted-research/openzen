@@ -518,12 +518,7 @@ target_compile_features(OpenZen
 
 set_property(TARGET OpenZen PROPERTY CXX_EXTENSIONS FALSE)
 
-if (MSVC)
-    target_compile_options(OpenZen
-        PRIVATE
-            /W4
-    )
-else()
+if (NOT MSVC)
     target_compile_options(OpenZen
         PRIVATE
             -Wall -Wextra -pedantic
