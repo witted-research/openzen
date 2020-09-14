@@ -26,7 +26,7 @@ namespace zen
                 return nonstd::make_unexpected(ZenSensorInitError_ConnectFailed);
             }
 
-            return std::move(ioInterface);
+            return ioInterface;
         }
     }
 
