@@ -51,32 +51,6 @@ namespace zen
             }
         }
 
-        ISensorProperties& getProperties(Sensor& self, const std::vector<std::unique_ptr<SensorComponent>>& components, uint8_t address) noexcept
-        {
-            return *(address ? components[address - 1]->properties() : self.properties());
-        }
-
-        ZenError parseError(gsl::span<const std::byte>& data) noexcept
-        {
-            const auto result = *reinterpret_cast<const ZenError*>(data.data());
-            data = data.subspan(sizeof(ZenError));
-            return result;
-        }
-
-        ZenEvent_t parseEventType(gsl::span<const std::byte>& data) noexcept
-        {
-            const auto result = *reinterpret_cast<const ZenEvent_t*>(data.data());
-            data = data.subspan(sizeof(ZenEvent_t));
-            return result;
-        }
-
-        ZenProperty_t parseProperty(gsl::span<const std::byte>& data) noexcept
-        {
-            const auto result = *reinterpret_cast<const ZenProperty_t*>(data.data());
-            data = data.subspan(sizeof(ZenProperty_t));
-            return result;
-        }
-
         std::unique_ptr<modbus::IFrameFactory> getFactory(uint32_t version) noexcept
         {
             if (version == 0)
@@ -492,37 +466,8 @@ namespace zen
                 }
             }
         }
-        else
-        {
-            if (address > m_components.size())
-                return ZenError_Io_MsgCorrupt;
 
-            switch (function)
-            {
-            case ZenProtocolFunction_Ack:
-                return properties::publishAck(getProperties(*this, m_components, address), *m_communicator, parseProperty(data), parseError(data));
-
-            case ZenProtocolFunction_Result:
-                return properties::publishResult(getProperties(*this, m_components, address), *m_communicator, parseProperty(data), parseError(data), data);
-
-            case ZenProtocolFunction_Event:
-                if (address)
-                {
-                    const auto eventType = parseEventType(data);
-                    if (auto eventData = m_components[address - 1]->processEventData(eventType, data))
-                        publishEvent({ eventType, {m_token}, {address}, std::move(*eventData) });
-                    else
-                        return eventData.error();
-
-                    return ZenError_None;
-                }
-                else
-                    return ZenError_UnsupportedEvent;
-
-            default:
-                return ZenError_Io_UnsupportedFunction;
-            }
-        }
+        return ZenError_Sensor_VersionNotSupported;
     }
 
     void Sensor::publishEvent(const ZenEvent& event) noexcept
