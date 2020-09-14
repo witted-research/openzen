@@ -593,7 +593,7 @@ if (ZEN_PYTHON)
     endif()
 
     if(UNIX)
-        # copy file to be used as python module in Linux/Max
+        # copy file to be used as python module in Linux/Mac
         add_custom_command(TARGET OpenZen POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenZen> ${CMAKE_CURRENT_BINARY_DIR}/openzen.so
         )
