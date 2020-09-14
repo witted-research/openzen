@@ -52,6 +52,7 @@ if (ZEN_USE_STATIC_LIBS)
     set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
 endif()
 add_subdirectory(spdlog)
+set_property(TARGET spdlog PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # expose the Asio headers as library
 add_library(openzen_asio INTERFACE)
