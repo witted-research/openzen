@@ -38,7 +38,7 @@ pipelines:
           script:
             - git submodule update --init
             - mkdir ../linux_x64_build && cd ../linux_x64_build
-            - cmake -DZEN_USE_STATIC_LIBS=ON ../build
+            - /opt/cmake-3.16.3-Linux-x86_64/bin/cmake -DZEN_USE_STATIC_LIBS=ON ../build
             - make
             - ./OpenZenTests
       - step:
