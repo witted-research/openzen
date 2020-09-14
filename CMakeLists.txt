@@ -152,7 +152,7 @@ endif()
 if(ZEN_CSHARP)
     list (APPEND zen_sources
         ## run
-        # swig.exe -csharp -small -c++ -debug-typedef -o OpenZenCSharp/OpenZen_wrap_csharp.cxx -outdir OpenZenCSharp OpenZen.i
+        # swig -csharp -small -c++ -debug-typedef -DSWIGWORDSIZE64 -o OpenZenCSharp/OpenZen_wrap_csharp.cxx -outdir OpenZenCSharp OpenZen.i
         # in the bindings folder to generate
         bindings/OpenZenCSharp/OpenZen_wrap_csharp.cxx
     )
