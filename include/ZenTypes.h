@@ -439,7 +439,7 @@ typedef enum ZenEventType
     ZenEventType_GnssComponentSpecific_Start = 3000,
     ZenEventType_GnssComponentSpecific_End = 3999,
 
-    ZenSensorEvent_Max
+    ZenEventType_Max
 } ZenEventType;
 
 typedef struct ZenEvent
