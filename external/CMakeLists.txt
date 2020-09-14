@@ -2,6 +2,15 @@
 # so their headers and cmake files are not copied to the
 # output folder when "make install" is used
 
+if (ZEN_USE_STATIC_LIBS)
+    # install spdlog in case of static build
+    # because CMake will otherwise complain about
+    # missing export target
+    message(FATEL set)
+    set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
+    set(PYBIND11_INSTALL ON CACHE BOOL "" FORCE)
+endif()
+
 add_subdirectory(expected-lite EXCLUDE_FROM_ALL)
 add_subdirectory(gsl EXCLUDE_FROM_ALL)
 
@@ -45,13 +54,7 @@ set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
 # EXCLUDE_FROM_ALL on this folder
 add_subdirectory(cereal EXCLUDE_FROM_ALL)
 
-if (ZEN_USE_STATIC_LIBS)
-    # install spdlog in case of static build
-    # because CMake will otherwise complain about
-    # missing export target
-    set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
-endif()
-add_subdirectory(spdlog)
+add_subdirectory(spdlog EXCLUDE_FROM_ALL)
 set_property(TARGET spdlog PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # expose the Asio headers as library

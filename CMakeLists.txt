@@ -662,6 +662,20 @@ install(TARGETS OpenZen EXPORT OpenZenTarget
     PUBLIC_HEADER DESTINATION include
 )
 
+# even private static targts need to be exported to justify the
+# dependencies for static builds.
+# see https://gitlab.kitware.com/cmake/cmake/-/issues/17357
+if (ZEN_USE_STATIC_LIBS)
+    install(TARGETS spdlog EXPORT OpenZenTarget)
+
+    if (ZEN_PYTHON)
+        install(TARGETS pybind11 EXPORT OpenZenTarget)
+    endif()
+    if (ZEN_NETWORK)
+        install(TARGETS cppzmq EXPORT OpenZenTarget)
+    endif()
+endif()
+
 if(WIN32 AND ZEN_USE_BINARY_LIBRARIES)
     get_target_property(FTDI_DLL ftdi IMPORTED_LOCATION)
     get_target_property(SIUSB_DLL siusb IMPORTED_LOCATION)
