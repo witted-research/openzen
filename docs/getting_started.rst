@@ -118,11 +118,11 @@ sensor's name, serial number and all information required to connect to the sens
         {
             switch (event.eventType)
             {
-            case ZenSensorEvent_SensorFound:
+            case ZenEventType_SensorFound:
                 std::cout << "Found sensor " << event.data.sensorFound.name << std::endl;
                 break;
 
-            case ZenSensorEvent_SensorListingProgress:
+            case ZenEventType_SensorListingProgress:
                 std::cout << "Sensor listing progress " << event.data.sensorListingProgress.progress
                     << " %" << std::endl;
                 if (event.data.sensorListingProgress.complete) {
@@ -251,7 +251,7 @@ You can use the previously introduced methods ``ZenClient::pollNextEvent`` or
     {
         switch (event.eventType)
         {
-        case ZenImuEvent_Sample:
+        case ZenEventType_ImuData:
                 std::cout << "> Acceleration: \t x = " << event.data.imuData.a[0]
                     << "\t y = " << event.data.imuData.a[1]
                     << "\t z = " << event.data.imuData.a[2] << std::endl;
@@ -271,7 +271,7 @@ the GNSS component like this:
     {
         switch (event.eventType)
         {
-        case ZenGnssEvent_Sample:
+        case ZenEventType_GnssData:
                 std::cout << "> GPS Fix Type: \t = " << event.data.gnssData.fixType << std::endl;
                 std::cout << "> Longitude: \t = " << event.data.gnssData.longitude
                     << "   Latitude: \t = " << event.data.gnssData.latitude << std::endl;
