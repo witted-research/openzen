@@ -20,9 +20,11 @@
 #include "io/systems/ZeroMQSystem.h"
 #endif
 #if WIN32
-#include "io/systems/PcanBasicSystem.h"
-#include "io/systems/FtdiUsbSystem.h"
-#include "io/systems/SiUsbSystem.h"
+    #if ZEN_USE_BINARY_LIBRARIES
+    #include "io/systems/PcanBasicSystem.h"
+    #include "io/systems/FtdiUsbSystem.h"
+    #include "io/systems/SiUsbSystem.h"
+    #endif
 #include "io/systems/windows/WindowsDeviceSystem.h"
 #elif __linux__
 #include "io/systems/linux/LinuxDeviceSystem.h"
@@ -44,9 +46,11 @@ namespace zen
 #endif
 
 #if WIN32
+    #if ZEN_USE_BINARY_LIBRARIES
     static auto pcanRegistry = makeRegistry<PcanBasicSystem>();
     static auto siUsbRegistry = makeRegistry<SiUsbSystem>();
     static auto ftdiUsbRegistry = makeRegistry<FtdiUsbSystem>();
+    #endif
 
     // [XXX] Need to re-evaluate the usage
     static auto windowsDeviceRegistry = makeRegistry<WindowsDeviceSystem>();

@@ -64,7 +64,7 @@ option(ZEN_CSHARP "Compile C# bindings for OpenZen" ON)
 option(ZEN_PYTHON "Compile Python bindings for OpenZen" OFF)
 option(ZEN_TESTS "Compile with OpenZen tests" ON)
 option(ZEN_EXAMPLES "Compile with OpenZen examples" ON)
-
+option(ZEN_USE_BINARY_LIBRARIES "If set to true, binaries libraries are downloaded during the build" ON)
 
 # Enable this line and set it to the correct Qt installation path if you want to compile
 # with bluetooth support on Windows
@@ -387,26 +387,12 @@ endif()
 
 if(WIN32)
 
-    set(io_can_sources ${io_can_sources}
-        src/io/can/PcanBasicChannel.cpp
-        src/io/can/PcanBasicChannel.h
-    )
     set(io_interfaces_sources ${io_interfaces_sources}
-        src/io/interfaces/SiUsbInterface.cpp
-        src/io/interfaces/SiUsbInterface.h
-        src/io/interfaces/FtdiUsbInterface.cpp
-        src/io/interfaces/FtdiUsbInterface.h
         src/io/interfaces/windows/WindowsDeviceInterface.cpp
         src/io/interfaces/windows/WindowsDeviceInterface.h
     )
 
     set(io_systems_sources ${io_systems_sources}
-        src/io/systems/PcanBasicSystem.cpp
-        src/io/systems/PcanBasicSystem.h
-        src/io/systems/SiUsbSystem.cpp
-        src/io/systems/SiUsbSystem.h
-        src/io/systems/FtdiUsbSystem.cpp
-        src/io/systems/FtdiUsbSystem.h
         src/io/systems/windows/EnumerateSerialPorts.cpp
         src/io/systems/windows/EnumerateSerialPorts.h
         src/io/systems/windows/WindowsDeviceSystem.cpp
@@ -419,6 +405,34 @@ if(WIN32)
         src/utility/windows/WindowsDll.cpp
         src/utility/windows/WindowsDll.h
     )
+
+    # add drivers which need binary libraries
+    if (ZEN_USE_BINARY_LIBRARIES)
+        set(io_can_sources ${io_can_sources}
+            src/io/can/PcanBasicChannel.cpp
+            src/io/can/PcanBasicChannel.h
+        )
+
+        list (APPEND io_interfaces_sources
+            src/io/interfaces/SiUsbInterface.cpp
+            src/io/interfaces/SiUsbInterface.h
+            src/io/interfaces/FtdiUsbInterface.cpp
+            src/io/interfaces/FtdiUsbInterface.h
+        )
+
+        list (APPEND io_systems_sources
+            src/io/systems/PcanBasicSystem.cpp
+            src/io/systems/PcanBasicSystem.h
+            src/io/systems/SiUsbSystem.cpp
+            src/io/systems/SiUsbSystem.h
+            src/io/systems/FtdiUsbSystem.cpp
+            src/io/systems/FtdiUsbSystem.h
+        )
+
+        list (APPEND zen_optional_compile_definitions_private
+            ZEN_USE_BINARY_LIBRARIES
+        )
+    endif()
 
 elseif(UNIX AND NOT APPLE)
 
@@ -536,10 +550,15 @@ set(zen_include_dirs_private
         $<TARGET_PROPERTY:openzen_asio,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:cereal,INTERFACE_INCLUDE_DIRECTORIES>
         $<TARGET_PROPERTY:nonstd::expected-lite,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
+if (ZEN_USE_BINARY_LIBRARIES)
+    set(zen_include_dirs_private ${zen_include_dirs_private}
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:pcanbasic,INTERFACE_INCLUDE_DIRECTORIES>>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:siusb,INTERFACE_INCLUDE_DIRECTORIES>>
         $<$<PLATFORM_ID:Windows>:$<TARGET_PROPERTY:ftdi,INTERFACE_INCLUDE_DIRECTORIES>>
-)
+    )
+endif()
 
 target_include_directories(OpenZen
     PUBLIC
@@ -643,7 +662,7 @@ install(TARGETS OpenZen EXPORT OpenZenTarget
     PUBLIC_HEADER DESTINATION include
 )
 
-if(WIN32)
+if(WIN32 AND ZEN_USE_BINARY_LIBRARIES)
     get_target_property(FTDI_DLL ftdi IMPORTED_LOCATION)
     get_target_property(SIUSB_DLL siusb IMPORTED_LOCATION)
     get_target_property(PCANBASIC_DLL pcanbasic IMPORTED_LOCATION)

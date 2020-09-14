@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in $(find . -name "*.h" -or -name "*.cpp")
+for i in $(find src/ -name "*.h" -or -name "*.cpp")
 do
   if ! grep -q Copyright $i
   then
