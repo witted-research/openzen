@@ -1,3 +1,14 @@
+###########################################################################
+#
+# OpenZen Python example
+#
+# Make sure the openzen.pyd (for Windows) or openzen.so (Linux/Mac)
+# are in the same folder as this file.
+# If you want to connect to USB sensors on Windows, the file SiUSBXp.dll
+# should also be in the same folder.
+#
+###########################################################################
+
 import sys
 import openzen
 
@@ -5,7 +16,7 @@ openzen.set_log_level(openzen.ZenLogLevel.Warning)
 
 error, client = openzen.make_client()
 if not error == openzen.ZenError.NoError:
-    print ("Error")
+    print ("Error while initializinng OpenZen library")
     sys.exit(1)
 
 error = client.list_sensors_async()
@@ -29,19 +40,18 @@ while True:
 print ("Sensor Listing complete")
 
 if sensor_desc_connect is None:
-    print("No sensor found")
+    print("No sensors found")
     sys.exit(1)
 
 # connect to the first sensor found
 error, sensor = client.obtain_sensor(sensor_desc_connect)
 
-# connect to a sensor by name
+# or connect to a sensor by name
 #error, sensor = client.obtain_sensor_by_name("LinuxDevice", "LPMSCU2000003")
 
 if not error == openzen.ZenSensorInitError.NoError:
-    print ("Error connecting")
+    print ("Error connecting to sensor")
     sys.exit(1)
-
 
 print ("Connected to sensor !")
 
@@ -58,6 +68,7 @@ if not error == openzen.ZenError.NoError:
 
 print ("Sensor is streaming data: {}".format(is_streaming))
 
+## load the alignment matrix from the sensor
 error, accAlignment = imu.get_array_property_float(openzen.ZenImuProperty.AccAlignment)
 if not error == openzen.ZenError.NoError:
     print ("Can't load alignment")
@@ -65,6 +76,7 @@ if not error == openzen.ZenError.NoError:
 
 if not len(accAlignment) == 9:
     print ("Loaded Alignment has incosistent size")
+    sys.exit(1)
 
 print ("Alignment loaded: {}".format(accAlignment))
 

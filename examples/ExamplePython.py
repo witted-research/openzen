@@ -2,63 +2,113 @@
 #
 # OpenZen Python example
 #
-# Make sure the _OpenZen.pyd (for Windows) or OpenZen.so (Linux/Mac)
-# and the OpenZen.py file are in the same folder as this file.
+# Make sure the openzen.pyd (for Windows) or openzen.so (Linux/Mac)
+# are in the same folder as this file.
 # If you want to connect to USB sensors on Windows, the file SiUSBXp.dll
-# should also be in the same folder
+# should also be in the same folder.
 #
 ###########################################################################
 
-from OpenZen import *
+import sys
+import openzen
 
-# name of the IO interfae the Sensor is connected to
-# see https://lpresearch.bitbucket.io/openzen/latest/io_systems.html for options
-sensor_io = "SiUsb"
-# name of the sensor
-sensor_name = "lpmscu2000573"
+openzen.set_log_level(openzen.ZenLogLevel.Warning)
 
-ZenSetLogLevel(ZenLogLevel_Info)
-client_handle = ZenClientHandle_t()
-res_init = ZenInit(client_handle)
-print("Initialized successful {}".format(res_init == ZenError_None))
+error, client = openzen.make_client()
+if not error == openzen.ZenError.NoError:
+    print ("Error while initializinng OpenZen library")
+    sys.exit(1)
 
-if not res_init == ZenError_None:
-    exit(1)
+error = client.list_sensors_async()
 
-print("Connecting to {}".format(sensor_name))
+# check for events
+sensor_desc_connect = None
+while True:
+    zenEvent = client.wait_for_next_event()
 
-sensor_handle = ZenSensorHandle_t()
-res_obtain = ZenObtainSensorByName(client_handle, sensor_io, sensor_name, 0, sensor_handle)
+    if zenEvent.event_type == openzen.ZenEventType.SensorFound:
+        print ("Found sensor {} on IoType {}".format( zenEvent.data.sensor_found.name,
+            zenEvent.data.sensor_found.io_type))
+        if sensor_desc_connect is None:
+            sensor_desc_connect = zenEvent.data.sensor_found
 
-print("Obtaining sensor successful {}".format(res_obtain == ZenSensorInitError_None))
+    if zenEvent.event_type == openzen.ZenEventType.SensorListingProgress:
+        lst_data = zenEvent.data.sensor_listing_progress
+        print ("Sensor listing progress: {} %".format(lst_data.progress * 100))
+        if lst_data.complete > 0:
+            break
+print ("Sensor Listing complete")
 
-if not res_obtain == ZenSensorInitError_None:
-    exit(1)
+if sensor_desc_connect is None:
+    print("No sensors found")
+    sys.exit(1)
 
-# get the first IMU component of the sensor
-imu_component_handle = ZenComponentHandle_t()
-ZenSensorComponentsByNumber(client_handle, sensor_handle, g_zenSensorType_Imu, 0, imu_component_handle)
+# connect to the first sensor found
+error, sensor = client.obtain_sensor(sensor_desc_connect)
 
-if imu_component_handle.handle == 0:
-    print("Connected sensor does not have an IMU component")
-    exit(1)
+# or connect to a sensor by name
+#error, sensor = client.obtain_sensor_by_name("LinuxDevice", "LPMSCU2000003")
 
-# set a sensor property
-# enable output of Orientation of the Sensor in Quaternion
-ZenSensorComponentSetBoolProperty(client_handle, sensor_handle, imu_component_handle,
-    ZenImuProperty_OutputQuat, True)
+if not error == openzen.ZenSensorInitError.NoError:
+    print ("Error connecting to sensor")
+    sys.exit(1)
 
-## get some events
-for poll_i in range(200):
-    zen_event = ZenEvent()
-    ZenWaitForNextEvent(client_handle, zen_event)
-    if zen_event.component.handle == imu_component_handle.handle:
-        # output the sensor orientation
-        q_python = OpenZenFloatArray_frompointer(zen_event.data.imuData.q)
-        print ("IMU Orientation - w: {} x: {} y: {} z: {}"
-            .format(q_python[0], q_python[1], q_python[2], q_python[3]))
+print ("Connected to sensor !")
 
-ZenReleaseSensor(client_handle, sensor_handle)
-ZenShutdown(client_handle)
+imu = sensor.get_any_component_of_type(openzen.component_type_imu)
+if imu is None:
+    print ("No IMU found")
+    sys.exit(1)
 
-print ("Sensor connection closed")
+## read bool property
+error, is_streaming = imu.get_bool_property(openzen.ZenImuProperty.StreamData)
+if not error == openzen.ZenError.NoError:
+    print ("Can't load streaming settings")
+    sys.exit(1)
+
+print ("Sensor is streaming data: {}".format(is_streaming))
+
+## load the alignment matrix from the sensor
+error, accAlignment = imu.get_array_property_float(openzen.ZenImuProperty.AccAlignment)
+if not error == openzen.ZenError.NoError:
+    print ("Can't load alignment")
+    sys.exit(1)
+
+if not len(accAlignment) == 9:
+    print ("Loaded Alignment has incosistent size")
+    sys.exit(1)
+
+print ("Alignment loaded: {}".format(accAlignment))
+
+# store float array
+#error = imu.set_array_property_float(openzen.ZenImuProperty.AccAlignment, accAlignment)
+
+#if not error == openzen.ZenError.NoError:
+#    print ("Can't store alignment")
+#    sys.exit(1)
+
+#print("Stored alignment {} to sensor".format(accAlignment))
+
+# start streaming data
+runSome = 0
+while True:
+    zenEvent = client.wait_for_next_event()
+
+    # check if its an IMU sample event and if it
+    # comes from our IMU and sensor component
+    if zenEvent.event_type == openzen.ZenEventType.ImuSample and \
+        zenEvent.sensor == imu.sensor and \
+        zenEvent.component.handle == imu.component.handle:
+
+        imu_data = zenEvent.data.imu_data
+        print ("A: {} m/s^2".format(imu_data.a))
+        print ("G: {} degree/s".format(imu_data.g))
+
+    runSome = runSome + 1
+    if runSome > 50:
+        break
+
+print ("Streaming of sensor data complete")
+sensor.release()
+client.close()
+print("OpenZen library was closed")
