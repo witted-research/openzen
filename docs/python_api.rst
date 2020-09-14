@@ -18,16 +18,14 @@ import the OpenZen module in your project, you can copy all the files
 in ``bindings\OpenZenPython`` into the folder of your Python script.
 
 The other option is to set the ``PYTHONPATH`` environment variable to the ``bindings\OpenZenPython``
-folder so your python installation can find the OpenZen files when you call ``from OpenZen import *``.
+folder so your python installation can find the OpenZen files when you call ``import openzen``.
 
 The last option is the set the PYTHONPATH dynamically when starting your script and before you
-call ``from OpenZen import *``. This is what is done in the ``ExamplePython.py`` script provided
-with the OpenZen release:
-
+call ``import openzen``.
 .. code-block:: python
 
     sys.path.append("C:/OpenZenRelease/bindings/OpenZenPython")
-    from OpenZen import *
+    import openzen
 
 Building OpenZen with Python support
 ====================================
@@ -39,13 +37,12 @@ the Python support with this CMake option:
 
 .. code-block:: bash
 
-    cmake -DZEN_PYTHON=On ..
+    cmake -DZEN_PYTHON=ON ..
 
 This will search for a valid Python3 installation on your system and build the
 OpenZen binaries to support this Python version.
 
-The output folder will now contain the file ``OpenZen.py`` and the files 
-``_OpenZen.so`` (on Linux/Mac) and ``_OpenZen.pyd`` (on Windows).
+The output folder will now contain the file ``openzen.so`` (on Linux/Mac) and ``openzen.pyd`` (on Windows).
 
 Place these files into the same folder you run your Python script from and the
 OpenZen module can be imported.
@@ -57,10 +54,14 @@ To create a new instance of OpenZen, you can use this code snippet:
 
 .. code-block:: python
 
-    from OpenZen import *
+    import openzen
 
-    client_handle = ZenClientHandle_t()
-    res_init = ZenInit(client_handle)
+    openzen.set_log_level(openzen.ZenLogLevel.Warning)
+
+    error, client = openzen.make_client()
+    if not error == openzen.ZenError.NoError:
+        print ("Error while initializinng OpenZen library")
+        sys.exit(1)
 
 Receive Sensor Data in Python
 =============================
@@ -70,13 +71,17 @@ by the interface using the following method:
 
 .. code-block:: python
 
-    zen_event = ZenEvent()
-    ZenWaitForNextEvent(client_handle, zen_event)
-    if zen_event.component.handle == imu_component_handle.handle:
-        # output the sensor orientation
-        q_python = OpenZenFloatArray_frompointer(zen_event.data.imuData.q)
-        print ("IMU Orientation - w: {} x: {} y: {} z: {}"
-            .format(q_python[0], q_python[1], q_python[2], q_python[3]))
+    zenEvent = client.wait_for_next_event()
+
+    # check if its an IMU sample event and if it
+    # comes from our IMU and sensor component
+    if zenEvent.event_type == openzen.ZenEventType.ImuData and \
+        zenEvent.sensor == imu.sensor and \
+        zenEvent.component.handle == imu.component.handle:
+
+        imu_data = zenEvent.data.imu_data
+        print ("A: {} m/s^2".format(imu_data.a))
+        print ("G: {} degree/s".format(imu_data.g))
 
 Troubleshooting
 ===============
@@ -88,7 +93,7 @@ If you get the following error when importing OpenZen:
 
 .. code-block:: bash
 
-    ImportError: DLL load failed while importing _OpenZen: %1 is not a valid Win32 application.
+    ImportError: DLL load failed while importing openzen: %1 is not a valid Win32 application.
 
 the reason is most probably that you tried to load OpenZen with a 32-bit Python version. The binary
 Release of OpenZen only supports 64-bit versions of Python. Please make sure you have the 64-bit version
@@ -102,7 +107,7 @@ If you get an error message of this form:
 
 .. code-block:: bash
 
-    ModuleNotFoundError: No module named 'OpenZen'
+    ModuleNotFoundError: No module named 'openzen'
 
 the PYTHONPATH for Python to find the OpenZen files is not properly set up. Please follow the instructions above
 to setup the PYTHONPATH.
@@ -134,7 +139,7 @@ If you get an error message of this form:
 
 .. code-block:: bash
 
-    ImportError: dynamic module does not define init function (init_OpenZen)
+    ImportError: dynamic module does not define init function (initopenzen)
 
 then OpenZen was compiled with Python 3 and you are trying to use with with Python 2. Make sure you
 call the OpenZen script with Python3:

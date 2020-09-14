@@ -96,7 +96,7 @@ while True:
 
     # check if its an IMU sample event and if it
     # comes from our IMU and sensor component
-    if zenEvent.event_type == openzen.ZenEventType.ImuSample and \
+    if zenEvent.event_type == openzen.ZenEventType.ImuData and \
         zenEvent.sensor == imu.sensor and \
         zenEvent.component.handle == imu.component.handle:
 
