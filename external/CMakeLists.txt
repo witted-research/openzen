@@ -6,7 +6,6 @@ if (ZEN_USE_STATIC_LIBS)
     # install spdlog in case of static build
     # because CMake will otherwise complain about
     # missing export target
-    message(FATEL set)
     set(SPDLOG_INSTALL ON CACHE BOOL "" FORCE)
     set(PYBIND11_INSTALL ON CACHE BOOL "" FORCE)
 endif()
@@ -77,6 +76,7 @@ if (ZEN_NETWORK)
     # zero mq
     add_library(cppzmq INTERFACE)
     target_include_directories(cppzmq INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/cppzmq
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/cppzmq>
+        $<INSTALL_INTERFACE:include/cppzmq>
         )
 endif()
