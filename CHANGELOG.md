@@ -4,13 +4,15 @@ Changes and additions to OpenZen will be documented in this file.
 
 ## Version 1.2 - Ongoing
 
+- This release breaks the ABI compatibitly with previous OpenZen releases. So if you want to use this version of
+  OpenZen you have to recompile old projects with the C/C++ headers of this version.
 - ZenEventType replaces the ZenSensorEvent, ZenImuEvent and ZenGnssEvent enums. Now the field ZenEvent::eventType
   directly uses the ZenEventType and a comparison can be perfromed to check which type of event is provided:
-
+```
   if (event.eventType == ZenEventType_ImuData) {
     // access event.data.imuData.g for gyro data
   }
-
+```
 - ZenHeaveMotionData struct in ZenImuData has been replaced by the member heaveMotion.
 
 ## Version 1.1.3 - 2020/09/03
