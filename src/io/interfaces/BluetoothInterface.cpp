@@ -24,6 +24,9 @@ namespace zen
     BluetoothInterface::~BluetoothInterface()
     {
         m_terminate = true;
+        // connection needs to be closed to abort pending reads
+        // are terminated so we can join the reader thread
+        m_handler->close();
         m_ioReader.join();
         m_handler.reset();
     }

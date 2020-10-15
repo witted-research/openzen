@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 #include <string_view>
+#include <atomic>
 
 namespace zen
 {
@@ -43,11 +44,22 @@ namespace zen
 
         bool equals(std::string_view address) const noexcept;
 
+        // This call will close the bluetooth connection if its open
+        // This is needed so a possible call to read the bluetooth
+        // buffer is aborted. If no data is transmitted any more (for example BT connection lost)
+        // the read call would outherwise block indefinatly.
+        void close() noexcept;
+
     private:
         std::string m_address;
         std::unique_ptr<BTSerialPortBinding> m_device;
 
         std::vector<std::byte> m_buffer;
+
+        // will be set to true after the connection has been closed
+        // so we know if an exception from the BT system is because
+        // the read was aborted from closing
+        std::atomic<bool> m_connectionClosed = false;
     };
 }
 

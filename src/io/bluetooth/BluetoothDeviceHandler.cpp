@@ -21,7 +21,14 @@ namespace zen
     {}
 
     BluetoothDeviceHandler::~BluetoothDeviceHandler() {
+        if (!m_connectionClosed) {
+            close();
+        }
+    }
+
+    void BluetoothDeviceHandler::close() noexcept {
         if (m_device) {
+            m_connectionClosed = true;
             m_device->Close();
         }
     }
@@ -31,6 +38,7 @@ namespace zen
         try {
             m_device = std::unique_ptr<BTSerialPortBinding>(BTSerialPortBinding::Create(std::string(m_address), 1));
             m_device->Connect();
+            m_connectionClosed = false;
             return ZenSensorInitError_None;
         }
         catch(BluetoothException & be) {
@@ -42,14 +50,22 @@ namespace zen
     nonstd::expected<std::vector<std::byte>, ZenError> BluetoothDeviceHandler::read() noexcept
     {
         try {
+            // note: this call will block indefinately if no data arrives
             auto nBytes = m_device->Read(reinterpret_cast<char *>(m_buffer.data()), static_cast<int>(m_buffer.size()));
             SPDLOG_DEBUG("Read {0} bytes trom bluetooth interface", nBytes);
             if (nBytes == 0)
                 return nonstd::make_unexpected(ZenError_Io_ReadFailed);
             m_buffer.resize(nBytes);
         } catch(BluetoothException & be) {
-            spdlog::warn("Exception while reading from bluetooth device: {0}", be.what());
-            return nonstd::make_unexpected(ZenError_Io_ReadFailed);
+            if (m_connectionClosed) {
+                // the read returend an exception because the connection has been closed
+                // and the pselect in the m_device->Read was terminated.
+                m_buffer.resize(0);
+                return m_buffer;
+            } else {
+                spdlog::warn("Exception while reading from bluetooth device: {0}", be.what());
+                return nonstd::make_unexpected(ZenError_Io_ReadFailed);
+            }
         }
         // copy return buffer
         return m_buffer;
