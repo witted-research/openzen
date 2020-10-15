@@ -41,11 +41,16 @@ namespace zen
 
     nonstd::expected<std::vector<std::byte>, ZenError> BluetoothDeviceHandler::read() noexcept
     {
-        auto nBytes = m_device->Read(reinterpret_cast<char *>(m_buffer.data()), static_cast<int>(m_buffer.size()));
-        SPDLOG_DEBUG("Read {0} bytes trom bluetooth interface", nBytes);
-        if (nBytes == 0)
+        try {
+            auto nBytes = m_device->Read(reinterpret_cast<char *>(m_buffer.data()), static_cast<int>(m_buffer.size()));
+            SPDLOG_DEBUG("Read {0} bytes trom bluetooth interface", nBytes);
+            if (nBytes == 0)
+                return nonstd::make_unexpected(ZenError_Io_ReadFailed);
+            m_buffer.resize(nBytes);
+        } catch(BluetoothException & be) {
+            spdlog::warn("Exception while reading from bluetooth device: {0}", be.what());
             return nonstd::make_unexpected(ZenError_Io_ReadFailed);
-        m_buffer.resize(nBytes);
+        }
         // copy return buffer
         return m_buffer;
     }
