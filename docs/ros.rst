@@ -17,8 +17,8 @@ To compile this driver in your ROS setup, follow these steps:
 
 .. code-block:: bash
 
-    mkdir -p catskin_ws/src
-    cd catskin_ws/src
+    mkdir -p catkin_ws/src
+    cd catkin_ws/src
 
     git clone --recurse-submodules https://bitbucket.org/lpresearch/openzenros.git
 
