@@ -5,7 +5,6 @@ Python API
 Overview
 ========
 The OpenZen language bindings allow you to access sensor data from Python.
-The function names are the same which are used by the OpenZen C API.
 
 You can find a complete OpenZen Python example in this `file <https://bitbucket.org/lpresearch/openzen/src/master/examples/ExamplePython.py>`_.
 
@@ -13,18 +12,17 @@ Using Python with OpenZen Releases
 ==================================
 
 The binary releases of OpenZen for Windows and Linux include support for **Python 3.8 64-bit** .
-You can find all files needed in the folder ``bindings\OpenZenPython``. In order to
-import the OpenZen module in your project, you can copy all the files
-in ``bindings\OpenZenPython`` into the folder of your Python script.
+On Linux, the library file ``openzen.so`` can be directly imported by Python. On Windows this file
+is named ``openzen.pyd``. You can copy this library to the location where you execute your python scripts.
 
-The other option is to set the ``PYTHONPATH`` environment variable to the ``bindings\OpenZenPython``
-folder so your python installation can find the OpenZen files when you call ``import openzen``.
+The other option is to set the ``PYTHONPATH`` environment variable to the folder where ``openzen.so``
+is located so the OpenZen files can be found when you call ``import openzen``.
 
-The last option is the set the PYTHONPATH dynamically when starting your script and before you
+The last option is to set the PYTHONPATH dynamically when starting your script and before you
 call ``import openzen``.
 .. code-block:: python
 
-    sys.path.append("C:/OpenZenRelease/bindings/OpenZenPython")
+    sys.path.append("C:/OpenZenRelease/")
     import openzen
 
 Building OpenZen with Python support
