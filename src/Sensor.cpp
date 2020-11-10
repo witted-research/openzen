@@ -345,7 +345,7 @@ namespace zen
 
                 // this entry is used to forward the OutputDataBitset for IMU and GPS while
                 // the component is not created yet.
-                case EDevicePropertyInternal::Config:
+                case EDevicePropertyInternal::ConfigImuOutputDataBitset:
                     if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
                     return m_communicator->publishResult(function, ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
@@ -410,10 +410,16 @@ namespace zen
 
                 // this entry is used to forward the OutputDataBitset for IMU and GPS while
                 // the component is not created yet.
-                case EDevicePropertyInternal::Config:
+                case EDevicePropertyInternal::ConfigImuOutputDataBitset:
                     if (data.size() != sizeof(uint32_t))
                         return ZenError_Io_MsgCorrupt;
-                    return m_communicator->publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::Config),
+                    return m_communicator->publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigImuOutputDataBitset),
+                        ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
+
+                case EDevicePropertyInternal::ConfigGetDegGradOutput:
+                    if (data.size() != sizeof(uint32_t))
+                        return ZenError_Io_MsgCorrupt;
+                    return m_communicator->publishResult(static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGetDegGradOutput),
                         ZenError_None, *reinterpret_cast<const uint32_t*>(data.data()));
 
                 case EDevicePropertyInternal::ConfigGpsOutputDataBitset:

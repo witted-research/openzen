@@ -24,10 +24,11 @@ enum class EDevicePropertyInternal : DeviceProperty_t
     UpdateIAP = 3,
     // this id is used for the OutputDataBitset when loading the initial
     // sensor configuration
-    Config = 4,
+    ConfigImuOutputDataBitset = 4,
     // this id is used for the GPS OutputDataBitset
     ConfigGpsOutputDataBitset = 5,
-
+    // loading configuration of the output units for Ig1
+    ConfigGetDegGradOutput = 6,
     Max
 };
 

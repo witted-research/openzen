@@ -74,6 +74,9 @@ namespace zen
         /** Manually initializes the output-data bitset */
         void setOutputDataBitset(uint32_t bitset) noexcept { m_cache.outputDataBitset = bitset; }
 
+        /** Manually initializes the output unit **/
+        void setDegGradOutput(uint32_t degGradOutput) noexcept { m_cache.degGradOutput = degGradOutput; }
+
     private:
 
         /** get a propery which is Int32 on the sensor but treated as bool by OpenZen */
@@ -84,7 +87,8 @@ namespace zen
 
         struct IMUState
         {
-            std::atomic_uint32_t outputDataBitset;
+            std::atomic_bool degGradOutput = false;
+            std::atomic_uint32_t outputDataBitset = 0;
         } m_cache;
 
         SyncedModbusCommunicator& m_communicator;

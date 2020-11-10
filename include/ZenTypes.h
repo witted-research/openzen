@@ -550,6 +550,9 @@ typedef enum EZenImuProperty
     ZenImuProperty_OutputGyr1AlignCalib,         // bool
     ZenImuProperty_OutputMagCalib,               // bool
 
+    /* switch between degrees or radian output (only for IG1 and newer) */
+    ZenImuProperty_DegRadOutput,                 // bool
+
     /* CAN bus properties */
     ZenImuProperty_CanChannelMode,
     ZenImuProperty_CanPointMode,

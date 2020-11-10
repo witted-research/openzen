@@ -72,6 +72,9 @@ namespace zen
             case ZenImuProperty_MagRange:
                 return get_set(EDevicePropertyV1::GetMagRange, EDevicePropertyV1::SetMagRange);
 
+            case ZenImuProperty_DegRadOutput:
+                return get_set(EDevicePropertyV1::GetDegGradOutput, EDevicePropertyV1::SetDegGradOutput);
+
             /* CAN bus properties */
             case ZenImuProperty_CanStartId:
                 return get_set(EDevicePropertyV1::GetCanStartId, EDevicePropertyV1::SetCanStartId);

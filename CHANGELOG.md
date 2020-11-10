@@ -14,6 +14,9 @@ Changes and additions to OpenZen will be documented in this file.
   }
 ```
 - ZenHeaveMotionData struct in ZenImuData has been replaced by the member heaveMotion.
+- Gyroscope sensor data in ZenImuData.g and ZenImuData.gRaw will now be always in radian/s and
+  the euler angles in ZenImuData.r will always be in radian. Even if the hardware sensor (feature in IG1 firmware)
+  is set to output in degrees, OpenZen will ensure the values are converted to rad/s and rad.
 
 ## Version 1.1.3 - 2020/09/03
 

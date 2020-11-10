@@ -28,9 +28,11 @@ namespace zen
                 if (function <= static_cast<uint16_t>(EDevicePropertyInternal::Nack))
                     return static_cast<EDevicePropertyInternal>(function);
                 else if (function == static_cast<uint16_t>(EDevicePropertyV1::GetImuTransmitData))
-                    return EDevicePropertyInternal::Config;
+                    return EDevicePropertyInternal::ConfigImuOutputDataBitset;
                 else if (function == static_cast<uint16_t>( EDevicePropertyV1::GetGpsTransmitData))
                     return EDevicePropertyInternal::ConfigGpsOutputDataBitset;
+                else if (function == static_cast<uint16_t>( EDevicePropertyV1::GetDegGradOutput))
+                    return EDevicePropertyInternal::ConfigGetDegGradOutput;
 
                 return {};
             }

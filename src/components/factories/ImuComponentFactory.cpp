@@ -55,8 +55,8 @@ namespace zen
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
             }
 
-            if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyInternal::Config),
-                static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
+            if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyInternal::ConfigImuOutputDataBitset),
+                static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigImuOutputDataBitset), {}))
             {
                 SPDLOG_DEBUG("Loaded config bitset of legacy sensor: {}", bitset.value());
                 properties->setConfigBitset(*bitset);
@@ -77,19 +77,33 @@ namespace zen
             }
 
             if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyV1::GetImuTransmitData),
-                static_cast<ZenProperty_t>(EDevicePropertyInternal::Config), {}))
+                static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigImuOutputDataBitset), {}))
             {
                 SPDLOG_DEBUG("Loaded output bitset of Ig1 sensor: {}", bitset.value());
                 properties->setOutputDataBitset(*bitset);
-
-                bool useSecondGyroAsPrimary = specialOptions & SpecialOptions_SecondGyroIsPrimary;
-
-                return std::make_unique<ImuIg1Component>(std::move(properties), communicator, version, useSecondGyroAsPrimary);
             }
             else
             {
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
             }
+
+            if (auto degreeOutputConfigured =
+                communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyV1::GetDegGradOutput),
+                static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGetDegGradOutput), {}))
+            {
+                SPDLOG_DEBUG("Ig1 sensor outputs degrees: {}", degreeOutputConfigured.value());
+                properties->setDegGradOutput(degreeOutputConfigured.value() > 0);
+                spdlog::info(" degreeOutputConfigured.value() > 0  {0}",(degreeOutputConfigured.value() > 0));
+            }
+            else
+            {
+                return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
+            }
+
+            bool useSecondGyroAsPrimary = specialOptions & SpecialOptions_SecondGyroIsPrimary;
+
+            return std::make_unique<ImuIg1Component>(std::move(properties), communicator, version, useSecondGyroAsPrimary);
+
         }
 
         if (auto properties = make_properties(version, id, communicator))

@@ -33,6 +33,13 @@ namespace zen
                 m[i * 3 + j] = i == j ? 1.f : 0.f;
     }
 
+    inline void degToRad3(float * v) {
+        const auto d2r = 3.14159265359f / 180.0f;
+        v[0] *= d2r;
+        v[2] *= d2r;
+        v[2] *= d2r;
+    }
+
     /**
     Set all data fields of the imu data class to zero or sensible values
     */

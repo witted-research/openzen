@@ -107,7 +107,9 @@ namespace zen
         }
 
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputRawGyr0,
-            m_properties, data, &imuData.gRaw[0])) {}
+            m_properties, data, &imuData.gRaw[0])) {
+                degToRad3(&imuData.gRaw[0]);
+            }
         else {
             return nonstd::make_unexpected(enabled.error());
         }
@@ -118,7 +120,9 @@ namespace zen
             secondGyroTargetRaw = &imuData.gRaw[0];
         }
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputRawGyr1,
-            m_properties, data, secondGyroTargetRaw)) {}
+            m_properties, data, secondGyroTargetRaw)) {
+                degToRad3(secondGyroTargetRaw);
+            }
         else {
             return nonstd::make_unexpected(enabled.error());
         }
@@ -137,18 +141,23 @@ namespace zen
 
         // alignment calibration also contains the static calibration correction
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputGyr0AlignCalib,
-            m_properties, data, &imuData.g[0])) {}
+            m_properties, data, &imuData.g[0])) {
+                degToRad3(&imuData.g[0]);
+            }
         else {
             return nonstd::make_unexpected(enabled.error());
         }
-
+todo: convert only if needed
+adapt python bindings
         // LPMS-BE1 writes its only gyro values in the gyr1 field
         float * secondGyroTarget = &unusedValue[0];
         if (m_secondGyroIsPrimary) {
             secondGyroTarget = &imuData.g[0];
         }
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputGyr1AlignCalib,
-            m_properties, data, secondGyroTarget)) {}
+            m_properties, data, secondGyroTarget)) {
+                degToRad3(secondGyroTarget);
+            }
         else {
             return nonstd::make_unexpected(enabled.error());
         }
