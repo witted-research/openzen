@@ -20,6 +20,7 @@ is located so the OpenZen files can be found when you call ``import openzen``.
 
 The last option is to set the PYTHONPATH dynamically when starting your script and before you
 call ``import openzen``.
+
 .. code-block:: python
 
     sys.path.append("C:/OpenZenRelease/")
