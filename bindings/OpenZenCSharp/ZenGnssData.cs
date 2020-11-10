@@ -43,6 +43,16 @@ public class ZenGnssData : global::System.IDisposable {
     }
   }
 
+  public int frameCount {
+    set {
+      OpenZenPINVOKE.ZenGnssData_frameCount_set(swigCPtr, value);
+    } 
+    get {
+      int ret = OpenZenPINVOKE.ZenGnssData_frameCount_get(swigCPtr);
+      return ret;
+    } 
+  }
+
   public double timestamp {
     set {
       OpenZenPINVOKE.ZenGnssData_timestamp_set(swigCPtr, value);

@@ -61,6 +61,7 @@ public enum EZenImuProperty {
   ZenImuProperty_OutputGyr0AlignCalib,
   ZenImuProperty_OutputGyr1AlignCalib,
   ZenImuProperty_OutputMagCalib,
+  ZenImuProperty_DegRadOutput,
   ZenImuProperty_CanChannelMode,
   ZenImuProperty_CanPointMode,
   ZenImuProperty_CanStartId,

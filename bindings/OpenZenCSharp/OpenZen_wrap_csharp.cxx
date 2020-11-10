@@ -383,6 +383,15 @@ SWIGEXPORT void * SWIGSTDCALL CSharp_new_ZenComponentHandle_t() { void * jresult
   result = (ZenComponentHandle *)new ZenComponentHandle(); jresult = (void *)result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_delete_ZenComponentHandle_t(void * jarg1) {
   ZenComponentHandle *arg1 = (ZenComponentHandle *) 0 ; arg1 = (ZenComponentHandle *)jarg1;  delete arg1; }
+SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_frameCount_set(void * jarg1, int jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
+  int arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (int)jarg2;  if (arg1) (arg1)->frameCount = arg2; }
+SWIGEXPORT int SWIGSTDCALL CSharp_ZenImuData_frameCount_get(void * jarg1) { int jresult ; ZenImuData *arg1 = (ZenImuData *) 0 ;
+  int result; arg1 = (ZenImuData *)jarg1;  result = (int) ((arg1)->frameCount); jresult = result;  return jresult; }
+SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_timestamp_set(void * jarg1, double jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
+  double arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (double)jarg2;  if (arg1) (arg1)->timestamp = arg2; }
+SWIGEXPORT double SWIGSTDCALL CSharp_ZenImuData_timestamp_get(void * jarg1) { double jresult ;
+  ZenImuData *arg1 = (ZenImuData *) 0 ; double result; arg1 = (ZenImuData *)jarg1;  result = (double) ((arg1)->timestamp);
+  jresult = result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_a_set(void * jarg1, void * jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
   float *arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (float *)jarg2;  { size_t ii; float *b = (float *) arg1->a;
     for (ii = 0; ii < (size_t)3; ii++) b[ii] = *((float *) arg2 + ii); }  }
@@ -448,10 +457,6 @@ SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_pressure_set(void * jarg1, float j
 SWIGEXPORT float SWIGSTDCALL CSharp_ZenImuData_pressure_get(void * jarg1) { float jresult ;
   ZenImuData *arg1 = (ZenImuData *) 0 ; float result; arg1 = (ZenImuData *)jarg1;  result = (float) ((arg1)->pressure);
   jresult = result;  return jresult; }
-SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_frameCount_set(void * jarg1, int jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
-  int arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (int)jarg2;  if (arg1) (arg1)->frameCount = arg2; }
-SWIGEXPORT int SWIGSTDCALL CSharp_ZenImuData_frameCount_get(void * jarg1) { int jresult ; ZenImuData *arg1 = (ZenImuData *) 0 ;
-  int result; arg1 = (ZenImuData *)jarg1;  result = (int) ((arg1)->frameCount); jresult = result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_linAcc_set(void * jarg1, void * jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
   float *arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (float *)jarg2;  { size_t ii; float *b = (float *) arg1->linAcc;
     for (ii = 0; ii < (size_t)3; ii++) b[ii] = *((float *) arg2 + ii); }  }
@@ -472,11 +477,6 @@ SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_temperature_set(void * jarg1, floa
 SWIGEXPORT float SWIGSTDCALL CSharp_ZenImuData_temperature_get(void * jarg1) { float jresult ;
   ZenImuData *arg1 = (ZenImuData *) 0 ; float result; arg1 = (ZenImuData *)jarg1;  result = (float) ((arg1)->temperature);
   jresult = result;  return jresult; }
-SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_timestamp_set(void * jarg1, double jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
-  double arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (double)jarg2;  if (arg1) (arg1)->timestamp = arg2; }
-SWIGEXPORT double SWIGSTDCALL CSharp_ZenImuData_timestamp_get(void * jarg1) { double jresult ;
-  ZenImuData *arg1 = (ZenImuData *) 0 ; double result; arg1 = (ZenImuData *)jarg1;  result = (double) ((arg1)->timestamp);
-  jresult = result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_ZenImuData_heaveMotion_set(void * jarg1, float jarg2) { ZenImuData *arg1 = (ZenImuData *) 0 ;
   float arg2 ; arg1 = (ZenImuData *)jarg1;  arg2 = (float)jarg2;  if (arg1) (arg1)->heaveMotion = arg2; }
 SWIGEXPORT float SWIGSTDCALL CSharp_ZenImuData_heaveMotion_get(void * jarg1) { float jresult ;
@@ -486,6 +486,11 @@ SWIGEXPORT void * SWIGSTDCALL CSharp_new_ZenImuData() { void * jresult ; ZenImuD
   result = (ZenImuData *)new ZenImuData(); jresult = (void *)result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_delete_ZenImuData(void * jarg1) { ZenImuData *arg1 = (ZenImuData *) 0 ;
   arg1 = (ZenImuData *)jarg1;  delete arg1; }
+SWIGEXPORT void SWIGSTDCALL CSharp_ZenGnssData_frameCount_set(void * jarg1, int jarg2) { ZenGnssData *arg1 = (ZenGnssData *) 0 ;
+  int arg2 ; arg1 = (ZenGnssData *)jarg1;  arg2 = (int)jarg2;  if (arg1) (arg1)->frameCount = arg2; }
+SWIGEXPORT int SWIGSTDCALL CSharp_ZenGnssData_frameCount_get(void * jarg1) { int jresult ;
+  ZenGnssData *arg1 = (ZenGnssData *) 0 ; int result; arg1 = (ZenGnssData *)jarg1;  result = (int) ((arg1)->frameCount);
+  jresult = result;  return jresult; }
 SWIGEXPORT void SWIGSTDCALL CSharp_ZenGnssData_timestamp_set(void * jarg1, double jarg2) {
   ZenGnssData *arg1 = (ZenGnssData *) 0 ; double arg2 ; arg1 = (ZenGnssData *)jarg1;  arg2 = (double)jarg2; 
   if (arg1) (arg1)->timestamp = arg2; }

@@ -246,6 +246,18 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_delete_ZenComponentHandle_t")]
   public static extern void delete_ZenComponentHandle_t(global::System.Runtime.InteropServices.HandleRef jarg1);
 
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_frameCount_set")]
+  public static extern void ZenImuData_frameCount_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_frameCount_get")]
+  public static extern int ZenImuData_frameCount_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_timestamp_set")]
+  public static extern void ZenImuData_timestamp_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_timestamp_get")]
+  public static extern double ZenImuData_timestamp_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_a_set")]
   public static extern void ZenImuData_a_set(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
 
@@ -318,12 +330,6 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_pressure_get")]
   public static extern float ZenImuData_pressure_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
-  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_frameCount_set")]
-  public static extern void ZenImuData_frameCount_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
-
-  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_frameCount_get")]
-  public static extern int ZenImuData_frameCount_get(global::System.Runtime.InteropServices.HandleRef jarg1);
-
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_linAcc_set")]
   public static extern void ZenImuData_linAcc_set(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
 
@@ -348,12 +354,6 @@ class OpenZenPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_temperature_get")]
   public static extern float ZenImuData_temperature_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
-  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_timestamp_set")]
-  public static extern void ZenImuData_timestamp_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);
-
-  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_timestamp_get")]
-  public static extern double ZenImuData_timestamp_get(global::System.Runtime.InteropServices.HandleRef jarg1);
-
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenImuData_heaveMotion_set")]
   public static extern void ZenImuData_heaveMotion_set(global::System.Runtime.InteropServices.HandleRef jarg1, float jarg2);
 
@@ -365,6 +365,12 @@ class OpenZenPINVOKE {
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_delete_ZenImuData")]
   public static extern void delete_ZenImuData(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_frameCount_set")]
+  public static extern void ZenGnssData_frameCount_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_frameCount_get")]
+  public static extern int ZenGnssData_frameCount_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("OpenZen", EntryPoint="CSharp_ZenGnssData_timestamp_set")]
   public static extern void ZenGnssData_timestamp_set(global::System.Runtime.InteropServices.HandleRef jarg1, double jarg2);

@@ -43,6 +43,26 @@ public class ZenImuData : global::System.IDisposable {
     }
   }
 
+  public int frameCount {
+    set {
+      OpenZenPINVOKE.ZenImuData_frameCount_set(swigCPtr, value);
+    } 
+    get {
+      int ret = OpenZenPINVOKE.ZenImuData_frameCount_get(swigCPtr);
+      return ret;
+    } 
+  }
+
+  public double timestamp {
+    set {
+      OpenZenPINVOKE.ZenImuData_timestamp_set(swigCPtr, value);
+    } 
+    get {
+      double ret = OpenZenPINVOKE.ZenImuData_timestamp_get(swigCPtr);
+      return ret;
+    } 
+  }
+
   public SWIGTYPE_p_float a {
     set {
       OpenZenPINVOKE.ZenImuData_a_set(swigCPtr, SWIGTYPE_p_float.getCPtr(value));
@@ -174,16 +194,6 @@ public class ZenImuData : global::System.IDisposable {
     } 
   }
 
-  public int frameCount {
-    set {
-      OpenZenPINVOKE.ZenImuData_frameCount_set(swigCPtr, value);
-    } 
-    get {
-      int ret = OpenZenPINVOKE.ZenImuData_frameCount_get(swigCPtr);
-      return ret;
-    } 
-  }
-
   public SWIGTYPE_p_float linAcc {
     set {
       OpenZenPINVOKE.ZenImuData_linAcc_set(swigCPtr, SWIGTYPE_p_float.getCPtr(value));
@@ -221,16 +231,6 @@ public class ZenImuData : global::System.IDisposable {
     } 
     get {
       float ret = OpenZenPINVOKE.ZenImuData_temperature_get(swigCPtr);
-      return ret;
-    } 
-  }
-
-  public double timestamp {
-    set {
-      OpenZenPINVOKE.ZenImuData_timestamp_set(swigCPtr, value);
-    } 
-    get {
-      double ret = OpenZenPINVOKE.ZenImuData_timestamp_get(swigCPtr);
       return ret;
     } 
   }
