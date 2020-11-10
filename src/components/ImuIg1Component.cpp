@@ -165,6 +165,8 @@ namespace zen
             return nonstd::make_unexpected(enabled.error());
         }
 
+        // this is the angular velocity which takes into account when an orientation offset was
+        // done
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputAngularVel,
             m_properties, data, &imuData.w[0])) {}
         else {

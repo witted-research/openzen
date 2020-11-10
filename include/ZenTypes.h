@@ -184,6 +184,9 @@ typedef struct ZenImuData
     float bRaw[3];
 
     /// Angular velocity data.
+    /// This angular velocity takes into account if an orientation offset
+    /// has been set while the g and gRaw values in this struct
+    /// do not.
     float w[3];
 
     /// Euler angle data.

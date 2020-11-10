@@ -291,6 +291,8 @@ namespace zen
                 return nonstd::make_unexpected(enabled.error());;
             }
 
+            // this is the angular velocity which takes into account when an orientation offset was
+            // done
             if (auto enabled = m_properties->getBool(ZenImuProperty_OutputAngularVel))
             {
                 if (*enabled)
