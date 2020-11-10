@@ -2,9 +2,9 @@
 
 Changes and additions to OpenZen will be documented in this file.
 
-## Version 1.2 - Ongoing
+## Version 1.2 - 2020/11/11
 
-- This release breaks the ABI compatibitly with previous OpenZen releases. So if you want to use this version of
+- This release breaks the ABI compatibitly with previous OpenZen releases. If you want to use this version of
   OpenZen you have to recompile old projects with the C/C++ headers of this version.
 - ZenEventType replaces the ZenSensorEvent, ZenImuEvent and ZenGnssEvent enums. Now the field ZenEvent::eventType
   directly uses the ZenEventType and a comparison can be perfromed to check which type of event is provided:
@@ -14,9 +14,15 @@ Changes and additions to OpenZen will be documented in this file.
   }
 ```
 - ZenHeaveMotionData struct in ZenImuData has been replaced by the member heaveMotion.
-- Gyroscope sensor data in ZenImuData.g and ZenImuData.gRaw will now be always in radian/s and
-  the euler angles in ZenImuData.r will always be in radian. Even if the hardware sensor (feature in IG1 firmware)
-  is set to output in degrees, OpenZen will ensure the values are converted to rad/s and rad.
+- Gyroscope sensor data in ZenImuData.g and ZenImuData.gRaw will now be always in degrees/s and
+  the euler angles in ZenImuData.r will always be in degrees. Even if the hardware sensor (feature in IG1 firmware)
+  is set to output in radians, OpenZen will ensure the values are converted to degrees/s and degrees when
+  ouputting the values via the OpenZen API.
+- added frameCount field to the ZenGnssData structure
+- changed python bindings to a more convenient wrapper code
+- updated documentation with supported sensor models and explanation on the sensor output values
+- Properly handling a possible Bluetooth exception
+- Improved stability on initial sensor connection
 
 ## Version 1.1.3 - 2020/09/03
 
