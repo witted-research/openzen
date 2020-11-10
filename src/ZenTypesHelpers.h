@@ -45,6 +45,8 @@ namespace zen
     */
     inline void imuDataReset(ZenImuData& imuData)
     {
+        imuData.frameCount = 0;
+        imuData.timestamp = 0.;
         vec3Zero(imuData.a);
         vec3Zero(imuData.g);
         vec3Zero(imuData.b);
@@ -52,16 +54,15 @@ namespace zen
         vec3Zero(imuData.gRaw);
         vec3Zero(imuData.bRaw);
         vec3Zero(imuData.w);
+        vec3Zero(imuData.r);
         quatIdentity(imuData.q);
         mat3x3fIdentity(imuData.rotationM);
         mat3x3fIdentity(imuData.rotOffsetM);
         imuData.pressure = 0.f;
-        imuData.frameCount = 0;
         vec3Zero(imuData.linAcc);
         imuData.gTemp = 0.f;
         imuData.altitude = 0.f;
         imuData.temperature = 0.f;
-        imuData.timestamp = 0.;
         imuData.heaveMotion = 0.f;
     }
 
@@ -70,6 +71,8 @@ namespace zen
     */
     inline void gnssDataReset(ZenGnssData& gnssData)
     {
+        gnssData.frameCount = 0;
+        gnssData.timestamp = 0.0f;
         gnssData.latitude = 0.0f;
         gnssData.horizontalAccuracy = 0.0f;
         gnssData.longitude = 0.0f;
@@ -81,8 +84,15 @@ namespace zen
         gnssData.velocity = 0.0f;
         gnssData.velocityAccuracy = 0.0f;
         gnssData.fixType = ZenGnssFixType_NoFix;
-        gnssData.numberSatellitesUsed = 0;
         gnssData.carrierPhaseSolution = ZenGnssFixCarrierPhaseSolution_None;
+        gnssData.numberSatellitesUsed = 0;
+        gnssData.year = 0;
+        gnssData.month = 0;
+        gnssData.day = 0;
+        gnssData.hour = 0;
+        gnssData.minute = 0;
+        gnssData.second = 0;
+        gnssData.nanoSecondCorrection = 0;
     }
 }
 
