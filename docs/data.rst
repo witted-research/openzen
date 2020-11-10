@@ -10,11 +10,35 @@ of the orientation sensor fusion and how to optimize it for your application cas
 
 Data Output Settings
 ====================
+Will all sensors models, the data which is transmitted can be selected individually to save bandwith and improve the
+latency of the data transfer. Therefore, you need to ensure the data item you want to read out is enabled for output.
+There are two ways to enable or disable the output of a data item.
+
+**1. Use the graphical user interface Tools LPMS-Control and IG1-Control**
+
+You can download theses tools from our `support website <https://lp-research.com/support/>`_. Then connect to the sensor
+and enable the output of the data you require. After enabling the output please ensure the settings are persisent by writing
+them to the sensor flash.
+
+Here is an example where to change the sensor data output:
+
+.. image:: images/lpms-sensor_output.png
+   :alt: LpmsControl enable data ouput
+
+**2. Configure data output with OpenZen**
+
+You can also enable or disable the output data set with OpenZen after you have opened a connection to the sensor:
+
+.. code-block:: cpp
+
+    imu.setBoolProperty(ZenImuProperty_OutputEuler, false);
+    imu.setBoolProperty(ZenImuProperty_OutputRawGyr, true);
+    ...
 
 ZenImuData
 ==========
-The ZenImuData structure contains the measurements of accelerometer and gyroscope.
-
+The ZenImuData structure contains the measurements of accelerometer and gyroscope sensors. Data items which are not
+enabled for output or not supported by the sensor are kept at their default values.
 
 +------------+------------------+------------------------------------+
 | Field Name | Unit             | Description                        |
