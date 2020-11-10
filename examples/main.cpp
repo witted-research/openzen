@@ -124,7 +124,12 @@ void pollLoop(std::reference_wrapper<ZenClient> client)
 
 int main(int argc, char *argv[])
 {
-    ZenSetLogLevel(ZenLogLevel_Info);
+    if ((argc > 1) && (std::string(argv[1]) == "debug")) {
+        std::cout << "Debug output enabled" << std::endl;
+        ZenSetLogLevel(ZenLogLevel_Debug);
+    } else {
+        ZenSetLogLevel(ZenLogLevel_Info);
+    }
 
     g_imuHandle = 0;
     g_gnssHandle = 0;
