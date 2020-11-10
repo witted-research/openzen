@@ -14,7 +14,7 @@ Will all sensors models, the data which is transmitted can be selected individua
 latency of the data transfer. Therefore, you need to ensure the data item you want to read out is enabled for output.
 There are two ways to enable or disable the output of a data item.
 
-**1. Use the graphical user interface Tools LPMS-Control and IG1-Control**
+**1. Use the graphical user interface tools LPMS-Control and IG1-Control**
 
 You can download theses tools from our `support website <https://lp-research.com/support/>`_. Then connect to the sensor
 and enable the output of the data you require. After enabling the output please ensure the settings are persisent by writing
@@ -35,10 +35,11 @@ You can also enable or disable the output data set with OpenZen after you have o
     imu.setBoolProperty(ZenImuProperty_OutputRawGyr, true);
     ...
 
-ZenImuData
-==========
+Inertial Data: ZenImuData
+=========================
 The ZenImuData structure contains the measurements of accelerometer and gyroscope sensors. Data items which are not
-enabled for output or not supported by the sensor are kept at their default values.
+enabled for output or not supported by the sensor are kept at their default values. This data structure will be output
+by all LP-Research sensors.
 
 +------------+------------------+------------------------------------+
 | Field Name | Unit             | Description                        |
@@ -93,3 +94,87 @@ enabled for output or not supported by the sensor are kept at their default valu
 | heaveMotion| m                | Heave motion output.               |
 |            |                  | Not supported by all sensor models.|
 +------------+------------------+------------------------------------+
+
+Global Position: ZenGnssData
+============================
+The ZenGnssData structure contains the measurements of a global navigation satellite
+system (GNSS) receiver. It is only availbable if the sensor contains a
+GNSS component. Most receivers combine their position measurements from
+multiple satellite constelations like GPS, Galileo or GLONASS.
+
+To receive all GNSS data listed below, all output options of the form
+``ZenGnssProperty_OutputNavPvt*`` need to be enabled.
+
++----------------------+------------------+------------------------------------+
+| Field Name           | Unit             | Description                        |
++======================+==================+====================================+
+| timestamp            | s                | Timestamp of the measurement data. |
+|                      |                  | The start point of this timestamp  |
+|                      |                  | is arbitrary but subsequent        |
+|                      |                  | measurements are guaranteed to have|
+|                      |                  | the distance to each other in time.|
++----------------------+------------------+------------------------------------+
+| latitude             | degrees          | Latitude measurement provided by   |
+|                      |                  | the GNSS or the IMU/GNSS sensor    |
+|                      |                  | fusion.                            |
++----------------------+------------------+------------------------------------+
+| horizontalAccuracy   | m                | Accuracy of the horizontal         |
+|                      |                  | measurement                        |
++----------------------+------------------+------------------------------------+
+| longitude            | degrees          | Longitude measurement provided by  |
+|                      |                  | the GNSS or the IMU/GNSS sensor    |
+|                      |                  | fusion.                            |
++----------------------+------------------+------------------------------------+
+| verticalAccuracy     | m                | Accuracy of the vertical           |
+|                      |                  | measurement                        |
++----------------------+------------------+------------------------------------+
+| height               | m                | height above WGS84 ellipsoid       |
++----------------------+------------------+------------------------------------+
+| headingOfMotion      | degrees          | Heading of sensor motion in degrees|
+|                      |                  | in clockwise counting and 0 degree |
+|                      |                  | being north.                       |
++----------------------+------------------+------------------------------------+
+| headingOfVehicle     | degrees          | Heading of vehicle in degrees      |
+|                      |                  | in clockwise counting and 0 degree |
+|                      |                  | being north. Can only be used when |
+|                      |                  | the IMU/GPS sensor fusion is active|
+|                      |                  | This heading is not changing if the|
+|                      |                  | vehicle drives backwards for       |
+|                      |                  | example.                           |
++----------------------+------------------+------------------------------------+
+| headingAccuracy      | degrees          | Heading Accuracy in degrees for    |
+|                      |                  | both headingOfVehicle and          |
+|                      |                  | headingOfMotion.                   |
++----------------------+------------------+------------------------------------+
+| velocity             | m/s              | Velocity over ground               |
++----------------------+------------------+------------------------------------+
+| velocityAccuracy     | m/s              | velocity accuracy over ground      |
++----------------------+------------------+------------------------------------+
+| fixType              | enumeration      | type of the GNSS fix and if        |
+|                      |                  | dead-reckoning mode is active.     |
++----------------------+------------------+------------------------------------+
+| carrierPhaseSolution | enumeration      | Information if an additional       |
+|                      |                  | RTK carrier phase correction is    |
+|                      |                  | used.                              |
++----------------------+------------------+------------------------------------+
+| numberSatellitesUsed | no unit          | the number of satellites that have |
+|                      |                  | been used to compute the position. |
++----------------------+------------------+------------------------------------+
+| year                 | years            | GNSS Year in UTC.                  |
++----------------------+------------------+------------------------------------+
+| month                | months           | GNSS Month in UTC.                 |
++----------------------+------------------+------------------------------------+
+| day                  | days             | GNSS Day in UTC.                   |
++----------------------+------------------+------------------------------------+
+| hour                 | hours            | GNSS Hour in UTC                   |
++----------------------+------------------+------------------------------------+
+| minute               | minutes          | GNSS Minute in UTC                 |
++----------------------+------------------+------------------------------------+
+| second               | s                | GNSS Second in UTC                 |
++----------------------+------------------+------------------------------------+
+| nanoSecondCorrection | ns               | This is the time in nanoseconds    |
+|                      |                  | which the above date and time      |
+|                      |                  | values need to be shifted to arrive|
+|                      |                  | at the exact time point measured   |
+|                      |                  | using the GNSS receiver.           |
++----------------------+------------------+------------------------------------+
