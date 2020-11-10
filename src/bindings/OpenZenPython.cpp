@@ -347,6 +347,8 @@ PYBIND11_MODULE(openzen, m) {
         .value("OutputGyr1AlignCalib", ZenImuProperty_OutputGyr1AlignCalib)
         .value("OutputMagCalib", ZenImuProperty_OutputMagCalib)
 
+        .value("DegRadOutput", ZenImuProperty_DegRadOutput)
+
         .value("CanChannelMode", ZenImuProperty_CanChannelMode)
         .value("CanPointMode", ZenImuProperty_CanPointMode)
         .value("CanStartId", ZenImuProperty_CanStartId)
