@@ -166,27 +166,35 @@ typedef enum ZenLogLevel
 typedef struct ZenImuData
 {
     /// Index of the data frame.
+    /// Unit: no unit
     int frameCount;
 
     /// Sampling time of the data in seconds
+    /// Unit: s
     double timestamp;
 
     /// Calibrated accelerometer sensor data.
+    /// Unit: m/s^2
     float a[3];
 
     /// Calibrated gyroscope sensor data.
+    /// Unit: degree/s
     float g[3];
 
     /// Calibrated magnetometer sensor data.
+    /// Unit: micro Tesla
     float b[3];
 
     /// Raw accelerometer sensor data.
+    /// Unit: m/s^2
     float aRaw[3];
 
     /// Raw gyroscope sensor data.
+    /// Unit: degree/s
     float gRaw[3];
 
     /// Raw magnetometer sensor data.
+    /// Unit: micro Tesla
     float bRaw[3];
 
     /// Angular velocity data.
@@ -196,34 +204,44 @@ typedef struct ZenImuData
     float w[3];
 
     /// Euler angle data.
+    /// Unit: degree/s
     float r[3];
 
     /// Quaternion orientation data.
     /// The component order is w, x, y, z
+    /// Unit: no unit
     float q[4];
 
     /// Orientation data as rotation matrix without offset.
+    /// Unit: no unit
     float rotationM[9];
 
     /// Orientation data as rotation matrix after zeroing.
+    /// Unit: no unit
     float rotOffsetM[9];
 
     /// Barometric pressure.
+    /// Unit: mPascal
     float pressure;
 
     /// Linear acceleration x, y and z.
+    /// Unit: m/s^2
     float linAcc[3];
 
     /// Gyroscope temperature.
+    /// Unit: Degree Celcius
     float gTemp;
 
     /// Altitude.
+    /// Unit: m
     float altitude;
 
     /// Temperature.
+    /// Unit: Degree Celcius
     float temperature;
 
     /// heave motion
+    /// Unit: m
     float heaveMotion;
 } ZenImuData;
 
