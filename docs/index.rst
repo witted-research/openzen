@@ -10,6 +10,7 @@ Contents
     ./getting_started
     ./examples
     ./supported_sensors
+    ./data
     ./io_systems
     ./c_api
     ./cpp_api
