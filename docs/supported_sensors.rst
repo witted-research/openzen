@@ -66,3 +66,45 @@ an additional GNSS component which is available to OpenZen.
 1x IMU
 
 1X GNSS
+
+LP-Research LPMS-ME1
+==================================
+.. image:: images/lpms-me1.jpg
+   :alt: LP-Research LPMS-ME1 sensor
+
+`Product Link LPMS-ME1 <https://lp-research.com/lpms-me1/>`_
+
+LPMS-ME1 is a high performance miniature inertial measurement unit (IMU) with multiple communication interfaces.
+Integrating UART, i2c and SPI in the same unit LPMS-ME1 perfectly fits both machine and human motion measurements
+for size and cost sensitive applications.
+
+OpenZen can communicate via UART directly with the LPMS-ME1 or via a SiLabs Serial-To-USB conversion
+chip. The LPMS-ME1 development kit contains such a SiLabs chip to connect the LPMS-ME1 to a PC.
+
+**Important Note: The default UART baudrate of the LPMS-ME1 is 115200 baud. OpenZen uses a larger baudrate by default 
+so 115200 baud needs to be selected when connecting with OpenZen to an LPMS-ME1 IMU.**
+
+**LPMS-ME1 provides OpenZen component:**
+
+1x IMU
+
+LP-Research LPMS-BE1
+==================================
+.. image:: images/lpms-be1.jpg
+   :alt: LP-Research LPMS-BE1 sensor
+
+`Product Link LPMS-BE1 <http://www.alubi.cn/lpms-be1/>`_
+
+LPMS-BE1 is a high performance miniature inertial measurement unit (IMU) with multiple communication interfaces.
+Integrating UART, i2c and SPI in the same unit LPMS-BE1 perfectly fits both machine and human motion measurements
+for size and cost sensitive applications.
+
+OpenZen can communicate via UART directly with the LPMS-BE1 or via a SiLabs Serial-To-USB conversion
+chip. The LPMS-BE1 development kit contains such a SiLabs chip to connect the LPMS-BE1 to a PC.
+
+**Important Note: The default UART baudrate of the LPMS-BE1 is 115200 baud. OpenZen uses a larger baudrate by default 
+so 115200 baud needs to be selected when connecting with OpenZen to an LPMS-BE1 IMU.**
+
+**LPMS-BE1 provides OpenZen component:**
+
+1x IMU
