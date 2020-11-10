@@ -7,7 +7,7 @@ Overview
 The OpenZen API is implemented using a pure C API to guarantee ABI stability. The header
 file ``OpenZenCAPI.h`` can be included to access the C interface to OpenZen.
 
-The overall concept of OpenZen usage is described in the section :ref:`getting-started-labe`.
+The overall concept of OpenZen usage is described in the section :ref:`getting-started-label`.
 This section will describe some special considerations when using the C API. A complete
 example of the C API usage can be found at this 
 `example source file <https://bitbucket.org/lpresearch/openzen/src/master/examples/ExampleCAPI.c>`_.
@@ -50,7 +50,7 @@ Access to Sensors and Components
 ================================
 To query the available sensors and connect them can be done using the functions ``ZenListSensorsAsync``,
 ``ZenObtainSensor``, ``ZenObtainSensorByName``. The usage of these functions is described
-in the section :ref:`getting-started-labe`.
+in the section :ref:`getting-started-label`.
 
 Once a sensor handle has been obtained, it needs to be provided to all ``ZenSensor*`` functions as a parameter.
 

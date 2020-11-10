@@ -1,4 +1,5 @@
 .. _getting-started-label:
+
 ############################
 Getting Started with OpenZen
 ############################
@@ -282,7 +283,7 @@ the GNSS component like this:
 .. todo: check for the correct sensor id
 
 Closing the Sensor Connection
-=========================
+=============================
 Once you are done with sampling sensor values, you can release the connection to the
 sensor and close the connection with the client:
 
