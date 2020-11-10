@@ -55,8 +55,8 @@ typedef int ZenError_t;
 
 typedef enum ZenError
 {
-    ZenError_None = 0,                       // None
-    ZenError_Unknown = 1,                    // Unknown
+    ZenError_None = 0,                       // Not error reported
+    ZenError_Unknown = 1,                    // Unkown error occured
 
     ZenError_IsNull = 10,                    // Pointer is invalid (null)
     ZenError_NotNull = 11,                   // Expected a null pointer
@@ -99,7 +99,6 @@ typedef enum ZenError
     ZenError_UnknownCommandMode = 851,       // Sensor does not support the command mode
     ZenError_UnsupportedEvent = 852,        // Host does not support the event type
 
-    // [XXX] What to do with other errors in the hardware?
     ZenError_FW_FunctionFailed = 900,        // Firmware failed to execute the requested function
 
     ZenError_Can_BusError = 1001,            // Can interface is in an error state
@@ -116,7 +115,7 @@ typedef enum ZenError
 
 typedef enum ZenSensorInitError
 {
-    ZenSensorInitError_None = 0,
+    ZenSensorInitError_None = 0,                // No error reported
 
     ZenSensorInitError_InvalidHandle,           // Provided client handle is invalid
     ZenSensorInitError_IsNull,                  // Provided pointer is null
