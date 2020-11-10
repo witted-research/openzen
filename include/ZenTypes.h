@@ -352,7 +352,7 @@ typedef struct ZenGnssData
     /// All the date and time values above are rounded
     /// so they can be represented as integeres. This
     /// is the time in nanoseconds that the above date & time values need
-    /// to be shifted to give to exact time measured by the GNSS receiver.
+    /// to be shifted to arrive at the exact time measured by the GNSS receiver.
     int32_t nanoSecondCorrection;
 
 } ZenGnssData;
