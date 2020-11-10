@@ -165,6 +165,12 @@ typedef enum ZenLogLevel
 
 typedef struct ZenImuData
 {
+    /// Index of the data frame.
+    int frameCount;
+
+    /// Sampling time of the data in seconds
+    double timestamp;
+
     /// Calibrated accelerometer sensor data.
     float a[3];
 
@@ -205,9 +211,6 @@ typedef struct ZenImuData
     /// Barometric pressure.
     float pressure;
 
-    /// Index of the data frame.
-    int frameCount;
-
     /// Linear acceleration x, y and z.
     float linAcc[3];
 
@@ -219,9 +222,6 @@ typedef struct ZenImuData
 
     /// Temperature.
     float temperature;
-
-    /// Sampling time of the data in seconds
-    double timestamp;
 
     /// heave motion
     float heaveMotion;
@@ -280,6 +280,9 @@ the IMU sensors.
 */
 typedef struct ZenGnssData
 {
+    /// Index of the data frame.
+    int frameCount;
+
     /// Sampling time of the data in seconds
     double timestamp;
 

@@ -204,6 +204,7 @@ PYBIND11_MODULE(openzen, m) {
         .value("FixedAmbiguities", ZenGnssFixCarrierPhaseSolution_FixedAmbiguities);
 
     py::class_<ZenGnssData>(m,"ZenGnssData")
+        .def_readonly("frameCount", &ZenGnssData::frameCount)
         .def_readonly("timestamp", &ZenGnssData::timestamp)
         .def_readonly("latitude", &ZenGnssData::latitude)
         .def_readonly("horizontal_accuracy", &ZenGnssData::horizontalAccuracy)

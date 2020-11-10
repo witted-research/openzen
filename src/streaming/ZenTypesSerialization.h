@@ -66,7 +66,9 @@ void serialize(Archive& ar, ZenComponentHandle_t& componentHandle)
 template <class Archive>
 void serialize(Archive& ar, ZenImuData & imuData)
 {
-    ar(imuData.a,
+    ar(imuData.frameCount,
+        imuData.timestamp,
+        imuData.a,
         imuData.g,
         imuData.b,
         imuData.aRaw,
@@ -78,19 +80,18 @@ void serialize(Archive& ar, ZenImuData & imuData)
         imuData.rotationM,
         imuData.rotOffsetM,
         imuData.pressure,
-        imuData.frameCount,
         imuData.linAcc,
         imuData.gTemp,
         imuData.altitude,
         imuData.temperature,
-        imuData.timestamp, 
         imuData.heaveMotion);
 }
 
 template <class Archive>
 void serialize(Archive& ar, ZenGnssData& gnssData)
 {
-    ar(gnssData. timestamp,
+    ar(gnssData.frameCount,
+        gnssData.timestamp,
         gnssData.latitude,
         gnssData.horizontalAccuracy,
         gnssData.longitude,
