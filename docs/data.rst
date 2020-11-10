@@ -56,8 +56,8 @@ by all LP-Research sensors.
 | a          | m/s^2            | Accleration measurment after all   |
 |            |                  | corrections have been applied      |
 +------------+------------------+------------------------------------+
-| g          | rad/s or         | Gyroscope measurment after all     |
-|            | deg/s            | corrections have been applied      |
+| g          | deg/s            | Gyroscope measurment after all     |
+|            |                  | corrections have been applied      |
 +------------+------------------+------------------------------------+
 | b          | :math:`\mu T`    | Magnetometer measurment after all  |
 |            |                  | corrections have been applied      |
@@ -65,14 +65,16 @@ by all LP-Research sensors.
 | aRaw       | m/s^2            | Accleration measurment before all  |
 |            |                  | corrections have been applied      |
 +------------+------------------+------------------------------------+
-| gRaw       | rad/s or         | Gyroscope measurment before all    |
-|            | deg/s            | corrections have been applied      |
+| gRaw       | deg/s            | Gyroscope measurment before all    |
+|            |                  | corrections have been applied      |
 +------------+------------------+------------------------------------+
-| w          | rad/s or         | Angular veloctiy                   |
-|            | deg/s            |                                    |
+| w          | deg/s            | Angular veloctiy.                  |
+|            |                  | This angular velocity takes into   |
+|            |                  | account if an orientation offset   |
+|            |                  | has been.                          |
 +------------+------------------+------------------------------------+
-| r          | rad/s or         | Three euler angles representing    |
-|            | deg/s            | the current rotation of the sensor.|
+| r          | deg/s            | Three euler angles representing    |
+|            |                  | the current rotation of the sensor.|
 |            |                  | See the sensor documenation how    |
 |            |                  | the angles are defined             |
 +------------+------------------+------------------------------------+
