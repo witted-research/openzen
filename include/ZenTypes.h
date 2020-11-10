@@ -569,6 +569,8 @@ typedef enum EZenImuProperty
     ZenImuProperty_OutputMagCalib,               // bool
 
     /* switch between degrees or radian output (only for IG1 and newer) */
+    /* If set to true, radians will be used as output unit */
+    /* If set to false, degrees will be used as output unit */
     ZenImuProperty_DegRadOutput,                 // bool
 
     /* CAN bus properties */
