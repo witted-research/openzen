@@ -12,6 +12,7 @@
 #define ZEN_COMPONENTS_SENSORPARSING_UTIL_H_
 
 #include "ZenTypes.h"
+#include "ZenTypesHelpers.h"
 #include "ISensorProperties.h"
 
 #include <gsl/span>
@@ -64,6 +65,24 @@ namespace zen {
         template<class TIntegerType>
         inline double integerToScaledDouble(TIntegerType it, int32_t scaleExponent) {
             return double(it) * std::pow(double(10.0), double(scaleExponent));
+        }
+
+        /*
+        Convert from rad to degrees in case the sensor is configured to output radians.
+        This is needed for IG1-style firmware which has the option to switch
+        between degrees and radian output.
+        */
+        inline ZenError radToDegreesIfNeededVector3(std::unique_ptr<ISensorProperties> const& properties,
+            float * targetArray) {
+            auto isRadOutput = properties->getBool(ZenImuProperty_DegRadOutput);
+            if (!isRadOutput)
+                return isRadOutput.error();
+
+            if (isRadOutput.value()) {
+                radToDeg3(targetArray);
+            }
+
+            return ZenError_None;
         }
 
         inline nonstd::expected<bool, ZenError> readVector3IfAvailable(ZenProperty_t checkProperty,

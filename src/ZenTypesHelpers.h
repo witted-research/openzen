@@ -33,11 +33,11 @@ namespace zen
                 m[i * 3 + j] = i == j ? 1.f : 0.f;
     }
 
-    inline void degToRad3(float * v) {
-        const auto d2r = 3.14159265359f / 180.0f;
-        v[0] *= d2r;
-        v[2] *= d2r;
-        v[2] *= d2r;
+    inline void radToDeg3(float * v) {
+        const auto r2d = 180.0f / 3.14159265359f;
+        v[0] *= r2d;
+        v[1] *= r2d;
+        v[2] *= r2d;
     }
 
     /**

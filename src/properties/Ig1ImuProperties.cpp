@@ -524,11 +524,6 @@ template <> struct OutputDataFlag<ZenImuProperty_OutputLowPrecision>
                 if (auto error = m_communicator.sendAndWaitForAck(0, function, function, gsl::make_span(reinterpret_cast<const std::byte*>(&uiValue), sizeof(uiValue))))
                     return error;
 
-                // store in cache
-                if (property == ZenImuProperty_DegRadOutput) {
-
-                }
-
                 notifyPropertyChange(property, value);
                 return ZenError_None;
             }

@@ -76,6 +76,10 @@ namespace zen
     {
         // Any properties that are retrieved here should be cached locally, because it
         // will take too much time to retrieve from the sensor!
+
+        // Units will always be converted to degrees and degrees/s no matter how the
+        // IG1 output is actually configured. OpenZen output unit is always degrees
+
         ZenEventData eventData;
         ZenImuData& imuData = eventData.imuData;
         imuDataReset(imuData);
@@ -108,9 +112,8 @@ namespace zen
 
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputRawGyr0,
             m_properties, data, &imuData.gRaw[0])) {
-                degToRad3(&imuData.gRaw[0]);
-            }
-        else {
+            sensor_parsing_util::radToDegreesIfNeededVector3(m_properties, &imuData.gRaw[0]);
+        } else {
             return nonstd::make_unexpected(enabled.error());
         }
 
@@ -121,7 +124,7 @@ namespace zen
         }
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputRawGyr1,
             m_properties, data, secondGyroTargetRaw)) {
-                degToRad3(secondGyroTargetRaw);
+            sensor_parsing_util::radToDegreesIfNeededVector3(m_properties, secondGyroTargetRaw);
             }
         else {
             return nonstd::make_unexpected(enabled.error());
@@ -142,13 +145,12 @@ namespace zen
         // alignment calibration also contains the static calibration correction
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputGyr0AlignCalib,
             m_properties, data, &imuData.g[0])) {
-                degToRad3(&imuData.g[0]);
+                sensor_parsing_util::radToDegreesIfNeededVector3(m_properties, &imuData.g[0]);
             }
         else {
             return nonstd::make_unexpected(enabled.error());
         }
-todo: convert only if needed
-adapt python bindings
+
         // LPMS-BE1 writes its only gyro values in the gyr1 field
         float * secondGyroTarget = &unusedValue[0];
         if (m_secondGyroIsPrimary) {
@@ -156,7 +158,7 @@ adapt python bindings
         }
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputGyr1AlignCalib,
             m_properties, data, secondGyroTarget)) {
-                degToRad3(secondGyroTarget);
+                sensor_parsing_util::radToDegreesIfNeededVector3(m_properties, secondGyroTarget);
             }
         else {
             return nonstd::make_unexpected(enabled.error());
@@ -177,7 +179,9 @@ adapt python bindings
         // this is the angular velocity which takes into account when an orientation offset was
         // done
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputAngularVel,
-            m_properties, data, &imuData.w[0])) {}
+            m_properties, data, &imuData.w[0])) {
+                sensor_parsing_util::radToDegreesIfNeededVector3(m_properties, &imuData.w[0]);
+            }
         else {
             return nonstd::make_unexpected(enabled.error());
         }
@@ -189,7 +193,9 @@ adapt python bindings
         }
 
         if (auto enabled = sensor_parsing_util::readVector3IfAvailable(ZenImuProperty_OutputEuler,
-            m_properties, data, &imuData.r[0])) {}
+            m_properties, data, &imuData.r[0])) {
+                sensor_parsing_util::radToDegreesIfNeededVector3(m_properties, &imuData.r[0]);
+            }
         else {
             return nonstd::make_unexpected(enabled.error());
         }
