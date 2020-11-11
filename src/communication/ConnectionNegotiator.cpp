@@ -166,7 +166,7 @@ namespace zen
             });
 
         if (itSensorConfig != m_sensorConfigs.end()) {
-            SPDLOG_DEBUG("Found specific device config for sensor name {0} and using it",
+            spdlog::debug("Found specific device config for sensor name {0} and using it",
                 localDeviceName);
             return itSensorConfig->second;
         }
@@ -186,7 +186,7 @@ namespace zen
                 localDeviceName);
             return nonstd::make_unexpected(ZenSensorInitError_NoConfiguration);
         } else {
-            SPDLOG_DEBUG("Using common device config for sensor name {0}",
+            spdlog::debug("Using common device config for sensor name {0}",
                 localDeviceName);
             return itSensorConfigWildcard->second;
         }
@@ -216,14 +216,14 @@ namespace zen
 
         if (function == uint8_t(EDevicePropertyV1::GetFirmwareInfo)) {
             // legacy sensor, providing just a 32-bit integer
-            SPDLOG_DEBUG("ConnectionNegotiator received data size {0} when loading the firmware version", data.size());
+            spdlog::debug("ConnectionNegotiator received data size {0} when loading the firmware version", data.size());
             if (data.size() == 4) {
                 m_isLegacy = true;
-                SPDLOG_DEBUG("ConnectionNegotiator received 32-bit from legacy sensor");
+                spdlog::debug("ConnectionNegotiator received 32-bit from legacy sensor");
             }
             else {
                 auto firmwareInfo = std::string(reinterpret_cast<char const*>(data.data()), data.size());
-                SPDLOG_DEBUG("ConnectionNegotiator loaded firmware Info from Ig1 sensor {0}", firmwareInfo);
+                spdlog::debug("ConnectionNegotiator loaded firmware Info from Ig1 sensor {0}", firmwareInfo);
                 m_isLegacy = false;
             }
         }
@@ -232,7 +232,7 @@ namespace zen
             auto name = std::string(reinterpret_cast<char const*>(data.data()), data.size());
             // device name can have some trailing zeros
             name = util::right_trim(name);
-            SPDLOG_DEBUG("ConnectionNegotiator received sensor model {0}", name);
+            spdlog::debug("ConnectionNegotiator received sensor model {0}", name);
             m_deviceName = name;
             return ZenError_None;
         }

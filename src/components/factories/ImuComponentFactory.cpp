@@ -51,14 +51,14 @@ namespace zen
 
             // Initialize to non-streaming to retrieve the config bitset
             if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false)) {
-                SPDLOG_DEBUG("Cannot disable streaming of legacy sensor");
+                spdlog::debug("Cannot disable streaming of legacy sensor");
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
             }
 
             if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyInternal::ConfigImuOutputDataBitset),
                 static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigImuOutputDataBitset), {}))
             {
-                SPDLOG_DEBUG("Loaded config bitset of legacy sensor: {}", bitset.value());
+                spdlog::debug("Loaded config bitset of legacy sensor: {}", bitset.value());
                 properties->setConfigBitset(*bitset);
                 return std::make_unique<ImuComponent>(std::move(properties), communicator, version);
             }
@@ -72,14 +72,14 @@ namespace zen
 
             // Initialize to non-streaming to retrieve the config bitset
             if (ZenError_None != properties->setBool(ZenImuProperty_StreamData, false)) {
-                SPDLOG_DEBUG("Cannot disable streaming of Ig1 sensor");
+                spdlog::debug("Cannot disable streaming of Ig1 sensor");
                 return nonstd::make_unexpected(ZenSensorInitError_RetrieveFailed);
             }
 
             if (auto bitset = communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyV1::GetImuTransmitData),
                 static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigImuOutputDataBitset), {}))
             {
-                SPDLOG_DEBUG("Loaded output bitset of Ig1 sensor: {}", bitset.value());
+                spdlog::debug("Loaded output bitset of Ig1 sensor: {}", bitset.value());
                 properties->setOutputDataBitset(*bitset);
             }
             else
@@ -91,9 +91,8 @@ namespace zen
                 communicator.sendAndWaitForResult<uint32_t>(0u, static_cast<DeviceProperty_t>(EDevicePropertyV1::GetDegGradOutput),
                 static_cast<ZenProperty_t>(EDevicePropertyInternal::ConfigGetDegGradOutput), {}))
             {
-                SPDLOG_DEBUG("Ig1 sensor outputs degrees: {}", degreeOutputConfigured.value());
+                spdlog::debug("Ig1 sensor outputs degrees: {}", degreeOutputConfigured.value() == 0 );
                 properties->setDegGradOutput(degreeOutputConfigured.value() > 0);
-                spdlog::info(" degreeOutputConfigured.value() > 0  {0}",(degreeOutputConfigured.value() > 0));
             }
             else
             {
