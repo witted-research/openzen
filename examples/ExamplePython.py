@@ -69,18 +69,19 @@ if not error == openzen.ZenError.NoError:
 print ("Sensor is streaming data: {}".format(is_streaming))
 
 ## load the alignment matrix from the sensor
-error, accAlignment = imu.get_array_property_float(openzen.ZenImuProperty.AccAlignment)
-if not error == openzen.ZenError.NoError:
-    print ("Can't load alignment")
-    sys.exit(1)
+## some sensors don't support this (for example IG1, BE1)
+#error, accAlignment = imu.get_array_property_float(openzen.ZenImuProperty.AccAlignment)
+#if not error == openzen.ZenError.NoError:
+#    print ("Can't load alignment")
+#    sys.exit(1)
 
-if not len(accAlignment) == 9:
-    print ("Loaded Alignment has incosistent size")
-    sys.exit(1)
+#if not len(accAlignment) == 9:
+#    print ("Loaded Alignment has incosistent size")
+#    sys.exit(1)
 
-print ("Alignment loaded: {}".format(accAlignment))
+#print ("Alignment loaded: {}".format(accAlignment))
 
-# store float array
+## store float array
 #error = imu.set_array_property_float(openzen.ZenImuProperty.AccAlignment, accAlignment)
 
 #if not error == openzen.ZenError.NoError:
