@@ -117,9 +117,11 @@ Published Topics
 /imu/mag (`sensor_msgs/MagneticField <http://docs.ros.org/melodic/api/sensor_msgs/html/msg/MagneticField.html>`_)
     Magnetometer reading from the sensor.
 
+/imu/nav (`sensor_msgs/NavSatFix <http://docs.ros.org/en/melodic/api/sensor_msgs/html/msg/NavSatFix.html>`_)
+    Global position from a satellite navigation system. Only available if the IMU includes a GNSS chip.
+
 /imu/is_autocalibration_active (`std_msgs/Bool <http://docs.ros.org/api/std_msgs/html/msg/Bool.html>`_)
     Latched topic indicating if the gyro autocalibration feature is active
-
 
 Services
 ########
