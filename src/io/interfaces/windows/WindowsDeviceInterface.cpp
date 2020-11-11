@@ -14,6 +14,8 @@
 
 #include "io/systems/windows/WindowsDeviceSystem.h"
 
+#include <spdlog/spdlog.h>
+
 namespace zen
 {
     WindowsDeviceInterface::WindowsDeviceInterface(IIoDataSubscriber& subscriber, std::string_view identifier, HANDLE handle, OVERLAPPED ioReader, OVERLAPPED ioWriter) noexcept
@@ -73,13 +75,17 @@ namespace zen
             return ZenError_None;
 
         DCB config;
-        if (!::GetCommState(m_handle, &config))
+        if (!::GetCommState(m_handle, &config)) {
+            spdlog::error("Cannot load COM port settings");
             return ZenError_Io_GetFailed;
+        }
 
         config.BaudRate = rate;
 
-        if (!::SetCommState(m_handle, &config))
+        if (!::SetCommState(m_handle, &config)) {
+            spdlog::error("Cannot set COM port settings");
             return ZenError_Io_SetFailed;
+        }
 
         m_baudrate = rate;
         return ZenError_None;
