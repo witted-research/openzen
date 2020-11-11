@@ -30,11 +30,11 @@ namespace OpenZenCSharpBindingTest
                             // event
                             switch (zenEvent.eventType)
                             {
-                                case (int)ZenSensorEvent.ZenSensorEvent_SensorFound:
+                                case ZenEventType.ZenEventType_SensorFound:
                                     Console.WriteLine("found sensor event event " + zenEvent.data.sensorFound.name);
                                     mFoundSensors.Add(zenEvent.data.sensorFound);
                                     break;
-                                case (int)ZenSensorEvent.ZenSensorEvent_SensorListingProgress:
+                                case ZenEventType.ZenEventType_SensorListingProgress:
                                     if (zenEvent.data.sensorListingProgress.progress == 1.0)
                                     {
                                         mSearchDone = true;
@@ -44,7 +44,7 @@ namespace OpenZenCSharpBindingTest
                         } else {
                             switch (zenEvent.eventType)
                             {
-                                case (int)ZenImuEvent.ZenImuEvent_Sample:
+                                case ZenEventType.ZenEventType_ImuData:
                                     mImuEventCount++;
 
                                     if (mImuEventCount % 100 == 0)

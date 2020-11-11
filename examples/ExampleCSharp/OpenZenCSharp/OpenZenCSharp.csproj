@@ -99,9 +99,6 @@
     <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_unsigned_long.cs">
       <Link>SWIGTYPE_p_unsigned_long.cs</Link>
     </Compile>
-    <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_unsigned_long_long.cs">
-      <Link>SWIGTYPE_p_unsigned_long_long.cs</Link>
-    </Compile>
     <Compile Include="..\..\..\bindings\OpenZenCSharp\SWIGTYPE_p_void.cs">
       <Link>SWIGTYPE_p_void.cs</Link>
     </Compile>
@@ -138,14 +135,8 @@
     <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenGnssFixType.cs">
       <Link>ZenGnssFixType.cs</Link>
     </Compile>
-    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenHeaveMotionData.cs">
-      <Link>ZenHeaveMotionData.cs</Link>
-    </Compile>
     <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenImuData.cs">
       <Link>ZenImuData.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenImuEvent.cs">
-      <Link>ZenImuEvent.cs</Link>
     </Compile>
     <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenLogLevel.cs">
       <Link>ZenLogLevel.cs</Link>
@@ -156,11 +147,11 @@
     <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenPropertyType.cs">
       <Link>ZenPropertyType.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenEventType.cs">
+      <Link>ZenEventType.cs</Link>
+    </Compile>
     <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenSensorDesc.cs">
       <Link>ZenSensorDesc.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenSensorEvent.cs">
-      <Link>ZenSensorEvent.cs</Link>
     </Compile>
     <Compile Include="..\..\..\bindings\OpenZenCSharp\ZenSensorHandle_t.cs">
       <Link>ZenSensorHandle_t.cs</Link>
