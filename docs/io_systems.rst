@@ -52,7 +52,7 @@ a baudrate of 115200 bits per second.
 
 .. code-block:: cpp
 
-    auto sensorPair = client.obtainSensorByName("WindowsDevice", "COM12", 115200);
+    auto sensorPair = client.obtainSensorByName("WindowsDevice", "\\.\COM12", 115200);
 
 Bluetooth 
 =========
