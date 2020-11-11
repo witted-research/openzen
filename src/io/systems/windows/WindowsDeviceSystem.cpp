@@ -9,10 +9,10 @@
 //===========================================================================//
 
 #include "io/systems/windows/WindowsDeviceSystem.h"
-
 #include "io/interfaces/windows/WindowsDeviceInterface.h"
-
 #include "EnumerateSerialPorts.h"
+
+#include <spdlog/spdlog.h>
 
 namespace zen
 {
@@ -46,25 +46,18 @@ namespace zen
     {
         auto handle = ::CreateFileA(desc.identifier, GENERIC_READ | GENERIC_WRITE,
             0, nullptr, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, nullptr);
-        if (handle == INVALID_HANDLE_VALUE)
+        if (handle == INVALID_HANDLE_VALUE) {
+            spdlog::error("Cannot open Windows IO file {0}", desc.identifier);
             return nonstd::make_unexpected(ZenSensorInitError_InvalidAddress);
+        }
 
-        // Create overlapped objects for asynchronous communication
-        OVERLAPPED ioReader{ 0 };
-        ioReader.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
-        if (!ioReader.hEvent)
-            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
-
-        OVERLAPPED ioWriter{ 0 };
-        ioWriter.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
-        if (!ioWriter.hEvent)
-            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
-
-        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, desc.identifier, handle, ioReader, ioWriter);
-
+        // configure the COM Port. This needs to be done before CreateEvent is called. Otherwise the
+        // settings are not directly used
         DCB config;
-        if (!::GetCommState(handle, &config))
+        if (!::GetCommState(handle, &config)) {
+            spdlog::error("Cannot get Windows IO comm state");
             return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+        }
 
         config.fOutxCtsFlow = false;
         config.fOutxDsrFlow = false;
@@ -76,8 +69,10 @@ namespace zen
         config.Parity = NOPARITY;
         config.StopBits = ONESTOPBIT;
 
-        if (!::SetCommState(handle, &config))
+        if (!::SetCommState(handle, &config)) {
+            spdlog::error("Cannot set Windows IO comm state");
             return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+        }
 
         COMMTIMEOUTS timeoutConfig;
         timeoutConfig.ReadIntervalTimeout = 1;
@@ -86,12 +81,30 @@ namespace zen
         timeoutConfig.WriteTotalTimeoutMultiplier = 1;
         timeoutConfig.WriteTotalTimeoutConstant = 1;
 
-        if (!::SetCommTimeouts(handle, &timeoutConfig))
+        if (!::SetCommTimeouts(handle, &timeoutConfig)) {
+            spdlog::error("Cannot set Windows IO comm timeouts");
             return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+        }
 
-        //constexpr static unsigned int DEFAULT_BAUDRATE = CBR_115200;
-        //if (auto error = ioInterface->setBaudRate(DEFAULT_BAUDRATE))
-        //    return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+        // Create overlapped objects for asynchronous communication
+        OVERLAPPED ioReader{ 0 };
+        ioReader.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
+        if (!ioReader.hEvent) {
+            spdlog::error("Cannot create Windows IO event for reader");
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+        }
+
+        OVERLAPPED ioWriter{ 0 };
+        ioWriter.hEvent = ::CreateEventA(nullptr, false, false, nullptr);
+        if (!ioWriter.hEvent) {
+            spdlog::error("Cannot create Windows IO event for writer");
+            return nonstd::make_unexpected(ZenSensorInitError_IoFailed);
+        }
+
+        auto ioInterface = std::make_unique<WindowsDeviceInterface>(subscriber, desc.identifier, handle, ioReader, ioWriter);
+
+        // Note: Setting of baudrate is not needed here because its done by the connection negotiator
+        spdlog::debug("Windows device interface for {0} created", desc.identifier);
 
         return ioInterface;
     }
