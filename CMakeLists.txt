@@ -109,7 +109,6 @@ endif()
 set(zen_includes
     include/OpenZen.h
     include/OpenZenCAPI.h
-    include/ZenProtocol.h
     include/ZenTypes.h
 )
 
@@ -646,7 +645,6 @@ endif()
 set_property(TARGET OpenZen PROPERTY PUBLIC_HEADER
     include/OpenZen.h
     include/OpenZenCAPI.h
-    include/ZenProtocol.h
     include/ZenTypes.h
 )
 
