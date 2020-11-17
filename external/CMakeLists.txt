@@ -51,6 +51,11 @@ endif()
 set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
 # we don't want cereals install targets, so use
 # EXCLUDE_FROM_ALL on this folder
+
+# currently, the cereal external gives an cmake warning
+# because project() call does not set version. There is a PR in the pipeline
+# which will fix this in the future
+# https://github.com/USCiLab/cereal/pull/659
 add_subdirectory(cereal EXCLUDE_FROM_ALL)
 
 add_subdirectory(spdlog EXCLUDE_FROM_ALL)
