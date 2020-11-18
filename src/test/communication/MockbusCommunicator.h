@@ -25,15 +25,15 @@ namespace zen {
 
 class DummyFrameFactory : public modbus::IFrameFactory {
 public:
- std::vector<std::byte> makeFrame(uint8_t address, uint8_t function,
-   const std::byte* data, uint8_t length) const override{
+ std::vector<std::byte> makeFrame(uint8_t, uint8_t,
+   const std::byte*, uint8_t) const override{
     return {};
   }
 };
 
 class DummyFrameParser : public modbus::IFrameParser {
 public:
-  modbus::FrameParseError parse(gsl::span<const std::byte>& data) override {
+  modbus::FrameParseError parse(gsl::span<const std::byte>&) override {
     return modbus::FrameParseError_None;
    }
   void reset() override {}
@@ -60,7 +60,7 @@ public:
 
   }
 
-  ZenError send(uint8_t address, uint8_t function, gsl::span<const std::byte> data) noexcept override {
+  ZenError send(uint8_t address, uint8_t function, gsl::span<const std::byte>) noexcept override {
     // check if we can supply that result
     auto itReply = std::find_if(m_replies.begin(), m_replies.end(),
       [address,function](auto const& entry ){
@@ -87,7 +87,7 @@ public:
   }
 
   /** Set Baudrate of IO interface (bit/s) */
-  ZenError setBaudRate(unsigned int rate) noexcept override {
+  ZenError setBaudRate(unsigned int) noexcept override {
     return ZenError_None;
   }
 
