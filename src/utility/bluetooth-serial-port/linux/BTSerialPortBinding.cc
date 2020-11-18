@@ -95,7 +95,9 @@ void BTSerialPortBinding::Close()
 	if (data->s != 0)
 	{
 		close(data->s);
-		write(data->rep[1], "close", (strlen("close") + 1));
+		// we don't care about the return value at this point
+		// tell the compiler so there is no unused return warning
+		[[maybe_unused]] auto ret = write(data->rep[1], "close", (strlen("close") + 1));
 		data->s = 0;
 	}
 }
