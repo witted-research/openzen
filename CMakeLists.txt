@@ -90,6 +90,7 @@ add_subdirectory(external)
 # contains additional C/C++ precompiler defines
 # which might be set depending on the selected compile options
 set(zen_optional_compile_definitions_private)
+set(zen_optional_compile_options)
 set(zen_optional_libs)
 
 # set the correct log level
@@ -518,9 +519,8 @@ target_compile_features(OpenZen
 set_property(TARGET OpenZen PROPERTY CXX_EXTENSIONS FALSE)
 
 if (NOT MSVC)
-    target_compile_options(OpenZen
-        PRIVATE
-            -Wall -Wextra -pedantic
+    list (APPEND zen_optional_compile_options
+        -Wall -Wextra -pedantic
     )
 
     # add linker options to statically compile in libstdc++
@@ -532,6 +532,19 @@ if (NOT MSVC)
         )
     endif()
 endif()
+
+# manage compile options for the targets
+if (CMAKE_COMPILER_IS_GNUCC)
+    # this warning is unreliable accross GCC releases
+    # https://gcc.gnu.org/pipermail/gcc-bugs/2019-January/648130.html
+    list (APPEND zen_optional_compile_options
+        -Wno-redundant-move
+    )
+endif()
+
+target_compile_options(OpenZen
+    PRIVATE
+        ${zen_optional_compile_options})
 
 set(zen_include_dirs_public
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -634,6 +647,11 @@ if (ZEN_TESTS)
             ZEN_API_STATIC
             ${zen_optional_compile_definitions_private}
     )
+
+    target_compile_options(OpenZenTests
+        PRIVATE
+            ${zen_optional_compile_options})
+
 endif()
 
 if (ZEN_EXAMPLES)
