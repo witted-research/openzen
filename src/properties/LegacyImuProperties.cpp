@@ -214,16 +214,27 @@ namespace zen
         if (propertyType != type(property))
             return std::make_pair(ZenError_WrongDataType, buffer.size());
 
-        if (property == ZenImuProperty_SupportedSamplingRates)
-            return imu::v0::supportedSamplingRates(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
-        else if (property == ZenImuProperty_SupportedFilterModes)
+        // the size of the buffer needs to multiplied by the data type size
+        // to arrive at the byte count in the returned buffer
+        if (property == ZenImuProperty_SupportedSamplingRates) {
+            auto [err, item_count] = imu::v0::supportedSamplingRates(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+            return {err, item_count * sizeof(int32_t)};
+        }
+        else if (property == ZenImuProperty_SupportedFilterModes) {
             return imu::v0::supportedFilterModes(buffer);
-        else if (property == ZenImuProperty_AccSupportedRanges)
-            return imu::v0::supportedAccRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
-        else if (property == ZenImuProperty_GyrSupportedRanges)
-            return imu::v0::supportedGyrRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
-        else if (property == ZenImuProperty_MagSupportedRanges)
-            return imu::v0::supportedMagRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+        }
+        else if (property == ZenImuProperty_AccSupportedRanges) {
+            auto [err, item_count] = imu::v0::supportedAccRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+            return {err, item_count * sizeof(int32_t)};
+        }
+        else if (property == ZenImuProperty_GyrSupportedRanges) {
+            auto [err, item_count] =  imu::v0::supportedGyrRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+            return {err, item_count * sizeof(int32_t)};
+        }
+        else if (property == ZenImuProperty_MagSupportedRanges) {
+            auto [err, item_count] =  imu::v0::supportedMagRanges(gsl::make_span(reinterpret_cast<int32_t*>(buffer.data()), buffer.size()));
+            return {err, item_count * sizeof(int32_t)};
+        }
 
         auto streaming = getBool(ZenImuProperty_StreamData);
         if (!streaming)
