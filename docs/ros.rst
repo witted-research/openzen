@@ -10,10 +10,29 @@ the ROS package to readout OpenZen sensors and provide IMU and magnetometer meas
 .. image:: images/ros-plot.png
    :alt: Visualization of angluar velocity data from an OpenZen sensor in rqt
 
-Compilation
------------
+Installing via the Package Manager
+==================================
 
-To compile this driver in your ROS setup, follow these steps:
+The OpenZen ROS driver is part of the official ROS distribution and you can conveniently install it via the package
+manager of your Linux distribution. Please check this website to see if the OpenZen ROS driver is available
+for the ROS distribution you use:
+
+https://index.ros.org/p/openzen_sensor/bitbucket-lpresearch-openzenros/
+
+For example, on Ubuntu 18.04 and with ROS distribution Melodic Morenia, the OpenZen ROS driver
+can be installed with this command:
+
+.. code-block:: bash
+
+    apt install ros-melodic-openzen-sensor
+
+Compilation
+===========
+
+If OpenZen is not available for your ROS distribution or you want to customize some OpenZen options,
+you can also compile the OpenZen ROS driver yourself.
+
+To compile the driver in your ROS setup, follow these steps:
 
 .. code-block:: bash
 
@@ -29,9 +48,12 @@ To compile this driver in your ROS setup, follow these steps:
     source ./devel/setup.bash
 
 Running the Driver
-------------------
+==================
 
-Open another terminal window and run the ROS core:
+Before running the driver, please ensure that the access rights to the serial port on your
+system are properly configured as described :ref:`in the Linux IO system section.<io-systems_linux-device>`
+
+Open a new terminal window and run the ROS core:
 
 .. code-block:: bash
 
@@ -90,23 +112,20 @@ Alternatively, you can use the sample launch file (openzen_lpms_ig1.launch) star
 
     roslaunch openzen_sensor openzen_lpms_ig1.launch
 
+Limitations of OpenZen ROS driver
+=================================
 
-
-Supported Hardware
-==================
-
-This driver should work with IMUs that use the LPMS LPBus protocol. Tested Hardware:
-
-- LPMS-IG1
-- LPMS-CU2
+The default binary distribution and source compile for the OpenZen ROS driver does not support Bluetooth sensor models.
+Therefore, if you want to use Bluetooth sensors together with ROS you need to follow the instructions above to compile the
+OpenZen ROS driver. Before compiling the driver, you need to set the option ``ZEN_BLUETOOTH`` to ``ON`` in the CMakeLists.txt file in
+the root folder of the OpenZenRos repository.
 
 ROS API
 =======
 
-openzen_sensor_node
--------------------
-
-lpms_ig1_node is a driver for the LPMS Inertial Measurement Unit. It publishes orientation, angular velocity, linear acceleration and magnetometer data (covariances are not yet supported), and complies with the `Sensor message <https://wiki.ros.org/sensor_msgs)>`_ for `IMU API <http://docs.ros.org/api/sensor_msgs/html/msg/Imu.html>`_ and `MagneticField <http://docs.ros.org/melodic/api/sensor_msgs/html/msg/MagneticField.html>`_ API.
+The openzen_sensor driver publishes orientation, angular velocity, linear acceleration
+and magnetometer data (covariances are not yet supported). If your sensor models is equiped with
+a GNSS receiver unit it also publishes the NavSatFix message.
 
 Published Topics
 ################

@@ -93,6 +93,8 @@ Example to obtain a bluetooth sensor which has the bluetooth address 00:11:22:33
 
     auto sensorPair = client.obtainSensorByName("Ble", "00:11:22:33:FF:EE");
 
+.. _io-systems_linux-device:
+
 Linux Device
 ============
 Allows to connect to a sensor which is connected via the USB-mode on Linux systems. It is the
