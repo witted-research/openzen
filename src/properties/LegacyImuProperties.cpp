@@ -417,7 +417,7 @@ namespace zen
         else if (i <= 6)
             return 460800;
         else
-            return 921600;
+            return 115200;
     }
 
     constexpr int32_t mapUartFormatFromImu(uint32_t value)

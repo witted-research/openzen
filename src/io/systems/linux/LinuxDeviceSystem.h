@@ -30,7 +30,7 @@ namespace zen
         static constexpr int32_t mapBaudRate(unsigned int baudRate) noexcept;
         static ZenError setBaudRateForFD(int fd, int speed) noexcept;
 
-        uint32_t getDefaultBaudrate() override { return 921600; }
+        uint32_t getDefaultBaudrate() override { return 115200; }
     };
 }
 

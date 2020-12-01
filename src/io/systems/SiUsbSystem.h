@@ -62,7 +62,7 @@ namespace zen
 
         static SiUsbFnTable fnTable;
 
-        uint32_t getDefaultBaudrate() override { return 921600; }
+        uint32_t getDefaultBaudrate() override { return 115200; }
 
     private:
         void* m_handle;

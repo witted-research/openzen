@@ -48,7 +48,7 @@ namespace zen
 
     class FtdiUsbSystem : public IIoSystem
     {
-        constexpr static unsigned int DEFAULT_BAUDRATE = FT_BAUD_921600;
+        constexpr static unsigned int DEFAULT_BAUDRATE = FT_BAUD_115200;
 
     public:
         constexpr static const char KEY[] = "Ftdi";

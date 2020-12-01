@@ -134,7 +134,7 @@ namespace zen
             std::memcpy(desc.identifier, identifier.c_str(), identifier.size());
             desc.identifier[identifier.size()] = '\0';
 
-            desc.baudRate = 921600;
+            desc.baudRate = 115200;
             outDevices.emplace_back(desc);
         }
 
